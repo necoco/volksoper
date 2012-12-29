@@ -1,0 +1,13 @@
+必要な機能
+
+SceneGraph
+シーングラフの構築
+
+EventFlow
+ちゃんとしたイベントフロー
+
+Scene
+Sceneの管理
+
+非同期システム
+Futureベースのシステム、Scenario
