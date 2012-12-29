@@ -49,6 +49,15 @@ module volksoper{
             return top;
         }
 
+        swapTop(child: Actor): Actor{
+            var result = this.popChild();
+            if(result){
+                this.addChild(child);
+            }
+
+            return result;
+        }
+
         get topChild(): Actor{
             if(!this._children || this._children.length == 0) return null;
             return this._children[this._children.length-1];
