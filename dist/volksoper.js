@@ -46,6 +46,7 @@ var volksoper;
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
+    volksoper.SYSTEM_PRIORITY = -100000000;
     var Actor = (function () {
         function Actor() {
         }
@@ -258,7 +259,7 @@ var volksoper;
             var self = this;
             this.addEventListener(volksoper.Event.ADDED, function (e) {
                 self._registerTarget(e.target);
-            }, true);
+            }, true, volksoper.SYSTEM_PRIORITY);
             this.addEventListener(volksoper.Event.REMOVE, function (e) {
                 self._unregisterTarget(e.target);
             }, true);
@@ -280,7 +281,7 @@ var volksoper;
             };
             for(var key in target) {
                 var body = target[key];
-                if(typeof body == 'function') {
+                if(typeof body === 'function') {
                     wrapper[key] = Scene._wrapMethod(table, key, wrapper);
                 }
             }
@@ -314,4 +315,68 @@ var volksoper;
         return Scene;
     })(volksoper.Actor);
     volksoper.Scene = Scene;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var Story = (function () {
+        function Story() { }
+        Story.prototype.wait = function () {
+            var args = [];
+            for (var _i = 0; _i < (arguments.length - 0); _i++) {
+                args[_i] = arguments[_i + 0];
+            }
+            return this;
+        };
+        Story.prototype.then = function (fn) {
+            return this;
+        };
+        Story.prototype.waitEvent = function (name, source) {
+            return this;
+        };
+        Story.prototype.tween = function (obj) {
+            return this;
+        };
+        Story.prototype.tweenBy = function (obj) {
+            return this;
+        };
+        Story.prototype.call = function (methodName) {
+            var args = [];
+            for (var _i = 0; _i < (arguments.length - 1); _i++) {
+                args[_i] = arguments[_i + 1];
+            }
+            return this;
+        };
+        Object.defineProperty(Story.prototype, "and", {
+            get: function () {
+                return this;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return Story;
+    })();
+    volksoper.Story = Story;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var StoryBoard = (function () {
+        function StoryBoard(type) {
+        }
+        StoryBoard.UPDATE_TICK = "tick";
+        StoryBoard.UPDATE_TIME = "time";
+        StoryBoard.prototype.update = function (time) {
+        };
+        StoryBoard.prototype.story = function (hero) {
+            return null;
+        };
+        Object.defineProperty(StoryBoard.prototype, "numStories", {
+            get: function () {
+                return 0;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return StoryBoard;
+    })();
+    volksoper.StoryBoard = StoryBoard;    
 })(volksoper || (volksoper = {}));
