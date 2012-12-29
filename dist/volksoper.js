@@ -321,10 +321,6 @@ var volksoper;
     var Story = (function () {
         function Story() { }
         Story.prototype.wait = function () {
-            var args = [];
-            for (var _i = 0; _i < (arguments.length - 0); _i++) {
-                args[_i] = arguments[_i + 0];
-            }
             return this;
         };
         Story.prototype.then = function (fn) {

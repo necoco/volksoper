@@ -2,10 +2,10 @@
 module volksoper{
     export class Story{
 
-        wait(event: string, ...args: string[]): volksoper.Story;
+        wait(event: string, ...args: any[]): volksoper.Story;
         wait(fn: () => any, ...args: any[]): volksoper.Story;
-        wait(story: volksoper.Story): volksoper.Story;
-        wait(...args: any[]): volksoper.Story{
+        wait(story: volksoper.Story, ...args: any[]): volksoper.Story;
+        wait(): volksoper.Story{
             return this;
         }
 
