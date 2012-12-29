@@ -53,11 +53,11 @@ declare module jasmine {
         callCount: number;
     }
 
-    interface Clock {
+    export interface Clock {
         useMock() : void;
         uninstallMock() : void;
         tick(millis: number): void;
     }
 
-    var Clock: Clock;
+    export var Clock: Clock;
 }
