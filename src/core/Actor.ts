@@ -80,7 +80,7 @@ module volksoper{
             return this._children[index];
         }
 
-        addEventListener(type: String, listener: (event:Event) => void, capture?: bool, priority?: number): void{
+        addEventListener(type: String, listener: (event) => void, capture?: bool, priority?: number): void{
             if(capture){
                 this._captureHandlers = Actor._registerListener(this._captureHandlers, type , listener, priority);
             }else{
@@ -88,7 +88,7 @@ module volksoper{
             }
         }
 
-        removeEventListener(type: String, listener: (event:Event) => void, capture?: bool): bool{
+        removeEventListener(type: String, listener: (event) => void, capture?: bool): bool{
             if(capture){
                 return Actor._removeHandler(this._captureHandlers, type, listener);
             }else{

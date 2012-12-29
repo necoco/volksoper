@@ -81,6 +81,13 @@ var volksoper;
             top._parent = null;
             return top;
         };
+        Actor.prototype.swapTop = function (child) {
+            var result = this.popChild();
+            if(result) {
+                this.addChild(child);
+            }
+            return result;
+        };
         Object.defineProperty(Actor.prototype, "topChild", {
             get: function () {
                 if(!this._children || this._children.length == 0) {
@@ -262,65 +269,77 @@ var volksoper;
         __extends(Scene, _super);
         function Scene() {
                 _super.call(this);
-            this._wrapper = {
-            };
             this._registry = {
             };
+            this._execFind = 0;
+            this._unregister = [];
             var self = this;
-            this.addEventListener(volksoper.Event.ADDED, function (e) {
+            var addedListener = function (e) {
                 self._registerTarget(e.target);
-            }, true, volksoper.SYSTEM_PRIORITY);
-            this.addEventListener(volksoper.Event.REMOVE, function (e) {
+                e.target.removeEventListener(volksoper.Event.ADDED, addedListener);
+            };
+            var removeListener = function (e) {
                 self._unregisterTarget(e.target);
-            }, true);
+                e.target.removeEventListener(volksoper.Event.REMOVE, removeListener);
+            };
+            this.addEventListener(volksoper.Event.ADDED, addedListener, true, volksoper.SYSTEM_PRIORITY);
+            this.addEventListener(volksoper.Event.REMOVE, removeListener, true, volksoper.SYSTEM_PRIORITY);
         }
         Scene.prototype._registerTarget = function (target) {
-            this._getTable(target).push(target);
-            this._registerWrapper(target);
+            this._iterateTable(target, function (a) {
+                a.push(target);
+            });
         };
-        Scene.prototype._registerWrapper = function (target) {
-            var wrapper = this._wrapper[target.prototype.constructor];
-            var table = this._getTable(target);
-            if(!wrapper) {
-                wrapper = Scene._createWrapper(target, table);
-                this._wrapper[target.prototype.constructor] = wrapper;
-            }
-        };
-        Scene._createWrapper = function _createWrapper(target, table) {
-            var wrapper = {
-            };
-            for(var key in target) {
-                var body = target[key];
-                if(typeof body === 'function') {
-                    wrapper[key] = Scene._wrapMethod(table, key, wrapper);
+        Scene.prototype._iterateTable = function (target, fn) {
+            var group = target.constructor.group;
+            if(typeof group === 'string') {
+                this._callbackGroup(group, fn);
+            } else {
+                if(group instanceof Array) {
+                    for(var n = 0; n < group.length; ++n) {
+                        this._callbackGroup(group[n], fn);
+                    }
                 }
             }
-            return wrapper;
-        }
-        Scene._wrapMethod = function _wrapMethod(table, key, wrapper) {
-            return function () {
-                for(var index in table) {
-                    table[index][key].apply(table[index], arguments);
-                }
-                return wrapper;
-            }
-        }
-        Scene.prototype._getTable = function (target) {
-            var table = this._registry[target.prototype.constructor];
+        };
+        Scene.prototype._callbackGroup = function (group, fn) {
+            var table = this._registry[group];
             if(!table) {
-                this._registry[target.prototype.constructor] = table = [];
+                this._registry[group] = table = [];
             }
-            return table;
+            fn(table);
         };
         Scene.prototype._unregisterTarget = function (target) {
-            var table = this._getTable(target);
-            table.splice(table.indexOf(target), 1);
+            var _this = this;
+            if(this._execFind === 0) {
+                this._iterateTable(target, function (table) {
+                    console.log(table.indexOf(target));
+                    table.splice(table.indexOf(target), 1);
+                });
+            } else {
+                this._iterateTable(target, function (table) {
+                    _this._unregister = [
+                        table, 
+                        target
+                    ];
+                });
+            }
         };
-        Scene.prototype.find = function (targetClass) {
-            return this._registry[targetClass] = this._registry[targetClass] || [];
-        };
-        Scene.prototype.query = function (targetClass) {
-            return this._wrapper[targetClass];
+        Scene.prototype.find = function (groupName, callback) {
+            this._execFind++;
+            this._callbackGroup(groupName, function (a) {
+                var len = a.length;
+                for(var n = 0; n < len; ++n) {
+                    callback(a[n]);
+                }
+            });
+            this._execFind--;
+            var r = this._unregister;
+            var len = r.length;
+            for(var n = 0; n < len; ++n) {
+                r[n][0].splice(r[n][0].indexOf(r[n][1]), 1);
+            }
+            r.splice(0);
         };
         return Scene;
     })(volksoper.Actor);

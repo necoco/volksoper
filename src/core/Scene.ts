@@ -5,76 +5,85 @@
 module volksoper{
 
     export class Scene extends Actor{
-        private _wrapper: Object = {};
         private _registry: Object = {};
+        private _execFind = 0;
+        private _unregister = [];
 
         constructor(){
             super();
             var self: Scene = this;
-            this.addEventListener(volksoper.Event.ADDED,
-                    (e: volksoper.Event)=>{self._registerTarget(e.target);}, true, volksoper.SYSTEM_PRIORITY);
-            this.addEventListener(volksoper.Event.REMOVE,
-                    (e: volksoper.Event)=>{self._unregisterTarget(e.target);}, true);
+
+            var addedListener = (e: volksoper.Event)=>{
+                self._registerTarget(e.target);
+                e.target.removeEventListener(volksoper.Event.ADDED, addedListener);
+            };
+
+            var removeListener = (e: volksoper.Event)=>{
+                self._unregisterTarget(e.target);
+                e.target.removeEventListener(volksoper.Event.REMOVE, removeListener);
+            };
+
+            this.addEventListener(volksoper.Event.ADDED, addedListener, true, volksoper.SYSTEM_PRIORITY);
+            this.addEventListener(volksoper.Event.REMOVE, removeListener, true, volksoper.SYSTEM_PRIORITY);
         }
 
         private _registerTarget(target): void {
-            this._getTable(target).push(target);
-            this._registerWrapper(target);
+            this._iterateTable(target,(a)=>{
+                a.push(target);
+            });
         }
 
-        private _registerWrapper(target){
-            var wrapper = this._wrapper[target.prototype.constructor];
-            var table = this._getTable(target);
-
-            if(!wrapper){
-                wrapper = Scene._createWrapper(target, table);
-                this._wrapper[target.prototype.constructor] = wrapper;
-            }
-        }
-
-        private static _createWrapper(target, table){
-            var wrapper = {};
-            for(var key in target){
-                var body = target[key];
-                if(typeof body === 'function'){
-                    wrapper[key] = Scene._wrapMethod(table, key, wrapper);
+        private _iterateTable(target: any, fn){
+            var group = target.constructor.group;
+            if(typeof group === 'string'){
+                this._callbackGroup(group, fn);
+            }else if(group instanceof Array){
+                for(var n = 0; n < group.length; ++n){
+                    this._callbackGroup(group[n], fn);
                 }
             }
-
-            return wrapper;
         }
 
-        private static _wrapMethod(table, key, wrapper){
-            return ()=>{
-                for(var index in table){
-                    table[index][key].apply(table[index], arguments);
-                }
-
-                return wrapper;
-            }
-        }
-
-        private _getTable(target){
-            var table: any[] = this._registry[target.prototype.constructor];
+        private _callbackGroup(group: string, fn){
+            var table = this._registry[group];
 
             if(!table){
-                this._registry[target.prototype.constructor] = table = [];
+                this._registry[group] = table = [];
             }
 
-            return table;
+            fn(table);
         }
 
         private _unregisterTarget(target: Actor): void {
-            var table: any[] = this._getTable(target);
-            table.splice(table.indexOf(target), 1);
+            if(this._execFind === 0){
+                this._iterateTable(target, (table)=>{
+                    console.log(table.indexOf(target));
+                    table.splice(table.indexOf(target), 1);
+                });
+            }else{
+                this._iterateTable(target, (table)=>{
+                    this._unregister = [table, target];
+                });
+            }
         }
 
-        find(targetClass): any[]{
-            return this._registry[targetClass] = this._registry[targetClass] || [];
-        }
+        find(groupName: string, callback: (arg)=>void): void{
+            this._execFind++;
+            this._callbackGroup(groupName, (a)=>{
+                var len = a.length;
+                for(var n = 0; n < len; ++n){
+                    callback(a[n]);
+                }
+            });
 
-        query(targetClass):any{
-            return this._wrapper[targetClass];
+            this._execFind--;
+
+            var r = this._unregister;
+            var len = r.length;
+            for(var n = 0; n < len; ++n){
+                r[n][0].splice(r[n][0].indexOf(r[n][1]), 1);
+            }
+            r.splice(0);
         }
     }
 
