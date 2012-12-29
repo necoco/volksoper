@@ -38,6 +38,8 @@ module story_board_spec{
 
             actor.dispatchEvent(new volksoper.Event("event"));
 
+            board.update(10);
+
             expect(called).toBeTruthy();
         });
 
@@ -111,6 +113,8 @@ module story_board_spec{
 
             actor2.dispatchEvent(new volksoper.Event("event"));
 
+            board.update(10);
+
             expect(called).toBeTruthy();
         });
 
@@ -154,7 +158,7 @@ module story_board_spec{
 
             expect(called).toBeTruthy();
             expect(actor.tl).toBe(10);
-            expect(actor.tl2).toBe(10);
+            expect(actor.tl2).toBe(20);
         });
     });
 
