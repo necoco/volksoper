@@ -1,6 +1,7 @@
 
 ///<reference path="Event.ts"/>
 ///<reference path="Actor.ts"/>
+///<reference path="StoryBoard.ts"/>
 
 module volksoper{
 
@@ -8,6 +9,12 @@ module volksoper{
         private _registry: Object = {};
         private _execFind = 0;
         private _unregister = [];
+
+        private _board: volksoper.StoryBoard = new volksoper.StoryBoard();
+        get storyBoard(): volksoper.StoryBoard{
+            return this._board;
+        }
+
 
         constructor(){
             super();
@@ -32,6 +39,7 @@ module volksoper{
                 a.push(target);
             });
         }
+
 
         private _iterateTable(target: any, fn){
             var group = target.constructor.group;
@@ -66,6 +74,7 @@ module volksoper{
                 });
             }
         }
+
 
         find(groupName: string, callback: (arg)=>void): void{
             this._execFind++;

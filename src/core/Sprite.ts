@@ -1,6 +1,8 @@
 
 ///<reference path="Actor.ts"/>
 ///<reference path="Scene.ts"/>
+///<reference path="StoryBoard.ts"/>
+///<reference path="Story.ts"/>
 
 module volksoper{
     export class Sprite extends Actor{
@@ -8,6 +10,7 @@ module volksoper{
 
         x: number = 0;
         y: number = 0;
+        z: number = 0;
 
         pivotX: number;
         pivotY: number;
@@ -32,6 +35,27 @@ module volksoper{
         private _stage: volksoper.Stage;
         get stage(): volksoper.Stage{
             return this._stage;
+        }
+
+        private _story: volksoper.Story;
+        get story(): volksoper.Story{
+            if(this._story){
+                return this._story;
+            }
+
+            this._story = this._scene.storyBoard.story(this);
+            return this._story;
+        }
+
+        private _surface: volksoper.Surface;
+        get surface():volksoper.Surface {return this._surface;}
+        set surface(surface: volksoper.Surface){
+            if(this._surface){
+               this._surface.release();
+            }
+
+            this._surface = surface;
+            surface.addRef();
         }
 
         constructor(){

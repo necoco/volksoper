@@ -7,13 +7,13 @@
 ・Actorイベントフロー
 ・Sceneレジストリ
 ・StoryBoardによる非同期処理
+・Sprite extends Actor
+・Stage extends Actor
 
 **ここまで**
 
-・Sprite extends Actor
 ・Surface
 ・Label extends Surface
-・Stage extends Actor
 ・SceneDock
 ・TouchEvent
 ・KeyEvent

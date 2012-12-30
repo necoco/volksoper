@@ -9,6 +9,7 @@ var volksoper;
             this._type = _type;
             this._propagates = true;
             this._stopImmediate = false;
+            this._callDefault = true;
         }
         Event.ADDED = "added";
         Event.REMOVE = "remove";
@@ -44,13 +45,16 @@ var volksoper;
             this._propagates = false;
             this._stopImmediate = true;
         };
+        Event.prototype.preventDefault = function () {
+            this._callDefault = false;
+        };
         return Event;
     })();
     volksoper.Event = Event;    
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
-    volksoper.SYSTEM_PRIORITY = -100000000;
+    volksoper.SYSTEM_PRIORITY = 100000000;
     var Actor = (function () {
         function Actor() {
         }
@@ -228,13 +232,16 @@ var volksoper;
             }
             for(var index in handlers) {
                 var handler = handlers[index].handler;
-                event.currentTarget = this;
-                event.target = target;
-                handler(event);
-                if(event.stopImmediate) {
-                    break;
+                if(handlers[index].priority !== volksoper.SYSTEM_PRIORITY || event._callDefault) {
+                    event.currentTarget = this;
+                    event.target = target;
+                    handler(event);
+                    if(event.stopImmediate) {
+                        break;
+                    }
                 }
             }
+            event._callDefault = true;
             return true;
         };
         Actor.prototype._callHandler = function (event) {
@@ -264,223 +271,6 @@ var volksoper;
         Easing.LINEAR = LINEAR;
     })(volksoper.Easing || (volksoper.Easing = {}));
     var Easing = volksoper.Easing;
-})(volksoper || (volksoper = {}));
-var __extends = this.__extends || function (d, b) {
-    function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
-};
-var volksoper;
-(function (volksoper) {
-    var Scene = (function (_super) {
-        __extends(Scene, _super);
-        function Scene() {
-                _super.call(this);
-            this._registry = {
-            };
-            this._execFind = 0;
-            this._unregister = [];
-            var self = this;
-            var addedListener = function (e) {
-                self._registerTarget(e.target);
-                e.target.broadcastEvent(new volksoper.Event(volksoper.Event.ADDED_TO_SCENE), self);
-            };
-            var removeListener = function (e) {
-                e.target.broadcastEvent(new volksoper.Event(volksoper.Event.REMOVE_FROM_SCENE), self);
-                self._unregisterTarget(e.target);
-            };
-            this.addEventListener(volksoper.Event.ADDED, addedListener, true, volksoper.SYSTEM_PRIORITY);
-            this.addEventListener(volksoper.Event.REMOVE, removeListener, true, volksoper.SYSTEM_PRIORITY);
-        }
-        Scene.prototype._registerTarget = function (target) {
-            this._iterateTable(target, function (a) {
-                a.push(target);
-            });
-        };
-        Scene.prototype._iterateTable = function (target, fn) {
-            var group = target.constructor.group;
-            if(typeof group === 'string') {
-                this._callbackGroup(group, fn);
-            } else {
-                if(group instanceof Array) {
-                    for(var n = 0; n < group.length; ++n) {
-                        this._callbackGroup(group[n], fn);
-                    }
-                }
-            }
-        };
-        Scene.prototype._callbackGroup = function (group, fn) {
-            var table = this._registry[group];
-            if(!table) {
-                this._registry[group] = table = [];
-            }
-            fn(table);
-        };
-        Scene.prototype._unregisterTarget = function (target) {
-            var _this = this;
-            if(this._execFind === 0) {
-                this._iterateTable(target, function (table) {
-                    console.log(table.indexOf(target));
-                    table.splice(table.indexOf(target), 1);
-                });
-            } else {
-                this._iterateTable(target, function (table) {
-                    _this._unregister = [
-                        table, 
-                        target
-                    ];
-                });
-            }
-        };
-        Scene.prototype.find = function (groupName, callback) {
-            this._execFind++;
-            this._callbackGroup(groupName, function (a) {
-                var len = a.length;
-                for(var n = 0; n < len; ++n) {
-                    callback(a[n]);
-                }
-            });
-            this._execFind--;
-            var r = this._unregister;
-            var len = r.length;
-            for(var n = 0; n < len; ++n) {
-                r[n][0].splice(r[n][0].indexOf(r[n][1]), 1);
-            }
-            r.splice(0);
-        };
-        return Scene;
-    })(volksoper.Actor);
-    volksoper.Scene = Scene;    
-})(volksoper || (volksoper = {}));
-var volksoper;
-(function (volksoper) {
-    var Sprite = (function (_super) {
-        __extends(Sprite, _super);
-        function Sprite() {
-                _super.call(this);
-            this.alpha = 1;
-            this.x = 0;
-            this.y = 0;
-            this.width = 0;
-            this.height = 0;
-            this.rotation = 0;
-            this.rotationX = 0;
-            this.rotationY = 0;
-            this.scaleX = 1;
-            this.scaleY = 1;
-            this.visible = true;
-            var self = this;
-            this.addEventListener(volksoper.Event.ADDED_TO_SCENE, function (e) {
-                self._scene = e.target;
-            }, false, volksoper.SYSTEM_PRIORITY);
-            this.addEventListener(volksoper.Event.REMOVE_FROM_SCENE, function (e) {
-                self._scene = null;
-            });
-            this.addEventListener(volksoper.Event.ADDED_TO_STAGE, function (e) {
-                self._stage = e.target;
-            }, false, volksoper.SYSTEM_PRIORITY);
-            this.addEventListener(volksoper.Event.REMOVE_FROM_STAGE, function (e) {
-                self._stage = null;
-            });
-        }
-        Object.defineProperty(Sprite.prototype, "scene", {
-            get: function () {
-                return this._scene;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Sprite.prototype, "stage", {
-            get: function () {
-                return this._stage;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        return Sprite;
-    })(volksoper.Actor);
-    volksoper.Sprite = Sprite;    
-})(volksoper || (volksoper = {}));
-var volksoper;
-(function (volksoper) {
-    var Stage = (function (_super) {
-        __extends(Stage, _super);
-        function Stage() {
-                _super.call(this);
-            var self = this;
-            var addedListener = function (e) {
-                e.target.broadcastEvent(new volksoper.Event(volksoper.Event.ADDED_TO_STAGE), self);
-            };
-            var removeListener = function (e) {
-                e.target.broadcastEvent(new volksoper.Event(volksoper.Event.REMOVE_FROM_STAGE), self);
-            };
-            this.addEventListener(volksoper.Event.ADDED, addedListener, true, volksoper.SYSTEM_PRIORITY);
-            this.addEventListener(volksoper.Event.REMOVE, removeListener, true, volksoper.SYSTEM_PRIORITY);
-        }
-        return Stage;
-    })(volksoper.Sprite);
-    volksoper.Stage = Stage;    
-})(volksoper || (volksoper = {}));
-var volksoper;
-(function (volksoper) {
-    var StoryTimer = (function () {
-        function StoryTimer() {
-            this._time = 0;
-        }
-        StoryTimer.prototype.setTime = function (time) {
-            this._time = time;
-        };
-        StoryTimer.prototype.consume = function (time) {
-            if(this._time < time) {
-                this._time = 0;
-                return this._time - time;
-            }
-            this._time -= time;
-            return -1;
-        };
-        return StoryTimer;
-    })();    
-    var StoryBoard = (function () {
-        function StoryBoard() {
-            this._stories = [];
-            this._timer = new StoryTimer();
-            this._unregister = [];
-        }
-        StoryBoard.prototype.update = function (time) {
-            this._unregister.splice(0);
-            this._timer.setTime(time);
-            for(var n = 0; n < this._stories.length; n++) {
-                this._stories[n]._update(this._timer);
-            }
-            for(var n = 0; n < this._unregister.length; ++n) {
-                this._stories.splice(this._stories.indexOf(this._unregister[n]), 1);
-            }
-            return this._stories.length == 0;
-        };
-        StoryBoard.prototype._registerStory = function (story) {
-            var index = this._unregister.indexOf(story);
-            if(index >= 0) {
-                this._unregister.splice(index, 0);
-            } else {
-                this._stories.push(story);
-            }
-        };
-        StoryBoard.prototype._unregisterStory = function (story) {
-            this._unregister.push(story);
-        };
-        StoryBoard.prototype.story = function (hero) {
-            return new volksoper.Story(this, hero);
-        };
-        Object.defineProperty(StoryBoard.prototype, "numStories", {
-            get: function () {
-                return this._stories.length;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        return StoryBoard;
-    })();
-    volksoper.StoryBoard = StoryBoard;    
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
@@ -709,4 +499,276 @@ var volksoper;
         return Story;
     })();
     volksoper.Story = Story;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var StoryTimer = (function () {
+        function StoryTimer() {
+            this._time = 0;
+        }
+        StoryTimer.prototype.setTime = function (time) {
+            this._time = time;
+        };
+        StoryTimer.prototype.consume = function (time) {
+            if(this._time < time) {
+                this._time = 0;
+                return this._time - time;
+            }
+            this._time -= time;
+            return -1;
+        };
+        return StoryTimer;
+    })();    
+    var StoryBoard = (function () {
+        function StoryBoard() {
+            this._stories = [];
+            this._timer = new StoryTimer();
+            this._unregister = [];
+        }
+        StoryBoard.prototype.update = function (time) {
+            this._unregister.splice(0);
+            this._timer.setTime(time);
+            for(var n = 0; n < this._stories.length; n++) {
+                this._stories[n]._update(this._timer);
+            }
+            for(var n = 0; n < this._unregister.length; ++n) {
+                this._stories.splice(this._stories.indexOf(this._unregister[n]), 1);
+            }
+            return this._stories.length == 0;
+        };
+        StoryBoard.prototype._registerStory = function (story) {
+            var index = this._unregister.indexOf(story);
+            if(index >= 0) {
+                this._unregister.splice(index, 0);
+            } else {
+                this._stories.push(story);
+            }
+        };
+        StoryBoard.prototype._unregisterStory = function (story) {
+            this._unregister.push(story);
+        };
+        StoryBoard.prototype.story = function (hero) {
+            return new volksoper.Story(this, hero);
+        };
+        Object.defineProperty(StoryBoard.prototype, "numStories", {
+            get: function () {
+                return this._stories.length;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return StoryBoard;
+    })();
+    volksoper.StoryBoard = StoryBoard;    
+})(volksoper || (volksoper = {}));
+var __extends = this.__extends || function (d, b) {
+    function __() { this.constructor = d; }
+    __.prototype = b.prototype;
+    d.prototype = new __();
+};
+var volksoper;
+(function (volksoper) {
+    var Scene = (function (_super) {
+        __extends(Scene, _super);
+        function Scene() {
+                _super.call(this);
+            this._registry = {
+            };
+            this._execFind = 0;
+            this._unregister = [];
+            this._board = new volksoper.StoryBoard();
+            var self = this;
+            var addedListener = function (e) {
+                self._registerTarget(e.target);
+                e.target.broadcastEvent(new volksoper.Event(volksoper.Event.ADDED_TO_SCENE), self);
+            };
+            var removeListener = function (e) {
+                e.target.broadcastEvent(new volksoper.Event(volksoper.Event.REMOVE_FROM_SCENE), self);
+                self._unregisterTarget(e.target);
+            };
+            this.addEventListener(volksoper.Event.ADDED, addedListener, true, volksoper.SYSTEM_PRIORITY);
+            this.addEventListener(volksoper.Event.REMOVE, removeListener, true, volksoper.SYSTEM_PRIORITY);
+        }
+        Object.defineProperty(Scene.prototype, "storyBoard", {
+            get: function () {
+                return this._board;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Scene.prototype._registerTarget = function (target) {
+            this._iterateTable(target, function (a) {
+                a.push(target);
+            });
+        };
+        Scene.prototype._iterateTable = function (target, fn) {
+            var group = target.constructor.group;
+            if(typeof group === 'string') {
+                this._callbackGroup(group, fn);
+            } else {
+                if(group instanceof Array) {
+                    for(var n = 0; n < group.length; ++n) {
+                        this._callbackGroup(group[n], fn);
+                    }
+                }
+            }
+        };
+        Scene.prototype._callbackGroup = function (group, fn) {
+            var table = this._registry[group];
+            if(!table) {
+                this._registry[group] = table = [];
+            }
+            fn(table);
+        };
+        Scene.prototype._unregisterTarget = function (target) {
+            var _this = this;
+            if(this._execFind === 0) {
+                this._iterateTable(target, function (table) {
+                    console.log(table.indexOf(target));
+                    table.splice(table.indexOf(target), 1);
+                });
+            } else {
+                this._iterateTable(target, function (table) {
+                    _this._unregister = [
+                        table, 
+                        target
+                    ];
+                });
+            }
+        };
+        Scene.prototype.find = function (groupName, callback) {
+            this._execFind++;
+            this._callbackGroup(groupName, function (a) {
+                var len = a.length;
+                for(var n = 0; n < len; ++n) {
+                    callback(a[n]);
+                }
+            });
+            this._execFind--;
+            var r = this._unregister;
+            var len = r.length;
+            for(var n = 0; n < len; ++n) {
+                r[n][0].splice(r[n][0].indexOf(r[n][1]), 1);
+            }
+            r.splice(0);
+        };
+        return Scene;
+    })(volksoper.Actor);
+    volksoper.Scene = Scene;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var Sprite = (function (_super) {
+        __extends(Sprite, _super);
+        function Sprite() {
+                _super.call(this);
+            this.alpha = 1;
+            this.x = 0;
+            this.y = 0;
+            this.z = 0;
+            this.width = 0;
+            this.height = 0;
+            this.rotation = 0;
+            this.rotationX = 0;
+            this.rotationY = 0;
+            this.scaleX = 1;
+            this.scaleY = 1;
+            this.visible = true;
+            var self = this;
+            this.addEventListener(volksoper.Event.ADDED_TO_SCENE, function (e) {
+                self._scene = e.target;
+            }, false, volksoper.SYSTEM_PRIORITY);
+            this.addEventListener(volksoper.Event.REMOVE_FROM_SCENE, function (e) {
+                self._scene = null;
+            });
+            this.addEventListener(volksoper.Event.ADDED_TO_STAGE, function (e) {
+                self._stage = e.target;
+            }, false, volksoper.SYSTEM_PRIORITY);
+            this.addEventListener(volksoper.Event.REMOVE_FROM_STAGE, function (e) {
+                self._stage = null;
+            });
+        }
+        Object.defineProperty(Sprite.prototype, "scene", {
+            get: function () {
+                return this._scene;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Sprite.prototype, "stage", {
+            get: function () {
+                return this._stage;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Sprite.prototype, "story", {
+            get: function () {
+                if(this._story) {
+                    return this._story;
+                }
+                this._story = this._scene.storyBoard.story(this);
+                return this._story;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Sprite.prototype, "surface", {
+            get: function () {
+                return this._surface;
+            },
+            set: function (surface) {
+                if(this._surface) {
+                    this._surface.release();
+                }
+                this._surface = surface;
+                surface.addRef();
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return Sprite;
+    })(volksoper.Actor);
+    volksoper.Sprite = Sprite;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var Stage = (function (_super) {
+        __extends(Stage, _super);
+        function Stage() {
+                _super.call(this);
+            var self = this;
+            var addedListener = function (e) {
+                e.target.broadcastEvent(new volksoper.Event(volksoper.Event.ADDED_TO_STAGE), self);
+            };
+            var removeListener = function (e) {
+                e.target.broadcastEvent(new volksoper.Event(volksoper.Event.REMOVE_FROM_STAGE), self);
+            };
+            this.addEventListener(volksoper.Event.ADDED, addedListener, true, volksoper.SYSTEM_PRIORITY);
+            this.addEventListener(volksoper.Event.REMOVE, removeListener, true, volksoper.SYSTEM_PRIORITY);
+        }
+        return Stage;
+    })(volksoper.Sprite);
+    volksoper.Stage = Stage;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var Surface = (function () {
+        function Surface() {
+            this._referenceCount = 0;
+        }
+        Surface.prototype.invalidate = function () {
+        };
+        Surface.prototype.addRef = function () {
+            return ++this._referenceCount;
+        };
+        Surface.prototype.release = function () {
+            return --this._referenceCount;
+        };
+        Surface.prototype.count = function () {
+            return this._referenceCount;
+        };
+        return Surface;
+    })();
+    volksoper.Surface = Surface;    
 })(volksoper || (volksoper = {}));
