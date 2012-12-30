@@ -3,30 +3,10 @@
 ///<reference path="Scene.ts"/>
 ///<reference path="StoryBoard.ts"/>
 ///<reference path="Story.ts"/>
+///<reference path="DisplayObject.ts"/>
 
 module volksoper{
-    export class Sprite extends Actor{
-        alpha: number = 1;
-
-        x: number = 0;
-        y: number = 0;
-        z: number = 0;
-
-        pivotX: number;
-        pivotY: number;
-
-        width: number = 0;
-        height: number = 0;
-
-        rotation: number = 0;
-        rotationX: number = 0;
-        rotationY: number = 0;
-
-        scaleX: number = 1;
-        scaleY: number = 1;
-
-        visible: bool = true;
-
+    export class Sprite extends volksoper.DisplayObject{
         private _scene: volksoper.Scene;
         get scene(): volksoper.Scene{
             return this._scene;

@@ -291,6 +291,35 @@ var volksoper;
     })();
     volksoper.Actor = Actor;    
 })(volksoper || (volksoper = {}));
+var __extends = this.__extends || function (d, b) {
+    function __() { this.constructor = d; }
+    __.prototype = b.prototype;
+    d.prototype = new __();
+};
+var volksoper;
+(function (volksoper) {
+    var DisplayObject = (function (_super) {
+        __extends(DisplayObject, _super);
+        function DisplayObject() {
+            _super.apply(this, arguments);
+
+            this.alpha = 1;
+            this.x = 0;
+            this.y = 0;
+            this.z = 0;
+            this.width = 0;
+            this.height = 0;
+            this.rotation = 0;
+            this.rotationX = 0;
+            this.rotationY = 0;
+            this.scaleX = 1;
+            this.scaleY = 1;
+            this.visible = true;
+        }
+        return DisplayObject;
+    })(volksoper.Actor);
+    volksoper.DisplayObject = DisplayObject;    
+})(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
     (function (Easing) {
@@ -322,11 +351,6 @@ var volksoper;
     })();
     volksoper.Surface = Surface;    
 })(volksoper || (volksoper = {}));
-var __extends = this.__extends || function (d, b) {
-    function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
-};
 var volksoper;
 (function (volksoper) {
     var Label = (function (_super) {
@@ -768,7 +792,7 @@ var volksoper;
             }
         };
         return Scene;
-    })(volksoper.Actor);
+    })(volksoper.DisplayObject);
     volksoper.Scene = Scene;    
 })(volksoper || (volksoper = {}));
 var volksoper;
@@ -777,18 +801,6 @@ var volksoper;
         __extends(Sprite, _super);
         function Sprite() {
                 _super.call(this);
-            this.alpha = 1;
-            this.x = 0;
-            this.y = 0;
-            this.z = 0;
-            this.width = 0;
-            this.height = 0;
-            this.rotation = 0;
-            this.rotationX = 0;
-            this.rotationY = 0;
-            this.scaleX = 1;
-            this.scaleY = 1;
-            this.visible = true;
             var self = this;
             this.addEventListener(volksoper.Event.ADDED_TO_SCENE, function (e) {
                 self._scene = e.target;
@@ -843,7 +855,7 @@ var volksoper;
             configurable: true
         });
         return Sprite;
-    })(volksoper.Actor);
+    })(volksoper.DisplayObject);
     volksoper.Sprite = Sprite;    
 })(volksoper || (volksoper = {}));
 var volksoper;
@@ -863,6 +875,6 @@ var volksoper;
             this.addEventListener(volksoper.Event.REMOVE, removeListener, true, volksoper.SYSTEM_PRIORITY);
         }
         return Stage;
-    })(volksoper.Sprite);
+    })(volksoper.DisplayObject);
     volksoper.Stage = Stage;    
 })(volksoper || (volksoper = {}));

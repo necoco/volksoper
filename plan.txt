@@ -9,11 +9,11 @@
 ・StoryBoardによる非同期処理
 ・Sprite extends Actor
 ・Stage extends Actor
+・Surface
+・Label extends Surface
 
 **ここまで**
 
-・Surface
-・Label extends Surface
 ・SceneDock
 ・TouchEvent
 ・KeyEvent

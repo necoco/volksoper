@@ -1,9 +1,9 @@
-///<reference path="Sprite.ts"/>
+///<reference path="DisplayObject.ts"/>
 ///<reference path="Event.ts"/>
 ///<reference path="Actor.ts"/>
 
 module volksoper{
-    export class Stage extends volksoper.Sprite{
+    export class Stage extends volksoper.DisplayObject{
         constructor(){
             super();
 
