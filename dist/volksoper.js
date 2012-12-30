@@ -207,11 +207,9 @@ var volksoper;
         Actor.prototype._broadcastEvent = function (event, target) {
             var result = false;
             result = this._handleEvent(event, target, false) || result;
-            if(this._children) {
-                this.forEachChild(function (child) {
-                    result = child._broadcastEvent(event, target) || result;
-                });
-            }
+            this.forEachChild(function (child) {
+                result = child._broadcastEvent(event, target) || result;
+            });
             return result;
         };
         Actor.prototype.broadcast = function (name) {
@@ -222,6 +220,9 @@ var volksoper;
             if(name in this) {
                 this[name].call(this, args);
             }
+            this.forEachChild(function (child) {
+                child.broadcast(name, args);
+            });
         };
         Actor.prototype.forEachChild = function (fn) {
             this._forEach++;

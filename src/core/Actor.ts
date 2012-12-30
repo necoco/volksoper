@@ -182,11 +182,9 @@ module volksoper{
 
             result = this._handleEvent(event, target, false) || result;
 
-            if(this._children){
-                this.forEachChild((child: Actor)=>{
-                    result = child._broadcastEvent(event, target) || result;
-                });
-            }
+            this.forEachChild((child: Actor)=>{
+                result = child._broadcastEvent(event, target) || result;
+            });
 
             return result;
         }
@@ -195,6 +193,10 @@ module volksoper{
             if(name in this){
                 this[name].call(this, args);
             }
+
+            this.forEachChild((child: any)=>{
+                child.broadcast(name, args);
+            });
         }
 
         forEachChild(fn: (child:any)=> void): void{
