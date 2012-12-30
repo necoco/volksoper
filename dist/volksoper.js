@@ -53,6 +53,7 @@ var volksoper;
     volksoper.SYSTEM_PRIORITY = 100000000;
     var Actor = (function () {
         function Actor() {
+            this._forEach = 0;
         }
         Actor._handlerNameTable = {
         };
@@ -65,6 +66,11 @@ var volksoper;
         Actor.prototype.removeChild = function (child) {
             if(!this._children) {
                 return false;
+            }
+            if(this._forEach !== 0) {
+                this._toRemove = this._toRemove || [];
+                this._toRemove.push(child);
+                return true;
             }
             var index = this._children.indexOf(child);
             if(index >= 0) {
@@ -202,11 +208,40 @@ var volksoper;
             var result = false;
             result = this._handleEvent(event, target, false) || result;
             if(this._children) {
-                for(var n = 0; n < this._children.length; ++n) {
-                    result = (this._children[n])._broadcastEvent(event, target) || result;
-                }
+                this.forEachChild(function (child) {
+                    result = child._broadcastEvent(event, target) || result;
+                });
             }
             return result;
+        };
+        Actor.prototype.broadcast = function (name) {
+            var args = [];
+            for (var _i = 0; _i < (arguments.length - 1); _i++) {
+                args[_i] = arguments[_i + 1];
+            }
+            if(name in this) {
+                this[name].call(this, args);
+            }
+        };
+        Actor.prototype.forEachChild = function (fn) {
+            this._forEach++;
+            if(this._children) {
+                var len = this._children.length;
+                for(var n = 0; n < len; ++n) {
+                    fn(this._children[n]);
+                }
+            }
+            this._forEach--;
+            if(this._forEach === 0) {
+                var r = this._toRemove;
+                if(r) {
+                    var rlen = r.length;
+                    for(var m = 0; m < rlen; m++) {
+                        this.removeChild(r[m]);
+                    }
+                    r.splice(0);
+                }
+            }
         };
         Actor.prototype._handleEvent = function (event, target, capture) {
             event.currentTarget = this;
@@ -638,12 +673,14 @@ var volksoper;
                 }
             });
             this._execFind--;
-            var r = this._unregister;
-            var len = r.length;
-            for(var n = 0; n < len; ++n) {
-                r[n][0].splice(r[n][0].indexOf(r[n][1]), 1);
+            if(this._execFind === 0) {
+                var r = this._unregister;
+                var len = r.length;
+                for(var n = 0; n < len; ++n) {
+                    r[n][0].splice(r[n][0].indexOf(r[n][1]), 1);
+                }
+                r.splice(0);
             }
-            r.splice(0);
         };
         return Scene;
     })(volksoper.Actor);

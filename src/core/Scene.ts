@@ -87,12 +87,14 @@ module volksoper{
 
             this._execFind--;
 
-            var r = this._unregister;
-            var len = r.length;
-            for(var n = 0; n < len; ++n){
-                r[n][0].splice(r[n][0].indexOf(r[n][1]), 1);
+            if(this._execFind === 0){
+                var r = this._unregister;
+                var len = r.length;
+                for(var n = 0; n < len; ++n){
+                    r[n][0].splice(r[n][0].indexOf(r[n][1]), 1);
+                }
+                r.splice(0);
             }
-            r.splice(0);
         }
     }
 

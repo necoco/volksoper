@@ -12,6 +12,8 @@ module volksoper{
         private _children: Array;
         private _captureHandlers: Object;
         private _bubbleHandlers: Object;
+        private _toRemove: Actor[];
+        private _forEach: number = 0;
 
         constructor(){
         }
@@ -27,6 +29,13 @@ module volksoper{
 
         removeChild(child: Actor): bool{
             if(!this._children) return false;
+
+            if(this._forEach !== 0){
+                this._toRemove = this._toRemove || [];
+                this._toRemove.push(child);
+
+                return true;
+            }
 
             var index: number = this._children.indexOf(child);
             if(index >= 0){
@@ -174,13 +183,41 @@ module volksoper{
             result = this._handleEvent(event, target, false) || result;
 
             if(this._children){
-                for(var n: number = 0; n < this._children.length; ++n){
-                    result = (<Actor>this._children[n])._broadcastEvent(event, target) || result;
-                }
+                this.forEachChild((child: Actor)=>{
+                    result = child._broadcastEvent(event, target) || result;
+                });
             }
 
             return result;
+        }
 
+        broadcast(name: string, ...args: any[]): void{
+            if(name in this){
+                this[name].call(this, args);
+            }
+        }
+
+        forEachChild(fn: (child:any)=> void): void{
+            this._forEach++;
+            if(this._children){
+                var len = this._children.length;
+                for(var n: number = 0; n < len; ++n){
+                    fn(this._children[n]);
+                }
+            }
+            this._forEach--;
+
+            if(this._forEach === 0){
+                var r = this._toRemove;
+                if(r){
+                    var rlen = r.length;
+                    for(var m = 0; m < rlen; m++){
+                        this.removeChild(r[m]);
+                    }
+                    r.splice(0);
+                }
+
+            }
         }
 
         private _handleEvent(event: volksoper.Event, target: Actor, capture: bool): bool{
