@@ -4,7 +4,6 @@
 module volksoper{
     export class Label extends volksoper.Surface{
         font: volksoper.Font;
-        mutable: bool = false;
         align: number = 0;
         lineGap: number = 0;
         textColor: number = 0;
@@ -25,8 +24,8 @@ module volksoper{
             return 0;
         }
 
-        constructor(public width: number, public height: number){
-            super();
+        constructor(name: string, width: number, height: number){
+            super(name, width, height);
         }
     }
 

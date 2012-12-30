@@ -333,7 +333,10 @@ var volksoper;
 var volksoper;
 (function (volksoper) {
     var Surface = (function () {
-        function Surface() {
+        function Surface(_name, _width, _height) {
+            this._name = _name;
+            this._width = _width;
+            this._height = _height;
             this._referenceCount = 0;
         }
         Surface.prototype.invalidate = function () {
@@ -347,6 +350,27 @@ var volksoper;
         Surface.prototype.count = function () {
             return this._referenceCount;
         };
+        Object.defineProperty(Surface.prototype, "name", {
+            get: function () {
+                return this._name;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Surface.prototype, "width", {
+            get: function () {
+                return this._width;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Surface.prototype, "height", {
+            get: function () {
+                return this._height;
+            },
+            enumerable: true,
+            configurable: true
+        });
         return Surface;
     })();
     volksoper.Surface = Surface;    
@@ -355,11 +379,8 @@ var volksoper;
 (function (volksoper) {
     var Label = (function (_super) {
         __extends(Label, _super);
-        function Label(width, height) {
-                _super.call(this);
-            this.width = width;
-            this.height = height;
-            this.mutable = false;
+        function Label(name, width, height) {
+                _super.call(this, name, width, height);
             this.align = 0;
             this.lineGap = 0;
             this.textColor = 0;
@@ -413,6 +434,274 @@ var volksoper;
         var BOTTOM = 64;
     })(volksoper.HorizontalAlign || (volksoper.HorizontalAlign = {}));
     var HorizontalAlign = volksoper.HorizontalAlign;
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var Matrix4 = (function () {
+        function Matrix4(m) {
+            this.m = [
+                1, 
+                0, 
+                0, 
+                0, 
+                0, 
+                1, 
+                0, 
+                0, 
+                0, 
+                0, 
+                1, 
+                0, 
+                0, 
+                0, 
+                0, 
+                1
+            ];
+            if(m) {
+                this.setValue(m);
+            }
+        }
+        Matrix4.IDENT = [
+            1, 
+            0, 
+            0, 
+            0, 
+            0, 
+            1, 
+            0, 
+            0, 
+            0, 
+            0, 
+            1, 
+            0, 
+            0, 
+            0, 
+            0, 
+            1
+        ];
+        Matrix4.TMP = [
+            1, 
+            0, 
+            0, 
+            0, 
+            0, 
+            1, 
+            0, 
+            0, 
+            0, 
+            0, 
+            1, 
+            0, 
+            0, 
+            0, 
+            0, 
+            1
+        ];
+        Matrix4.prototype.setValue = function (m) {
+            var s = this.m;
+            var d = m.m;
+            for(var n = 0; n < 16; ++n) {
+                s[n] = d[n];
+            }
+        };
+        Matrix4.prototype.translate = function (x, y, z) {
+            var m = this.m;
+            m[12] += x;
+            m[13] += y;
+            m[14] += z;
+            return this;
+        };
+        Matrix4.prototype.multiply = function (m) {
+            var ma = this.m;
+            var mb = m.m;
+            var tmp = Matrix4.TMP;
+            tmp[0] = ma[0] * mb[0] + ma[4] * mb[1] + ma[8] * mb[2] + ma[12] * mb[3];
+            tmp[4] = ma[0] * mb[4] + ma[4] * mb[5] + ma[8] * mb[6] + ma[12] * mb[7];
+            tmp[8] = ma[0] * mb[8] + ma[4] * mb[9] + ma[8] * mb[10] + ma[12] * mb[11];
+            tmp[12] = ma[0] * mb[12] + ma[4] * mb[13] + ma[8] * mb[14] + ma[12] * mb[15];
+            tmp[1] = ma[1] * mb[0] + ma[5] * mb[1] + ma[9] * mb[2] + ma[13] * mb[3];
+            tmp[5] = ma[1] * mb[4] + ma[5] * mb[5] + ma[9] * mb[6] + ma[13] * mb[7];
+            tmp[9] = ma[1] * mb[8] + ma[5] * mb[9] + ma[9] * mb[10] + ma[13] * mb[11];
+            tmp[13] = ma[1] * mb[12] + ma[5] * mb[13] + ma[9] * mb[14] + ma[13] * mb[15];
+            tmp[2] = ma[2] * mb[0] + ma[6] * mb[1] + ma[10] * mb[2] + ma[14] * mb[3];
+            tmp[6] = ma[2] * mb[4] + ma[6] * mb[5] + ma[10] * mb[6] + ma[14] * mb[7];
+            tmp[10] = ma[2] * mb[8] + ma[6] * mb[9] + ma[10] * mb[10] + ma[14] * mb[11];
+            tmp[14] = ma[2] * mb[12] + ma[6] * mb[13] + ma[10] * mb[14] + ma[14] * mb[15];
+            tmp[3] = ma[3] * mb[0] + ma[7] * mb[1] + ma[11] * mb[2] + ma[15] * mb[3];
+            tmp[7] = ma[3] * mb[4] + ma[7] * mb[5] + ma[11] * mb[6] + ma[15] * mb[7];
+            tmp[11] = ma[3] * mb[8] + ma[7] * mb[9] + ma[11] * mb[10] + ma[15] * mb[11];
+            tmp[15] = ma[3] * mb[12] + ma[7] * mb[13] + ma[11] * mb[14] + ma[15] * mb[15];
+            for(var n = 0; n < 16; ++n) {
+                ma[n] = tmp[n];
+            }
+            return this;
+        };
+        Matrix4.prototype.multiplyVector = function (i, o) {
+            var m = this.m;
+            o[0] = i[0] * m[0] + i[1] * m[1] + i[2] * m[2] + i[3] * m[3];
+            o[1] = i[0] * m[4] + i[1] * m[5] + i[2] * m[6] + i[3] * m[7];
+            o[2] = i[0] * m[8] + i[1] * m[9] + i[2] * m[10] + i[3] * m[11];
+            o[3] = i[0] * m[12] + i[1] * m[13] + i[2] * m[14] + i[3] * m[15];
+        };
+        Matrix4.prototype.transpose = function (m) {
+            var ma = this.m;
+            var mb = m.m;
+            var tmp = Matrix4.TMP;
+            tmp[0] = mb[0];
+            tmp[4] = mb[1];
+            tmp[8] = mb[2];
+            tmp[12] = mb[3];
+            tmp[1] = mb[4];
+            tmp[5] = mb[5];
+            tmp[9] = mb[6];
+            tmp[13] = mb[7];
+            tmp[2] = mb[8];
+            tmp[6] = mb[9];
+            tmp[10] = mb[10];
+            tmp[14] = mb[11];
+            tmp[3] = mb[12];
+            tmp[7] = mb[13];
+            tmp[11] = mb[14];
+            tmp[15] = mb[15];
+            for(var n = 0; n < 16; ++n) {
+                ma[n] = tmp[n];
+            }
+            return this;
+        };
+        Matrix4.prototype.identify = function () {
+            var m = this.m;
+            m[0] = 1;
+            m[4] = 0;
+            m[8] = 0;
+            m[12] = 0;
+            m[1] = 0;
+            m[5] = 1;
+            m[9] = 0;
+            m[13] = 0;
+            m[2] = 0;
+            m[6] = 0;
+            m[10] = 1;
+            m[14] = 0;
+            m[3] = 0;
+            m[7] = 0;
+            m[11] = 0;
+            m[15] = 1;
+            return this;
+        };
+        Matrix4.prototype.invert = function () {
+            var tmp = Matrix4.TMP;
+            var m = this.m;
+            var l_det = m[3] * m[6] * m[9] * m[12] - m[2] * m[7] * m[9] * m[12] - m[3] * m[5] * m[10] * m[12] + m[1] * m[7] * m[10] * m[12] + m[2] * m[5] * m[11] * m[12] - m[1] * m[6] * m[11] * m[12] - m[3] * m[6] * m[8] * m[13] + m[2] * m[7] * m[8] * m[13] + m[3] * m[4] * m[10] * m[13] - m[0] * m[7] * m[10] * m[13] - m[2] * m[4] * m[11] * m[13] + m[0] * m[6] * m[11] * m[13] + m[3] * m[5] * m[8] * m[14] - m[1] * m[7] * m[8] * m[14] - m[3] * m[4] * m[9] * m[14] + m[0] * m[7] * m[9] * m[14] + m[1] * m[4] * m[11] * m[14] - m[0] * m[5] * m[11] * m[14] - m[2] * m[5] * m[8] * m[15] + m[1] * m[6] * m[8] * m[15] + m[2] * m[4] * m[9] * m[15] - m[0] * m[6] * m[9] * m[15] - m[1] * m[4] * m[10] * m[15] + m[0] * m[5] * m[10] * m[15];
+            if(l_det == 0) {
+                return false;
+            }
+            var inv_det = 1 / l_det;
+            tmp[0] = m[9] * m[14] * m[7] - m[13] * m[10] * m[7] + m[13] * m[6] * m[11] - m[5] * m[14] * m[11] - m[9] * m[6] * m[15] + m[5] * m[10] * m[15];
+            tmp[4] = m[12] * m[10] * m[7] - m[8] * m[14] * m[7] - m[12] * m[6] * m[11] + m[4] * m[14] * m[11] + m[8] * m[6] * m[15] - m[4] * m[10] * m[15];
+            tmp[8] = m[8] * m[13] * m[7] - m[12] * m[9] * m[7] + m[12] * m[5] * m[11] - m[4] * m[13] * m[11] - m[8] * m[5] * m[15] + m[4] * m[9] * m[15];
+            tmp[12] = m[12] * m[9] * m[6] - m[8] * m[13] * m[6] - m[12] * m[5] * m[10] + m[4] * m[13] * m[10] + m[8] * m[5] * m[14] - m[4] * m[9] * m[14];
+            tmp[1] = m[13] * m[10] * m[3] - m[9] * m[14] * m[3] - m[13] * m[2] * m[11] + m[1] * m[14] * m[11] + m[9] * m[2] * m[15] - m[1] * m[10] * m[15];
+            tmp[5] = m[8] * m[14] * m[3] - m[12] * m[10] * m[3] + m[12] * m[2] * m[11] - m[0] * m[14] * m[11] - m[8] * m[2] * m[15] + m[0] * m[10] * m[15];
+            tmp[9] = m[12] * m[9] * m[3] - m[8] * m[13] * m[3] - m[12] * m[1] * m[11] + m[0] * m[13] * m[11] + m[8] * m[1] * m[15] - m[0] * m[9] * m[15];
+            tmp[13] = m[8] * m[13] * m[2] - m[12] * m[9] * m[2] + m[12] * m[1] * m[10] - m[0] * m[13] * m[10] - m[8] * m[1] * m[14] + m[0] * m[9] * m[14];
+            tmp[2] = m[5] * m[14] * m[3] - m[13] * m[6] * m[3] + m[13] * m[2] * m[7] - m[1] * m[14] * m[7] - m[5] * m[2] * m[15] + m[1] * m[6] * m[15];
+            tmp[6] = m[12] * m[6] * m[3] - m[4] * m[14] * m[3] - m[12] * m[2] * m[7] + m[0] * m[14] * m[7] + m[4] * m[2] * m[15] - m[0] * m[6] * m[15];
+            tmp[10] = m[4] * m[13] * m[3] - m[12] * m[5] * m[3] + m[12] * m[1] * m[7] - m[0] * m[13] * m[7] - m[4] * m[1] * m[15] + m[0] * m[5] * m[15];
+            tmp[14] = m[12] * m[5] * m[2] - m[4] * m[13] * m[2] - m[12] * m[1] * m[6] + m[0] * m[13] * m[6] + m[4] * m[1] * m[14] - m[0] * m[5] * m[14];
+            tmp[3] = m[9] * m[6] * m[3] - m[5] * m[10] * m[3] - m[9] * m[2] * m[7] + m[1] * m[10] * m[7] + m[5] * m[2] * m[11] - m[1] * m[6] * m[11];
+            tmp[7] = m[4] * m[10] * m[3] - m[8] * m[6] * m[3] + m[8] * m[2] * m[7] - m[0] * m[10] * m[7] - m[4] * m[2] * m[11] + m[0] * m[6] * m[11];
+            tmp[11] = m[8] * m[5] * m[3] - m[4] * m[9] * m[3] - m[8] * m[1] * m[7] + m[0] * m[9] * m[7] + m[4] * m[1] * m[11] - m[0] * m[5] * m[11];
+            tmp[15] = m[4] * m[9] * m[2] - m[8] * m[5] * m[2] + m[8] * m[1] * m[6] - m[0] * m[9] * m[6] - m[4] * m[1] * m[10] + m[0] * m[5] * m[10];
+            m[0] = tmp[0] * inv_det;
+            m[4] = tmp[4] * inv_det;
+            m[8] = tmp[8] * inv_det;
+            m[12] = tmp[12] * inv_det;
+            m[1] = tmp[1] * inv_det;
+            m[5] = tmp[5] * inv_det;
+            m[9] = tmp[9] * inv_det;
+            m[13] = tmp[13] * inv_det;
+            m[2] = tmp[2] * inv_det;
+            m[6] = tmp[6] * inv_det;
+            m[10] = tmp[10] * inv_det;
+            m[14] = tmp[14] * inv_det;
+            m[3] = tmp[3] * inv_det;
+            m[7] = tmp[7] * inv_det;
+            m[11] = tmp[11] * inv_det;
+            m[15] = tmp[15] * inv_det;
+            return true;
+        };
+        Matrix4.prototype.determinant = function () {
+            var m = this.m;
+            return m[3] * m[6] * m[9] * m[12] - m[2] * m[7] * m[9] * m[12] - m[3] * m[5] * m[10] * m[12] + m[1] * m[7] * m[10] * m[12] + m[2] * m[5] * m[11] * m[12] - m[1] * m[6] * m[11] * m[12] - m[3] * m[6] * m[8] * m[13] + m[2] * m[7] * m[8] * m[13] + m[3] * m[4] * m[10] * m[13] - m[0] * m[7] * m[10] * m[13] - m[2] * m[4] * m[11] * m[13] + m[0] * m[6] * m[11] * m[13] + m[3] * m[5] * m[8] * m[14] - m[1] * m[7] * m[8] * m[14] - m[3] * m[4] * m[9] * m[14] + m[0] * m[7] * m[9] * m[14] + m[1] * m[4] * m[11] * m[14] - m[0] * m[5] * m[11] * m[14] - m[2] * m[5] * m[8] * m[15] + m[1] * m[6] * m[8] * m[15] + m[2] * m[4] * m[9] * m[15] - m[0] * m[6] * m[9] * m[15] - m[1] * m[4] * m[10] * m[15] + m[0] * m[5] * m[10] * m[15];
+        };
+        Matrix4.prototype.projection = function (near, far, fov, aspect) {
+            var m = this.m;
+            this.identify();
+            var fd = 1 / Math.tan((fov * (Math.PI / 180)) / 2);
+            var a1 = (far + near) / (near - far);
+            var a2 = (2 * far * near) / (near - far);
+            m[0] = fd / aspect;
+            m[1] = 0;
+            m[2] = 0;
+            m[3] = 0;
+            m[4] = 0;
+            m[5] = fd;
+            m[6] = 0;
+            m[7] = 0;
+            m[8] = 0;
+            m[9] = 0;
+            m[10] = a1;
+            m[11] = -1;
+            m[12] = 0;
+            m[13] = 0;
+            m[14] = a2;
+            m[15] = 0;
+            return this;
+        };
+        Matrix4.prototype.viewport = function (width, height) {
+            var m = this.m;
+            this.identify();
+            m[0] = width / 2;
+            m[5] = -height / 2;
+            m[12] = width / 2;
+            m[13] = height / 2;
+            return this;
+        };
+        Matrix4.prototype.ortho = function (left, right, bottom, top, near, far) {
+            var m = this.m;
+            this.identify();
+            var x_orth = 2 / (right - left);
+            var y_orth = 2 / (top - bottom);
+            var z_orth = -2 / (far - near);
+            var tx = -(right + left) / (right - left);
+            var ty = -(top + bottom) / (top - bottom);
+            var tz = -(far + near) / (far - near);
+            m[0] = x_orth;
+            m[1] = 0;
+            m[2] = 0;
+            m[3] = 0;
+            m[4] = 0;
+            m[5] = y_orth;
+            m[6] = 0;
+            m[7] = 0;
+            m[8] = 0;
+            m[9] = 0;
+            m[10] = z_orth;
+            m[11] = 0;
+            m[12] = tx;
+            m[13] = ty;
+            m[14] = tz;
+            m[15] = 1;
+        };
+        Matrix4.prototype.scale = function (x, y, z) {
+            var m = this.m;
+            m[0] *= x;
+            m[5] *= y;
+            m[10] *= z;
+            return this;
+        };
+        return Matrix4;
+    })();    
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
@@ -797,6 +1086,48 @@ var volksoper;
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
+    var SceneDock = (function (_super) {
+        __extends(SceneDock, _super);
+        function SceneDock(_parentDock) {
+                _super.call(this);
+            this._parentDock = _parentDock;
+            this._id = 0;
+        }
+        SceneDock.prototype._generateName = function () {
+            if(this._parentDock) {
+                return this._parentDock._generateName();
+            } else {
+                return "volksoper-" + (++this._id).toString();
+            }
+        };
+        SceneDock.prototype.find = function (name) {
+            return null;
+        };
+        SceneDock.prototype.createFont = function (size, bold, italic, face) {
+            return null;
+        };
+        SceneDock.prototype.createLabel = function (width, height, name) {
+            return null;
+        };
+        SceneDock.prototype.createSurface = function (width, height, name) {
+            return null;
+        };
+        SceneDock.prototype.load = function () {
+            var files = [];
+            for (var _i = 0; _i < (arguments.length - 0); _i++) {
+                files[_i] = arguments[_i + 0];
+            }
+            return null;
+        };
+        SceneDock.prototype.clone = function (surface) {
+            return null;
+        };
+        return SceneDock;
+    })(volksoper.Actor);
+    volksoper.SceneDock = SceneDock;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
     var Sprite = (function (_super) {
         __extends(Sprite, _super);
         function Sprite() {
@@ -877,4 +1208,24 @@ var volksoper;
         return Stage;
     })(volksoper.DisplayObject);
     volksoper.Stage = Stage;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var TouchEvent = (function (_super) {
+        __extends(TouchEvent, _super);
+        function TouchEvent(type) {
+                _super.call(this, type);
+        }
+        Object.defineProperty(TouchEvent.prototype, "currentActor", {
+            get: function () {
+                return this._currentTarget;
+            },
+            set: function (actor) {
+                this._currentTarget = actor;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return TouchEvent;
+    })(volksoper.Event);    
 })(volksoper || (volksoper = {}));

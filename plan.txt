@@ -11,17 +11,20 @@
 ・Stage extends Actor
 ・Surface
 ・Label extends Surface
+・SceneDock
 
 **ここまで**
 
-・SceneDock
 ・TouchEvent
 ・KeyEvent
+・SoundSystem
+・LiteSprite
 ・Canvas:Sprite
 ・Canvas:Surface
 ・HTML5:Stage
 ・WebGL:Sprite
 ・WebGL:Surface
+
 
 ・ハイレベルライブラリ群
 
