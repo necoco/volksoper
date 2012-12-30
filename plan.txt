@@ -1,13 +1,32 @@
 必要な機能
 
-SceneGraph
-シーングラフの構築
 
-EventFlow
-ちゃんとしたイベントフロー
 
-Scene
-Sceneの管理
 
-非同期システム
-Futureベースのシステム、Scenario
+・Actor階層構造
+・Actorイベントフロー
+・Sceneレジストリ
+・StoryBoardによる非同期処理
+
+**ここまで**
+
+・Sprite extends Actor
+・Surface
+・Label extends Surface
+・Stage extends Actor
+・SceneDock
+・TouchEvent
+・KeyEvent
+・Canvas:Sprite
+・Canvas:Surface
+・HTML5:Stage
+・WebGL:Sprite
+・WebGL:Surface
+
+・ハイレベルライブラリ群
+
+・レイアウトシステム
+・HUDシステム
+・モーフィング
+・マップチップ
+・キーフレームアニメーション

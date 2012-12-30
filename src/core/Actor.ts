@@ -164,18 +164,23 @@ module volksoper{
             return result;
         }
 
-        broadcastEvent(event: volksoper.Event): bool{
+        broadcastEvent(event: volksoper.Event, target?: volksoper.Actor): bool{
+            return this._broadcastEvent(event, (target)? target: this);
+        }
+
+        private _broadcastEvent(event: volksoper.Event, target: Actor): bool{
             var result: bool = false;
 
-            result = this._handleEvent(event, null, false) || result;
+            result = this._handleEvent(event, target, false) || result;
 
             if(this._children){
                 for(var n: number = 0; n < this._children.length; ++n){
-                    result = (<Actor>this._children[n]).broadcastEvent(event) || result;
+                    result = (<Actor>this._children[n])._broadcastEvent(event, target) || result;
                 }
             }
 
             return result;
+
         }
 
         private _handleEvent(event: volksoper.Event, target: Actor, capture: bool): bool{

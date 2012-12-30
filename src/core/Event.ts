@@ -3,6 +3,12 @@ module volksoper{
         static ADDED: string = "added";
         static REMOVE: string = "remove";
 
+        static ADDED_TO_SCENE: string = "addedToScene";
+        static REMOVE_FROM_SCENE: string = "removeFromScene";
+
+        static ADDED_TO_STAGE: string = "addedToStage";
+        static REMOVE_FROM_STAGE: string = "removeFromScene";
+
         currentTarget: Actor;
         target: Actor;
 

@@ -1,4 +1,4 @@
-/*! Volksoper - v0.1.0 - 2012-12-29
+/*! Volksoper - v0.1.0 - 2012-12-30
 * http://PROJECT_WEBSITE/
 * Copyright (c) 2012 tshinsay; Licensed MIT */
 
@@ -12,6 +12,10 @@ var volksoper;
         }
         Event.ADDED = "added";
         Event.REMOVE = "remove";
+        Event.ADDED_TO_SCENE = "addedToScene";
+        Event.REMOVE_FROM_SCENE = "removeFromScene";
+        Event.ADDED_TO_STAGE = "addedToStage";
+        Event.REMOVE_FROM_STAGE = "removeFromScene";
         Object.defineProperty(Event.prototype, "type", {
             get: function () {
                 return this._type;
@@ -191,12 +195,15 @@ var volksoper;
             }
             return result;
         };
-        Actor.prototype.broadcastEvent = function (event) {
+        Actor.prototype.broadcastEvent = function (event, target) {
+            return this._broadcastEvent(event, (target) ? target : this);
+        };
+        Actor.prototype._broadcastEvent = function (event, target) {
             var result = false;
-            result = this._handleEvent(event, null, false) || result;
+            result = this._handleEvent(event, target, false) || result;
             if(this._children) {
                 for(var n = 0; n < this._children.length; ++n) {
-                    result = (this._children[n]).broadcastEvent(event) || result;
+                    result = (this._children[n])._broadcastEvent(event, target) || result;
                 }
             }
             return result;
@@ -276,11 +283,11 @@ var volksoper;
             var self = this;
             var addedListener = function (e) {
                 self._registerTarget(e.target);
-                e.target.removeEventListener(volksoper.Event.ADDED, addedListener);
+                e.target.broadcastEvent(new volksoper.Event(volksoper.Event.ADDED_TO_SCENE), self);
             };
             var removeListener = function (e) {
+                e.target.broadcastEvent(new volksoper.Event(volksoper.Event.REMOVE_FROM_SCENE), self);
                 self._unregisterTarget(e.target);
-                e.target.removeEventListener(volksoper.Event.REMOVE, removeListener);
             };
             this.addEventListener(volksoper.Event.ADDED, addedListener, true, volksoper.SYSTEM_PRIORITY);
             this.addEventListener(volksoper.Event.REMOVE, removeListener, true, volksoper.SYSTEM_PRIORITY);
@@ -344,6 +351,75 @@ var volksoper;
         return Scene;
     })(volksoper.Actor);
     volksoper.Scene = Scene;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var Sprite = (function (_super) {
+        __extends(Sprite, _super);
+        function Sprite() {
+                _super.call(this);
+            this.alpha = 1;
+            this.x = 0;
+            this.y = 0;
+            this.width = 0;
+            this.height = 0;
+            this.rotation = 0;
+            this.rotationX = 0;
+            this.rotationY = 0;
+            this.scaleX = 1;
+            this.scaleY = 1;
+            this.visible = true;
+            var self = this;
+            this.addEventListener(volksoper.Event.ADDED_TO_SCENE, function (e) {
+                self._scene = e.target;
+            }, false, volksoper.SYSTEM_PRIORITY);
+            this.addEventListener(volksoper.Event.REMOVE_FROM_SCENE, function (e) {
+                self._scene = null;
+            });
+            this.addEventListener(volksoper.Event.ADDED_TO_STAGE, function (e) {
+                self._stage = e.target;
+            }, false, volksoper.SYSTEM_PRIORITY);
+            this.addEventListener(volksoper.Event.REMOVE_FROM_STAGE, function (e) {
+                self._stage = null;
+            });
+        }
+        Object.defineProperty(Sprite.prototype, "scene", {
+            get: function () {
+                return this._scene;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Sprite.prototype, "stage", {
+            get: function () {
+                return this._stage;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return Sprite;
+    })(volksoper.Actor);
+    volksoper.Sprite = Sprite;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var Stage = (function (_super) {
+        __extends(Stage, _super);
+        function Stage() {
+                _super.call(this);
+            var self = this;
+            var addedListener = function (e) {
+                e.target.broadcastEvent(new volksoper.Event(volksoper.Event.ADDED_TO_STAGE), self);
+            };
+            var removeListener = function (e) {
+                e.target.broadcastEvent(new volksoper.Event(volksoper.Event.REMOVE_FROM_STAGE), self);
+            };
+            this.addEventListener(volksoper.Event.ADDED, addedListener, true, volksoper.SYSTEM_PRIORITY);
+            this.addEventListener(volksoper.Event.REMOVE, removeListener, true, volksoper.SYSTEM_PRIORITY);
+        }
+        return Stage;
+    })(volksoper.Sprite);
+    volksoper.Stage = Stage;    
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {

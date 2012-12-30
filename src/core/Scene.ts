@@ -15,12 +15,12 @@ module volksoper{
 
             var addedListener = (e: volksoper.Event)=>{
                 self._registerTarget(e.target);
-                e.target.removeEventListener(volksoper.Event.ADDED, addedListener);
+                e.target.broadcastEvent(new volksoper.Event(volksoper.Event.ADDED_TO_SCENE), self);
             };
 
             var removeListener = (e: volksoper.Event)=>{
+                e.target.broadcastEvent(new volksoper.Event(volksoper.Event.REMOVE_FROM_SCENE), self);
                 self._unregisterTarget(e.target);
-                e.target.removeEventListener(volksoper.Event.REMOVE, removeListener);
             };
 
             this.addEventListener(volksoper.Event.ADDED, addedListener, true, volksoper.SYSTEM_PRIORITY);
