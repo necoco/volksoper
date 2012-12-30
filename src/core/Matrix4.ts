@@ -1,6 +1,6 @@
 
 module volksoper{
-    class Matrix4{
+    export class Matrix4{
         static IDENT: number[] = [
                 1, 0, 0, 0,
                 0, 1, 0, 0,
@@ -15,12 +15,16 @@ module volksoper{
             0, 0, 0, 1
         ];
 
+        static TMP_MAT: Matrix4 = new Matrix4();
+
         m: number[] = [
                 1, 0, 0, 0,
                 0, 1, 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1
         ];
+
+
 
         constructor(m?: Matrix4){
             if(m){
@@ -45,6 +49,33 @@ module volksoper{
             m[14] += z;
 
             return this;
+        }
+
+        rotate(x: number, y: number, z: number): Matrix4{
+            var m = Matrix4.TMP_MAT.m;
+            Matrix4.TMP_MAT.identify();
+
+            var cx = Math.cos(x);
+            var cy = Math.cos(y);
+            var cz = Math.cos(z);
+
+            var sx = Math.sin(x);
+            var sy = Math.sin(y);
+            var sz = Math.sin(z);
+
+            m[0] = cy*cz;
+            m[1] = sx*sy*cz - cx*sz;
+            m[2] = cx*sy*cz + sx*sz;
+
+            m[4] = cy*sz;
+            m[5] = sx*sy*sz + cx*cz;
+            m[6] = cx*sy*sz - sx*cz;
+
+            m[8] = -sy;
+            m[9] = sx*cy;
+            m[10] = cx*cz;
+
+            return this.multiply(Matrix4.TMP_MAT);
         }
 
         multiply (m: Matrix4): Matrix4{
