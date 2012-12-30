@@ -1369,10 +1369,11 @@ var volksoper;
 (function (volksoper) {
     var TouchEvent = (function (_super) {
         __extends(TouchEvent, _super);
-        function TouchEvent(type, _x, _y) {
+        function TouchEvent(type, _x, _y, _id) {
                 _super.call(this, type);
             this._x = _x;
             this._y = _y;
+            this._id = _id;
             this._localX = 0;
             this._localY = 0;
         }
@@ -1413,6 +1414,13 @@ var volksoper;
         Object.defineProperty(TouchEvent.prototype, "localY", {
             get: function () {
                 return this._localY;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(TouchEvent.prototype, "id", {
+            get: function () {
+                return this._id;
             },
             enumerable: true,
             configurable: true

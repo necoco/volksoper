@@ -24,6 +24,10 @@ module volksoper{
             return this._localY;
         }
 
+        get id(){
+            return this._id;
+        }
+
         private _currentTarget: volksoper.Actor;
         get currentTarget(): volksoper.Actor{
             return this._currentTarget;
@@ -51,7 +55,7 @@ module volksoper{
             }
         }
 
-        constructor(type: string, private _x: number, private _y: number){
+        constructor(type: string, private _x: number, private _y: number, private _id: number){
             super(type);
         }
     }
