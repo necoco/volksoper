@@ -15,6 +15,8 @@ module volksoper{
         private _toRemove: Actor[];
         private _forEach: number = 0;
 
+        public name: String;
+
         constructor(){
         }
 

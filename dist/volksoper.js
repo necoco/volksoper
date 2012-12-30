@@ -303,6 +303,95 @@ var volksoper;
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
+    var Surface = (function () {
+        function Surface() {
+            this._referenceCount = 0;
+        }
+        Surface.prototype.invalidate = function () {
+        };
+        Surface.prototype.addRef = function () {
+            return ++this._referenceCount;
+        };
+        Surface.prototype.release = function () {
+            return --this._referenceCount;
+        };
+        Surface.prototype.count = function () {
+            return this._referenceCount;
+        };
+        return Surface;
+    })();
+    volksoper.Surface = Surface;    
+})(volksoper || (volksoper = {}));
+var __extends = this.__extends || function (d, b) {
+    function __() { this.constructor = d; }
+    __.prototype = b.prototype;
+    d.prototype = new __();
+};
+var volksoper;
+(function (volksoper) {
+    var Label = (function (_super) {
+        __extends(Label, _super);
+        function Label(width, height) {
+                _super.call(this);
+            this.width = width;
+            this.height = height;
+            this.mutable = false;
+            this.align = 0;
+            this.lineGap = 0;
+            this.textColor = 0;
+        }
+        Object.defineProperty(Label.prototype, "text", {
+            get: function () {
+                return this._text;
+            },
+            set: function (text) {
+                this._text = text;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Label.prototype, "textWidth", {
+            get: function () {
+                return 0;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Label.prototype, "textHeight", {
+            get: function () {
+                return 0;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return Label;
+    })(volksoper.Surface);
+    volksoper.Label = Label;    
+    var Font = (function () {
+        function Font(size, bold, italic, face) {
+            this.size = size;
+            this.bold = bold;
+            this.italic = italic;
+            this.face = face;
+        }
+        return Font;
+    })();
+    volksoper.Font = Font;    
+    (function (VerticalAlign) {
+        var CENTER = 1;
+        var LEFT = 2;
+        var RIGHT = 4;
+    })(volksoper.VerticalAlign || (volksoper.VerticalAlign = {}));
+    var VerticalAlign = volksoper.VerticalAlign;
+    (function (HorizontalAlign) {
+        var CENTER = 16;
+        var TOP = 32;
+        var BOTTOM = 64;
+    })(volksoper.HorizontalAlign || (volksoper.HorizontalAlign = {}));
+    var HorizontalAlign = volksoper.HorizontalAlign;
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
     function CompositeScenario(callback) {
         var scenarios = [];
         return function (timer, scenario) {
@@ -590,11 +679,6 @@ var volksoper;
     })();
     volksoper.StoryBoard = StoryBoard;    
 })(volksoper || (volksoper = {}));
-var __extends = this.__extends || function (d, b) {
-    function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
-};
 var volksoper;
 (function (volksoper) {
     var Scene = (function (_super) {
@@ -781,25 +865,4 @@ var volksoper;
         return Stage;
     })(volksoper.Sprite);
     volksoper.Stage = Stage;    
-})(volksoper || (volksoper = {}));
-var volksoper;
-(function (volksoper) {
-    var Surface = (function () {
-        function Surface() {
-            this._referenceCount = 0;
-        }
-        Surface.prototype.invalidate = function () {
-        };
-        Surface.prototype.addRef = function () {
-            return ++this._referenceCount;
-        };
-        Surface.prototype.release = function () {
-            return --this._referenceCount;
-        };
-        Surface.prototype.count = function () {
-            return this._referenceCount;
-        };
-        return Surface;
-    })();
-    volksoper.Surface = Surface;    
 })(volksoper || (volksoper = {}));
