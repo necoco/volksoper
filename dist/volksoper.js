@@ -57,6 +57,13 @@ var volksoper;
         }
         Actor._handlerNameTable = {
         };
+        Object.defineProperty(Actor.prototype, "parent", {
+            get: function () {
+                return this._parent;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Actor.prototype.addChild = function (child) {
             this._children = this._children || [];
             child._parent = this;
@@ -291,150 +298,6 @@ var volksoper;
     })();
     volksoper.Actor = Actor;    
 })(volksoper || (volksoper = {}));
-var __extends = this.__extends || function (d, b) {
-    function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
-};
-var volksoper;
-(function (volksoper) {
-    var DisplayObject = (function (_super) {
-        __extends(DisplayObject, _super);
-        function DisplayObject() {
-            _super.apply(this, arguments);
-
-            this.alpha = 1;
-            this.x = 0;
-            this.y = 0;
-            this.z = 0;
-            this.width = 0;
-            this.height = 0;
-            this.rotation = 0;
-            this.rotationX = 0;
-            this.rotationY = 0;
-            this.scaleX = 1;
-            this.scaleY = 1;
-            this.visible = true;
-        }
-        return DisplayObject;
-    })(volksoper.Actor);
-    volksoper.DisplayObject = DisplayObject;    
-})(volksoper || (volksoper = {}));
-var volksoper;
-(function (volksoper) {
-    (function (Easing) {
-        function LINEAR(t) {
-            return t;
-        }
-        Easing.LINEAR = LINEAR;
-    })(volksoper.Easing || (volksoper.Easing = {}));
-    var Easing = volksoper.Easing;
-})(volksoper || (volksoper = {}));
-var volksoper;
-(function (volksoper) {
-    var Surface = (function () {
-        function Surface(_name, _width, _height) {
-            this._name = _name;
-            this._width = _width;
-            this._height = _height;
-            this._referenceCount = 0;
-        }
-        Surface.prototype.invalidate = function () {
-        };
-        Surface.prototype.addRef = function () {
-            return ++this._referenceCount;
-        };
-        Surface.prototype.release = function () {
-            return --this._referenceCount;
-        };
-        Surface.prototype.count = function () {
-            return this._referenceCount;
-        };
-        Object.defineProperty(Surface.prototype, "name", {
-            get: function () {
-                return this._name;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Surface.prototype, "width", {
-            get: function () {
-                return this._width;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Surface.prototype, "height", {
-            get: function () {
-                return this._height;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        return Surface;
-    })();
-    volksoper.Surface = Surface;    
-})(volksoper || (volksoper = {}));
-var volksoper;
-(function (volksoper) {
-    var Label = (function (_super) {
-        __extends(Label, _super);
-        function Label(name, width, height) {
-                _super.call(this, name, width, height);
-            this.align = 0;
-            this.lineGap = 0;
-            this.textColor = 0;
-        }
-        Object.defineProperty(Label.prototype, "text", {
-            get: function () {
-                return this._text;
-            },
-            set: function (text) {
-                this._text = text;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Label.prototype, "textWidth", {
-            get: function () {
-                return 0;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Label.prototype, "textHeight", {
-            get: function () {
-                return 0;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        return Label;
-    })(volksoper.Surface);
-    volksoper.Label = Label;    
-    var Font = (function () {
-        function Font(size, bold, italic, face) {
-            this.size = size;
-            this.bold = bold;
-            this.italic = italic;
-            this.face = face;
-        }
-        return Font;
-    })();
-    volksoper.Font = Font;    
-    (function (VerticalAlign) {
-        var CENTER = 1;
-        var LEFT = 2;
-        var RIGHT = 4;
-    })(volksoper.VerticalAlign || (volksoper.VerticalAlign = {}));
-    var VerticalAlign = volksoper.VerticalAlign;
-    (function (HorizontalAlign) {
-        var CENTER = 16;
-        var TOP = 32;
-        var BOTTOM = 64;
-    })(volksoper.HorizontalAlign || (volksoper.HorizontalAlign = {}));
-    var HorizontalAlign = volksoper.HorizontalAlign;
-})(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
     var Matrix4 = (function () {
@@ -497,6 +360,7 @@ var volksoper;
             0, 
             1
         ];
+        Matrix4.TMP_MAT = new Matrix4();
         Matrix4.prototype.setValue = function (m) {
             var s = this.m;
             var d = m.m;
@@ -510,6 +374,26 @@ var volksoper;
             m[13] += y;
             m[14] += z;
             return this;
+        };
+        Matrix4.prototype.rotate = function (x, y, z) {
+            var m = Matrix4.TMP_MAT.m;
+            Matrix4.TMP_MAT.identify();
+            var cx = Math.cos(x);
+            var cy = Math.cos(y);
+            var cz = Math.cos(z);
+            var sx = Math.sin(x);
+            var sy = Math.sin(y);
+            var sz = Math.sin(z);
+            m[0] = cy * cz;
+            m[1] = sx * sy * cz - cx * sz;
+            m[2] = cx * sy * cz + sx * sz;
+            m[4] = cy * sz;
+            m[5] = sx * sy * sz + cx * cz;
+            m[6] = cx * sy * sz - sx * cz;
+            m[8] = -sy;
+            m[9] = sx * cy;
+            m[10] = cx * cz;
+            return this.multiply(Matrix4.TMP_MAT);
         };
         Matrix4.prototype.multiply = function (m) {
             var ma = this.m;
@@ -701,7 +585,279 @@ var volksoper;
             return this;
         };
         return Matrix4;
-    })();    
+    })();
+    volksoper.Matrix4 = Matrix4;    
+})(volksoper || (volksoper = {}));
+var __extends = this.__extends || function (d, b) {
+    function __() { this.constructor = d; }
+    __.prototype = b.prototype;
+    d.prototype = new __();
+};
+var volksoper;
+(function (volksoper) {
+    var DisplayObject = (function (_super) {
+        __extends(DisplayObject, _super);
+        function DisplayObject() {
+            _super.apply(this, arguments);
+
+            this._dirty = true;
+            this._localMatrix = new volksoper.Matrix4();
+            this.alpha = 1;
+            this.width = 0;
+            this.height = 0;
+            this.visible = true;
+        }
+        Object.defineProperty(DisplayObject.prototype, "localMatrix", {
+            get: function () {
+                var m = this._localMatrix;
+                if(this._dirty) {
+                    this._dirty = false;
+                    var px = this.pivotX || 0;
+                    var py = this.pivotY || 0;
+                    m.identify().translate(px + this.x, py + this.y, 0).rotate(this.rotationX, this.rotationY, this.rotation).scale(this.scaleX, this.scaleY, 1).translate(-px, -py, 0);
+                }
+                return m;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        DisplayObject.prototype.getWorldMatrix = function (m) {
+            var current = this;
+            do {
+                if(current.getWorldMatrix) {
+                    current.getWorldMatrix(m);
+                }
+            }while(current = current.parent)
+            m.multiply(this.localMatrix);
+        };
+        Object.defineProperty(DisplayObject.prototype, "x", {
+            get: function () {
+                return this._x;
+            },
+            set: function (value) {
+                this._x = value;
+                this._dirty = true;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(DisplayObject.prototype, "y", {
+            get: function () {
+                return this._y;
+            },
+            set: function (value) {
+                this._y = value;
+                this._dirty = true;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(DisplayObject.prototype, "z", {
+            get: function () {
+                return this._z;
+            },
+            set: function (value) {
+                this._z = value;
+                this._dirty = true;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(DisplayObject.prototype, "pivotX", {
+            get: function () {
+                return this._pivotX;
+            },
+            set: function (value) {
+                this._pivotX = value;
+                this._dirty = true;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(DisplayObject.prototype, "pivotY", {
+            get: function () {
+                return this._pivotY;
+            },
+            set: function (value) {
+                this._pivotY = value;
+                this._dirty = true;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(DisplayObject.prototype, "rotation", {
+            get: function () {
+                return this._rotation;
+            },
+            set: function (value) {
+                this._rotation = value;
+                this._dirty = true;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(DisplayObject.prototype, "rotationX", {
+            get: function () {
+                return this._rotationX;
+            },
+            set: function (value) {
+                this._rotationX = value;
+                this._dirty = true;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(DisplayObject.prototype, "rotationY", {
+            get: function () {
+                return this._rotationY;
+            },
+            set: function (value) {
+                this._rotationY = value;
+                this._dirty = true;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(DisplayObject.prototype, "scaleX", {
+            get: function () {
+                return this._scaleX;
+            },
+            set: function (value) {
+                this._scaleX = value;
+                this._dirty = true;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(DisplayObject.prototype, "scaleY", {
+            get: function () {
+                return this._scaleY;
+            },
+            set: function (value) {
+                this._scaleY = value;
+                this._dirty = true;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return DisplayObject;
+    })(volksoper.Actor);
+    volksoper.DisplayObject = DisplayObject;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    (function (Easing) {
+        function LINEAR(t) {
+            return t;
+        }
+        Easing.LINEAR = LINEAR;
+    })(volksoper.Easing || (volksoper.Easing = {}));
+    var Easing = volksoper.Easing;
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var Surface = (function () {
+        function Surface(_name, _width, _height) {
+            this._name = _name;
+            this._width = _width;
+            this._height = _height;
+            this._referenceCount = 0;
+        }
+        Surface.prototype.invalidate = function () {
+        };
+        Surface.prototype.addRef = function () {
+            return ++this._referenceCount;
+        };
+        Surface.prototype.release = function () {
+            return --this._referenceCount;
+        };
+        Surface.prototype.count = function () {
+            return this._referenceCount;
+        };
+        Object.defineProperty(Surface.prototype, "name", {
+            get: function () {
+                return this._name;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Surface.prototype, "width", {
+            get: function () {
+                return this._width;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Surface.prototype, "height", {
+            get: function () {
+                return this._height;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return Surface;
+    })();
+    volksoper.Surface = Surface;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var Label = (function (_super) {
+        __extends(Label, _super);
+        function Label(name, width, height) {
+                _super.call(this, name, width, height);
+            this.align = 0;
+            this.lineGap = 0;
+            this.textColor = 0;
+        }
+        Object.defineProperty(Label.prototype, "text", {
+            get: function () {
+                return this._text;
+            },
+            set: function (text) {
+                this._text = text;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Label.prototype, "textWidth", {
+            get: function () {
+                return 0;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Label.prototype, "textHeight", {
+            get: function () {
+                return 0;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return Label;
+    })(volksoper.Surface);
+    volksoper.Label = Label;    
+    var Font = (function () {
+        function Font(size, bold, italic, face) {
+            this.size = size;
+            this.bold = bold;
+            this.italic = italic;
+            this.face = face;
+        }
+        return Font;
+    })();
+    volksoper.Font = Font;    
+    (function (VerticalAlign) {
+        var CENTER = 1;
+        var LEFT = 2;
+        var RIGHT = 4;
+    })(volksoper.VerticalAlign || (volksoper.VerticalAlign = {}));
+    var VerticalAlign = volksoper.VerticalAlign;
+    (function (HorizontalAlign) {
+        var CENTER = 16;
+        var TOP = 32;
+        var BOTTOM = 64;
+    })(volksoper.HorizontalAlign || (volksoper.HorizontalAlign = {}));
+    var HorizontalAlign = volksoper.HorizontalAlign;
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
@@ -1213,19 +1369,79 @@ var volksoper;
 (function (volksoper) {
     var TouchEvent = (function (_super) {
         __extends(TouchEvent, _super);
-        function TouchEvent(type) {
+        function TouchEvent(type, _x, _y) {
                 _super.call(this, type);
+            this._x = _x;
+            this._y = _y;
+            this._localX = 0;
+            this._localY = 0;
         }
-        Object.defineProperty(TouchEvent.prototype, "currentActor", {
+        TouchEvent.TMP_MAT = new volksoper.Matrix4();
+        TouchEvent.TMP_IN = [
+            0, 
+            0, 
+            0, 
+            1
+        ];
+        TouchEvent.TMP_OUT = [
+            0, 
+            0, 
+            0, 
+            1
+        ];
+        Object.defineProperty(TouchEvent.prototype, "x", {
+            get: function () {
+                return this._x;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(TouchEvent.prototype, "y", {
+            get: function () {
+                return this._y;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(TouchEvent.prototype, "localX", {
+            get: function () {
+                return this._localX;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(TouchEvent.prototype, "localY", {
+            get: function () {
+                return this._localY;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(TouchEvent.prototype, "currentTarget", {
             get: function () {
                 return this._currentTarget;
             },
             set: function (actor) {
                 this._currentTarget = actor;
+                var i = TouchEvent.TMP_IN;
+                var o = TouchEvent.TMP_OUT;
+                var m = TouchEvent.TMP_MAT;
+                if(actor instanceof volksoper.DisplayObject) {
+                    (actor).getWorldMatrix(m);
+                    i[0] = this._x;
+                    i[1] = this._y;
+                    m.multiplyVector(i, o);
+                    this._localX = o[0];
+                    this._localY = o[1];
+                } else {
+                    this._localX = null;
+                    this._localY = null;
+                }
             },
             enumerable: true,
             configurable: true
         });
         return TouchEvent;
-    })(volksoper.Event);    
+    })(volksoper.Event);
+    volksoper.TouchEvent = TouchEvent;    
 })(volksoper || (volksoper = {}));

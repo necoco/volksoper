@@ -9,6 +9,10 @@ module volksoper{
         private static _handlerNameTable: Object = {};
 
         private _parent: Actor;
+        get parent(): Actor{
+            return this._parent;
+        }
+
         private _children: Array;
         private _captureHandlers: Object;
         private _bubbleHandlers: Object;

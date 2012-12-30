@@ -28,6 +28,18 @@ module volksoper{
             return m;
         }
 
+        getWorldMatrix(m: Matrix4): void{
+            var current:any = this;
+
+            do{
+                if(current.getWorldMatrix){
+                    current.getWorldMatrix(m);
+                }
+            }while(current = current.parent);
+
+            m.multiply(this.localMatrix);
+        }
+
         alpha: number = 1;
         
         private _x: number;
