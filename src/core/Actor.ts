@@ -3,7 +3,7 @@
 
 module volksoper{
 
-    export var SYSTEM_PRIORITY: number = -100000000;
+    export var SYSTEM_PRIORITY: number = 100000000;
 
     export class Actor{
         private static _handlerNameTable: Object = {};

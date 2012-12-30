@@ -9,7 +9,6 @@ var volksoper;
             this._type = _type;
             this._propagates = true;
             this._stopImmediate = false;
-            this._callDefault = true;
         }
         Event.ADDED = "added";
         Event.REMOVE = "remove";
@@ -44,9 +43,6 @@ var volksoper;
         Event.prototype.stopPropagationImmediate = function () {
             this._propagates = false;
             this._stopImmediate = true;
-        };
-        Event.prototype.preventDefault = function () {
-            this._callDefault = false;
         };
         return Event;
     })();
@@ -232,16 +228,13 @@ var volksoper;
             }
             for(var index in handlers) {
                 var handler = handlers[index].handler;
-                if(handlers[index].priority !== volksoper.SYSTEM_PRIORITY || event._callDefault) {
-                    event.currentTarget = this;
-                    event.target = target;
-                    handler(event);
-                    if(event.stopImmediate) {
-                        break;
-                    }
+                event.currentTarget = this;
+                event.target = target;
+                handler(event);
+                if(event.stopImmediate) {
+                    break;
                 }
             }
-            event._callDefault = true;
             return true;
         };
         Actor.prototype._callHandler = function (event) {
