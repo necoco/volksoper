@@ -1,12 +1,10 @@
 
 ///<reference path="Event.ts"/>
 ///<reference path="Actor.ts"/>
+///<reference path="DisplayObject.ts"/>
 
 module volksoper{
     export class TouchEvent extends volksoper.Event{
-        private static TMP_MAT: Matrix4 = new Matrix4();
-        private static TMP_IN: number[] = [0,0,0,1];
-        private static TMP_OUT: number[] = [0,0,0,1];
 
         get x(){
             return this._x;
@@ -15,17 +13,25 @@ module volksoper{
             return this._y;
         }
 
-        private _localX = 0;
+        private _localPosition: any;
         get localX(){
-            return this._localX;
+            return (this._localPosition)? this._localPosition.x: this._getLocal().x;
         }
-        private _localY = 0;
         get localY(){
-            return this._localY;
+            return (this._localPosition)? this._localPosition.y: this._getLocal().y;
         }
 
         get id(){
             return this._id;
+        }
+
+        private _getLocal(): any{
+            if(this._currentTarget instanceof DisplayObject){
+                this._localPosition = (<DisplayObject>this._currentTarget).globalToLocal(this._x, this._y);
+            }else{
+                this._localPosition = {x: this._x, y: this._y};
+            }
+            return this._localPosition;
         }
 
         private _currentTarget: volksoper.Actor;
@@ -34,25 +40,7 @@ module volksoper{
         }
         set currentTarget(actor: volksoper.Actor){
             this._currentTarget = actor;
-
-            var i = TouchEvent.TMP_IN;
-            var o = TouchEvent.TMP_OUT;
-            var m = TouchEvent.TMP_MAT;
-
-            if(actor instanceof volksoper.DisplayObject){
-                (<volksoper.DisplayObject>actor).getWorldMatrix(m);
-
-                i[0] = this._x;
-                i[1] = this._y;
-
-                m.multiplyVector(i, o);
-
-                this._localX = o[0];
-                this._localY = o[1];
-            }else{
-                this._localX = null;
-                this._localY = null;
-            }
+            this._localPosition = null;
         }
 
         constructor(type: string, private _x: number, private _y: number, private _id: number){

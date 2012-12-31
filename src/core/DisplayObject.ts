@@ -28,8 +28,20 @@ module volksoper{
             return m;
         }
 
-        getWorldMatrix(m: Matrix4): void{
+        hitTestLocal(x: number,y :number): bool{
+            return 0 <= x && x <= this.width && 0 <= y && y <= this.height;
+        }
+
+        hitTest(x: number, y: number){
+            var localPos = this.globalToLocal(x, y);
+            return this.hitTestLocal(localPos.x, localPos.y);
+        }
+
+        getWorldMatrix(m?: Matrix4): Matrix4{
             var current:any = this;
+            if(!m){
+                m = new volksoper.Matrix4();
+            }
 
             do{
                 if(current.getWorldMatrix){
@@ -38,9 +50,26 @@ module volksoper{
             }while(current = current.parent);
 
             m.multiply(this.localMatrix);
+
+            return m;
+        }
+
+        globalToLocal(x: number, y: number){
+            var mat = this.getWorldMatrix();
+            var m = mat.m;
+
+            if(mat.invert()){
+                return {
+                    x: x*m[0] + y*m[1] + m[3],
+                    y: x*m[4] + y*m[5] + m[7]
+                };
+            }else{
+                return {x: x, y: y};
+            }
         }
 
         alpha: number = 1;
+        touchEnabled: bool = true;
         
         private _x: number;
         get x(): number{

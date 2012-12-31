@@ -210,7 +210,9 @@ module volksoper{
             if(this._children){
                 var len = this._children.length;
                 for(var n: number = 0; n < len; ++n){
-                    fn(this._children[n]);
+                    if(fn(this._children[n])){
+                        break;
+                    }
                 }
             }
             this._forEach--;
@@ -224,7 +226,6 @@ module volksoper{
                     }
                     r.splice(0);
                 }
-
             }
         }
 

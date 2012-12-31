@@ -1,4 +1,6 @@
 
+///<reference path="Vector3.ts"/>
+
 module volksoper{
     export class Matrix4{
         static IDENT: number[] = [
@@ -107,13 +109,14 @@ module volksoper{
             return this;
         }
 
-        multiplyVector(i: number[], o: number[]): void{
+        multiplyVector(i: Vector3, o: Vector3): Vector3{
             var m = this.m;
 
-            o[0] = i[0]*m[0] + i[1]*m[1] + i[2]*m[2] + i[3]*m[3];
-            o[1] = i[0]*m[4] + i[1]*m[5] + i[2]*m[6] + i[3]*m[7];
-            o[2] = i[0]*m[8] + i[1]*m[9] + i[2]*m[10] + i[3]*m[11];
-            o[3] = i[0]*m[12] + i[1]*m[13] + i[2]*m[14] + i[3]*m[15];
+            o.x = i.x*m[0] + i.y*m[1] + i.z*m[2] + m[3];
+            o.y = i.x*m[4] + i.y*m[5] + i.z*m[6] + m[7];
+            o.z = i.x*m[8] + i.y*m[9] + i.z*m[10] + m[11];
+
+            return o;
         }
 
         transpose(m: Matrix4): Matrix4{

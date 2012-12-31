@@ -1,4 +1,4 @@
-/*! Volksoper - v0.1.0 - 2012-12-30
+/*! Volksoper - v0.1.0 - 2012-12-31
 * http://PROJECT_WEBSITE/
 * Copyright (c) 2012 tshinsay; Licensed MIT */
 
@@ -236,7 +236,9 @@ var volksoper;
             if(this._children) {
                 var len = this._children.length;
                 for(var n = 0; n < len; ++n) {
-                    fn(this._children[n]);
+                    if(fn(this._children[n])) {
+                        break;
+                    }
                 }
             }
             this._forEach--;
@@ -297,6 +299,43 @@ var volksoper;
         return Actor;
     })();
     volksoper.Actor = Actor;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var Vector3 = (function () {
+        function Vector3(x, y, z) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.x = x || 0;
+            this.y = y || 0;
+            this.z = z || 0;
+        }
+        Vector3.prototype.normalize = function () {
+            var len = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+            if(len === 0) {
+                return false;
+            }
+            this.x /= len;
+            this.y /= len;
+            this.z /= len;
+            return true;
+        };
+        Vector3.prototype.length = function () {
+            return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+        };
+        Vector3.prototype.dot = function (v) {
+            return this.x * v.x + this.y * v.y + this.z * v.z;
+        };
+        Vector3.prototype.cross = function (a, b) {
+            this.x = a.y * b.z - a.z * b.y;
+            this.y = a.z * b.x - a.x * b.z;
+            this.z = a.x * b.y - a.y * b.x;
+            return this;
+        };
+        return Vector3;
+    })();
+    volksoper.Vector3 = Vector3;    
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
@@ -422,10 +461,10 @@ var volksoper;
         };
         Matrix4.prototype.multiplyVector = function (i, o) {
             var m = this.m;
-            o[0] = i[0] * m[0] + i[1] * m[1] + i[2] * m[2] + i[3] * m[3];
-            o[1] = i[0] * m[4] + i[1] * m[5] + i[2] * m[6] + i[3] * m[7];
-            o[2] = i[0] * m[8] + i[1] * m[9] + i[2] * m[10] + i[3] * m[11];
-            o[3] = i[0] * m[12] + i[1] * m[13] + i[2] * m[14] + i[3] * m[15];
+            o.x = i.x * m[0] + i.y * m[1] + i.z * m[2] + m[3];
+            o.y = i.x * m[4] + i.y * m[5] + i.z * m[6] + m[7];
+            o.z = i.x * m[8] + i.y * m[9] + i.z * m[10] + m[11];
+            return o;
         };
         Matrix4.prototype.transpose = function (m) {
             var ma = this.m;
@@ -603,6 +642,7 @@ var volksoper;
             this._dirty = true;
             this._localMatrix = new volksoper.Matrix4();
             this.alpha = 1;
+            this.touchEnabled = true;
             this.width = 0;
             this.height = 0;
             this.visible = true;
@@ -621,14 +661,40 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
+        DisplayObject.prototype.hitTestLocal = function (x, y) {
+            return 0 <= x && x <= this.width && 0 <= y && y <= this.height;
+        };
+        DisplayObject.prototype.hitTest = function (x, y) {
+            var localPos = this.globalToLocal(x, y);
+            return this.hitTestLocal(localPos.x, localPos.y);
+        };
         DisplayObject.prototype.getWorldMatrix = function (m) {
             var current = this;
+            if(!m) {
+                m = new volksoper.Matrix4();
+            }
             do {
                 if(current.getWorldMatrix) {
                     current.getWorldMatrix(m);
                 }
             }while(current = current.parent)
             m.multiply(this.localMatrix);
+            return m;
+        };
+        DisplayObject.prototype.globalToLocal = function (x, y) {
+            var mat = this.getWorldMatrix();
+            var m = mat.m;
+            if(mat.invert()) {
+                return {
+                    x: x * m[0] + y * m[1] + m[3],
+                    y: x * m[4] + y * m[5] + m[7]
+                };
+            } else {
+                return {
+                    x: x,
+                    y: y
+                };
+            }
         };
         Object.defineProperty(DisplayObject.prototype, "x", {
             get: function () {
@@ -795,6 +861,9 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
+        Surface.prototype.hitTest = function (x, y) {
+            return 0 <= x && x <= this._width && 0 <= y && y <= this._height;
+        };
         return Surface;
     })();
     volksoper.Surface = Surface;    
@@ -1341,9 +1410,106 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(Sprite.prototype, "width", {
+            get: function () {
+                return (this._surface) ? this._surface.width : 0;
+            },
+            set: function (_) {
+                throw new Error("cannot set width");
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Sprite.prototype, "height", {
+            get: function () {
+                return (this._surface) ? this._surface.height : 0;
+            },
+            set: function (_) {
+                throw new Error("cannot set height");
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Sprite.prototype.hitTestLocal = function (x, y) {
+            if(this._surface) {
+                return this._surface.hitTest(x, y);
+            }
+            return false;
+        };
         return Sprite;
     })(volksoper.DisplayObject);
     volksoper.Sprite = Sprite;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var TouchEvent = (function (_super) {
+        __extends(TouchEvent, _super);
+        function TouchEvent(type, _x, _y, _id) {
+                _super.call(this, type);
+            this._x = _x;
+            this._y = _y;
+            this._id = _id;
+        }
+        Object.defineProperty(TouchEvent.prototype, "x", {
+            get: function () {
+                return this._x;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(TouchEvent.prototype, "y", {
+            get: function () {
+                return this._y;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(TouchEvent.prototype, "localX", {
+            get: function () {
+                return (this._localPosition) ? this._localPosition.x : this._getLocal().x;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(TouchEvent.prototype, "localY", {
+            get: function () {
+                return (this._localPosition) ? this._localPosition.y : this._getLocal().y;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(TouchEvent.prototype, "id", {
+            get: function () {
+                return this._id;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        TouchEvent.prototype._getLocal = function () {
+            if(this._currentTarget instanceof volksoper.DisplayObject) {
+                this._localPosition = (this._currentTarget).globalToLocal(this._x, this._y);
+            } else {
+                this._localPosition = {
+                    x: this._x,
+                    y: this._y
+                };
+            }
+            return this._localPosition;
+        };
+        Object.defineProperty(TouchEvent.prototype, "currentTarget", {
+            get: function () {
+                return this._currentTarget;
+            },
+            set: function (actor) {
+                this._currentTarget = actor;
+                this._localPosition = null;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return TouchEvent;
+    })(volksoper.Event);
+    volksoper.TouchEvent = TouchEvent;    
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
@@ -1361,95 +1527,44 @@ var volksoper;
             this.addEventListener(volksoper.Event.ADDED, addedListener, true, volksoper.SYSTEM_PRIORITY);
             this.addEventListener(volksoper.Event.REMOVE, removeListener, true, volksoper.SYSTEM_PRIORITY);
         }
+        Stage.prototype.propagateTouchEvent = function (type, x, y, id, strict) {
+            var stack = [];
+            var localStack = [];
+            var actorStack = [];
+            var target = this._findTouch(this, x, y, strict);
+            if(target) {
+                target.propagateEvent(new volksoper.TouchEvent(type, x, y, id));
+            }
+        };
+        Stage.prototype._findTouch = function (target, x, y, strict) {
+            var self = this;
+            var found = null;
+            if(!target.touchEnabled) {
+                return null;
+            }
+            target.forEachChild(function (a) {
+                found = self._findTouch(a, x, y, strict);
+                return found;
+            });
+            if(found) {
+                return found;
+            }
+            if(target instanceof volksoper.DisplayObject) {
+                var l = target.globalToLocal(x, y);
+                if(l.x < target.width && l.y < target.height) {
+                    if(strict) {
+                        if(target.hitTestLocal(l.x, l.y)) {
+                            return target;
+                        } else {
+                            return null;
+                        }
+                    }
+                    return target;
+                }
+            }
+            return null;
+        };
         return Stage;
     })(volksoper.DisplayObject);
     volksoper.Stage = Stage;    
-})(volksoper || (volksoper = {}));
-var volksoper;
-(function (volksoper) {
-    var TouchEvent = (function (_super) {
-        __extends(TouchEvent, _super);
-        function TouchEvent(type, _x, _y, _id) {
-                _super.call(this, type);
-            this._x = _x;
-            this._y = _y;
-            this._id = _id;
-            this._localX = 0;
-            this._localY = 0;
-        }
-        TouchEvent.TMP_MAT = new volksoper.Matrix4();
-        TouchEvent.TMP_IN = [
-            0, 
-            0, 
-            0, 
-            1
-        ];
-        TouchEvent.TMP_OUT = [
-            0, 
-            0, 
-            0, 
-            1
-        ];
-        Object.defineProperty(TouchEvent.prototype, "x", {
-            get: function () {
-                return this._x;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(TouchEvent.prototype, "y", {
-            get: function () {
-                return this._y;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(TouchEvent.prototype, "localX", {
-            get: function () {
-                return this._localX;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(TouchEvent.prototype, "localY", {
-            get: function () {
-                return this._localY;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(TouchEvent.prototype, "id", {
-            get: function () {
-                return this._id;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(TouchEvent.prototype, "currentTarget", {
-            get: function () {
-                return this._currentTarget;
-            },
-            set: function (actor) {
-                this._currentTarget = actor;
-                var i = TouchEvent.TMP_IN;
-                var o = TouchEvent.TMP_OUT;
-                var m = TouchEvent.TMP_MAT;
-                if(actor instanceof volksoper.DisplayObject) {
-                    (actor).getWorldMatrix(m);
-                    i[0] = this._x;
-                    i[1] = this._y;
-                    m.multiplyVector(i, o);
-                    this._localX = o[0];
-                    this._localY = o[1];
-                } else {
-                    this._localX = null;
-                    this._localY = null;
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        return TouchEvent;
-    })(volksoper.Event);
-    volksoper.TouchEvent = TouchEvent;    
 })(volksoper || (volksoper = {}));

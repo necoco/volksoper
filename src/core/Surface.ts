@@ -30,6 +30,10 @@ module volksoper{
             return this._height;
         }
 
+        hitTest(x: number, y: number){
+            return 0 <= x && x <= this._width && 0 <= y && y <= this._height;
+        }
+
         constructor(private _name: string, private _width: number, private _height: number){
 
         }
