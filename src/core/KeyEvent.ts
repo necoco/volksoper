@@ -3,7 +3,7 @@
 
 module volksoper{
 
-    class KeyEvent extends volksoper.Event{
+    export class KeyEvent extends volksoper.Event{
         static KEY_DOWN = "keyDown";
         static KEY_UP = "keyUp";
 

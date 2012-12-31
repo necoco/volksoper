@@ -9,6 +9,9 @@ module volksoper{
         static ADDED_TO_STAGE: string = "addedToStage";
         static REMOVE_FROM_STAGE: string = "removeFromScene";
 
+        static COMPLETE = "complete";
+        static LOADED = "loaded";
+
         currentTarget: Actor;
         target: Actor;
 

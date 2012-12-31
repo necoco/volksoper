@@ -1,10 +1,9 @@
 
+///<reference path="Resource.ts"/>
+
 module volksoper{
 
-    export class Surface{
-        renderer: (ctx: any)=> bool;
-        primitiveRenderer: (ctx: any)=> bool;
-
+    export class Surface extends Resource{
         invalidate(): void{
         }
 
@@ -35,7 +34,7 @@ module volksoper{
         }
 
         constructor(private _name: string, private _width: number, private _height: number){
-
+            super();
         }
 
     }

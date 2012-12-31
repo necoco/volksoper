@@ -16,6 +16,8 @@ var volksoper;
         Event.REMOVE_FROM_SCENE = "removeFromScene";
         Event.ADDED_TO_STAGE = "addedToStage";
         Event.REMOVE_FROM_STAGE = "removeFromScene";
+        Event.COMPLETE = "complete";
+        Event.LOADED = "loaded";
         Object.defineProperty(Event.prototype, "type", {
             get: function () {
                 return this._type;
@@ -838,12 +840,49 @@ var volksoper;
             configurable: true
         });
         return KeyEvent;
-    })(volksoper.Event);    
+    })(volksoper.Event);
+    volksoper.KeyEvent = KeyEvent;    
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
-    var Surface = (function () {
+    var Resource = (function () {
+        function Resource() {
+            this._listeners = [];
+            this._usable = false;
+        }
+        Object.defineProperty(Resource.prototype, "usable", {
+            get: function () {
+                return this._usable;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Resource.prototype._setUsable = function () {
+            if(!this._usable) {
+                this._usable = true;
+                for(var n = 0; n < this._listeners.length; ++n) {
+                    this._listeners[n](this);
+                }
+                this._listeners = null;
+            }
+        };
+        Resource.prototype.addUsableListener = function (fn) {
+            if(this._listeners) {
+                this._listeners.push(fn);
+            } else {
+                fn(this);
+            }
+        };
+        return Resource;
+    })();
+    volksoper.Resource = Resource;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var Surface = (function (_super) {
+        __extends(Surface, _super);
         function Surface(_name, _width, _height) {
+                _super.call(this);
             this._name = _name;
             this._width = _width;
             this._height = _height;
@@ -885,7 +924,7 @@ var volksoper;
             return 0 <= x && x <= this._width && 0 <= y && y <= this._height;
         };
         return Surface;
-    })();
+    })(volksoper.Resource);
     volksoper.Surface = Surface;    
 })(volksoper || (volksoper = {}));
 var volksoper;
@@ -1354,7 +1393,10 @@ var volksoper;
         SceneDock.prototype.createLabel = function (width, height, name) {
             return null;
         };
-        SceneDock.prototype.createSurface = function (width, height, name) {
+        SceneDock.prototype.createSurface = function (width, height, renderer, name) {
+            return null;
+        };
+        SceneDock.prototype.createPrimitiveSurface = function (width, height, renderer, name) {
             return null;
         };
         SceneDock.prototype.load = function () {
@@ -1364,7 +1406,7 @@ var volksoper;
             }
             return null;
         };
-        SceneDock.prototype.clone = function (surface) {
+        SceneDock.prototype.copy = function (surface) {
             return null;
         };
         return SceneDock;

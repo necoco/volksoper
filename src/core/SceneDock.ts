@@ -2,6 +2,7 @@
 ///<reference path="Actor.ts"/>
 ///<reference path="Surface.ts"/>
 ///<reference path="Label.ts"/>
+///<reference path="Resource.ts"/>
 
 
 module volksoper{
@@ -21,7 +22,7 @@ module volksoper{
             }
         }
 
-        find(name: string): any{
+        find(name: string): Resource{
             return null;
         }
 
@@ -33,15 +34,21 @@ module volksoper{
             return null;
         }
 
-        createSurface(width: number, height: number, name?: string): volksoper.Surface{
+        createSurface(width: number, height: number, renderer:(self: Surface, ctx: any)=>bool,
+                      name?: string): volksoper.Surface{
             return null;
         }
 
-        load(...files: string[]): any[]{
+        createPrimitiveSurface(width: number, height: number, renderer:(self: Surface, ctx: any)=>bool,
+                      name?: string): volksoper.Surface{
             return null;
         }
 
-        clone(surface: volksoper.Surface): volksoper.Surface{
+        load(...files: string[]): Resource[]{
+            return null;
+        }
+
+        copy(surface: volksoper.Surface): volksoper.Surface{
             return null;
         }
     }
