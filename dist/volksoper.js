@@ -808,6 +808,16 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
+        DisplayObject.prototype.render = function (stage) {
+            stage._preRender(this);
+            this.forEachChild(function (child) {
+                if(child.render) {
+                    child.render(stage);
+                }
+            });
+            stage._render(this);
+            stage._postRender(this);
+        };
         return DisplayObject;
     })(volksoper.Actor);
     volksoper.DisplayObject = DisplayObject;    
@@ -1079,25 +1089,179 @@ var volksoper;
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
+    var TouchEvent = (function (_super) {
+        __extends(TouchEvent, _super);
+        function TouchEvent(type, _x, _y, _id) {
+                _super.call(this, type);
+            this._x = _x;
+            this._y = _y;
+            this._id = _id;
+        }
+        TouchEvent.TOUCH_UP = "touchUp";
+        TouchEvent.TOUCH_DOWN = "touchDown";
+        TouchEvent.TOUCH_MOVE = "touchMove";
+        TouchEvent.TOUCH_CANCELED = "touchCanceled";
+        Object.defineProperty(TouchEvent.prototype, "x", {
+            get: function () {
+                return this._x;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(TouchEvent.prototype, "y", {
+            get: function () {
+                return this._y;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(TouchEvent.prototype, "localX", {
+            get: function () {
+                return (this._localPosition) ? this._localPosition.x : this._getLocal().x;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(TouchEvent.prototype, "localY", {
+            get: function () {
+                return (this._localPosition) ? this._localPosition.y : this._getLocal().y;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(TouchEvent.prototype, "id", {
+            get: function () {
+                return this._id;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        TouchEvent.prototype._getLocal = function () {
+            if(this._currentTarget instanceof volksoper.DisplayObject) {
+                this._localPosition = (this._currentTarget).globalToLocal(this._x, this._y);
+            } else {
+                this._localPosition = {
+                    x: this._x,
+                    y: this._y
+                };
+            }
+            return this._localPosition;
+        };
+        Object.defineProperty(TouchEvent.prototype, "currentTarget", {
+            get: function () {
+                return this._currentTarget;
+            },
+            set: function (actor) {
+                this._currentTarget = actor;
+                this._localPosition = null;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return TouchEvent;
+    })(volksoper.Event);
+    volksoper.TouchEvent = TouchEvent;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var Stage = (function (_super) {
+        __extends(Stage, _super);
+        function Stage() {
+                _super.call(this);
+            var self = this;
+            var addedListener = function (e) {
+                e.target.broadcastEvent(new volksoper.Event(volksoper.Event.ADDED_TO_STAGE), self);
+            };
+            var removeListener = function (e) {
+                e.target.broadcastEvent(new volksoper.Event(volksoper.Event.REMOVE_FROM_STAGE), self);
+            };
+            this.addEventListener(volksoper.Event.ADDED, addedListener, true, volksoper.SYSTEM_PRIORITY);
+            this.addEventListener(volksoper.Event.REMOVE, removeListener, true, volksoper.SYSTEM_PRIORITY);
+        }
+        Stage.prototype.propagateTouchEvent = function (type, x, y, id) {
+            var stack = [];
+            var localStack = [];
+            var actorStack = [];
+            var target = this._findTouch(this, x, y);
+            if(target) {
+                target.propagateEvent(new volksoper.TouchEvent(type, x, y, id));
+            }
+        };
+        Stage.prototype._findTouch = function (target, x, y) {
+            var self = this;
+            var found = null;
+            if(!target.touchEnabled) {
+                return null;
+            }
+            target.forEachChild(function (a) {
+                found = self._findTouch(a, x, y);
+                return found;
+            });
+            if(found) {
+                return found;
+            }
+            if(target instanceof volksoper.DisplayObject) {
+                if(target.hitTest(x, y)) {
+                    return target;
+                } else {
+                    return null;
+                }
+            }
+            return null;
+        };
+        Stage.prototype._preRender = function (o) {
+        };
+        Stage.prototype._postRender = function (o) {
+        };
+        Stage.prototype._render = function (o) {
+        };
+        Stage.prototype._createSurfaceImpl = function (width, height, renderer, primitive, name) {
+            return null;
+        };
+        Stage.prototype._createLabelImpl = function (width, height, name) {
+            return null;
+        };
+        return Stage;
+    })(volksoper.DisplayObject);
+    volksoper.Stage = Stage;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var ID = 0;
+    function generateUniqueName() {
+        return "volksoper-" + (++ID).toString();
+    }
+    volksoper.generateUniqueName = generateUniqueName;
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
     var Surface = (function (_super) {
         __extends(Surface, _super);
-        function Surface(_name, _width, _height) {
+        function Surface(_width, _height, _renderer, _primitive, _name) {
                 _super.call(this);
-            this._name = _name;
             this._width = _width;
             this._height = _height;
+            this._renderer = _renderer;
+            this._primitive = _primitive;
+            this._name = _name;
+            this._invalidate = false;
             this._referenceCount = 0;
+            if(!this._name) {
+                this._name = volksoper.generateUniqueName();
+            }
         }
         Surface.prototype.invalidate = function () {
+            if(!this._impl) {
+                this._invalidate = true;
+                return;
+            }
+            this._impl.invalidate();
         };
         Surface.prototype.addRef = function () {
-            return ++this._referenceCount;
+            return this._impl.addRef();
         };
         Surface.prototype.release = function () {
-            return --this._referenceCount;
-        };
-        Surface.prototype.count = function () {
-            return this._referenceCount;
+            return this._impl.release();
         };
         Object.defineProperty(Surface.prototype, "name", {
             get: function () {
@@ -1120,6 +1284,18 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
+        Surface.prototype._render = function () {
+            this._impl.render();
+        };
+        Surface.prototype._onStage = function (stage) {
+            if(!this._impl) {
+                this._impl = stage._createSurfaceImpl(this._width, this._height, this._renderer, this._primitive, this._name);
+                if(this._invalidate) {
+                    this._invalidate = false;
+                    this._impl.invalidate();
+                }
+            }
+        };
         Surface.prototype.hitTest = function (x, y) {
             return 0 <= x && x <= this._width && 0 <= y && y <= this._height;
         };
@@ -1131,18 +1307,73 @@ var volksoper;
 (function (volksoper) {
     var Label = (function (_super) {
         __extends(Label, _super);
-        function Label(name, width, height) {
-                _super.call(this, name, width, height);
-            this.align = 0;
-            this.lineGap = 0;
-            this.textColor = 0;
+        function Label(width, height, name) {
+                _super.call(this, width, height, null, false, name);
+            this._align = 0;
+            this._lineGap = 0;
+            this._textColor = 0;
         }
+        Object.defineProperty(Label.prototype, "font", {
+            get: function () {
+                return this._font;
+            },
+            set: function (font) {
+                this._font = font;
+                if(this._impl) {
+                    this._impl.font(font);
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Label.prototype, "align", {
+            get: function () {
+                return this._align;
+            },
+            set: function (align) {
+                this._align = align;
+                if(this._impl) {
+                    this._impl.align(align);
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Label.prototype, "lineGap", {
+            get: function () {
+                return this._lineGap;
+            },
+            set: function (lineGap) {
+                this._lineGap = lineGap;
+                if(this._impl) {
+                    this._impl.lineGap(lineGap);
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Label.prototype, "textColor", {
+            get: function () {
+                return this._textColor;
+            },
+            set: function (textColor) {
+                this._textColor = textColor;
+                if(this._impl) {
+                    this._impl.textColor(textColor);
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(Label.prototype, "text", {
             get: function () {
                 return this._text;
             },
             set: function (text) {
                 this._text = text;
+                if(this._impl) {
+                    this._impl.text(text);
+                }
             },
             enumerable: true,
             configurable: true
@@ -1161,6 +1392,16 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
+        Label.prototype._onStage = function (stage) {
+            if(!this._impl) {
+                this._impl = stage._createLabelImpl(this.width, this.height, this.name);
+                this._impl.font(this._font);
+                this._impl.lineGap(this._lineGap);
+                this._impl.align(this._align);
+                this._impl.text(this._text);
+                this._impl.textColor(this._textColor);
+            }
+        };
         return Label;
     })(volksoper.Surface);
     volksoper.Label = Label;    
@@ -1576,26 +1817,7 @@ var volksoper;
             this._parentDock = _parentDock;
             this._id = 0;
         }
-        SceneDock.prototype._generateName = function () {
-            if(this._parentDock) {
-                return this._parentDock._generateName();
-            } else {
-                return "volksoper-" + (++this._id).toString();
-            }
-        };
         SceneDock.prototype.find = function (name) {
-            return null;
-        };
-        SceneDock.prototype.createFont = function (size, bold, italic, face) {
-            return null;
-        };
-        SceneDock.prototype.createLabel = function (width, height, name) {
-            return null;
-        };
-        SceneDock.prototype.createSurface = function (width, height, renderer, name) {
-            return null;
-        };
-        SceneDock.prototype.createPrimitiveSurface = function (width, height, renderer, name) {
             return null;
         };
         SceneDock.prototype.load = function () {
@@ -1607,9 +1829,6 @@ var volksoper;
         };
         SceneDock.prototype.play = function (name) {
             return false;
-        };
-        SceneDock.prototype.copy = function (surface) {
-            return null;
         };
         return SceneDock;
     })(volksoper.Actor);
@@ -1634,6 +1853,7 @@ var volksoper;
                 self._stage = e.target;
                 _this._onStage = true;
                 if(_this._surface) {
+                    _this._surface._onStage(self._stage);
                     _this._surface.addRef();
                 }
             }, false, volksoper.SYSTEM_PRIORITY);
@@ -1680,6 +1900,7 @@ var volksoper;
                         this._surface.release();
                     }
                     this._surface = surface;
+                    surface._onStage(this._stage);
                     surface.addRef();
                 } else {
                     this._surface = surface;
@@ -1720,127 +1941,31 @@ var volksoper;
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
-    var TouchEvent = (function (_super) {
-        __extends(TouchEvent, _super);
-        function TouchEvent(type, _x, _y, _id) {
-                _super.call(this, type);
-            this._x = _x;
-            this._y = _y;
-            this._id = _id;
+    var HTMLStage = (function (_super) {
+        __extends(HTMLStage, _super);
+        function HTMLStage() {
+            _super.apply(this, arguments);
+
         }
-        TouchEvent.TOUCH_UP = "touchUp";
-        TouchEvent.TOUCH_DOWN = "touchDown";
-        TouchEvent.TOUCH_MOVE = "touchMove";
-        TouchEvent.TOUCH_CANCELED = "touchCanceled";
-        Object.defineProperty(TouchEvent.prototype, "x", {
-            get: function () {
-                return this._x;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(TouchEvent.prototype, "y", {
-            get: function () {
-                return this._y;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(TouchEvent.prototype, "localX", {
-            get: function () {
-                return (this._localPosition) ? this._localPosition.x : this._getLocal().x;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(TouchEvent.prototype, "localY", {
-            get: function () {
-                return (this._localPosition) ? this._localPosition.y : this._getLocal().y;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(TouchEvent.prototype, "id", {
-            get: function () {
-                return this._id;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        TouchEvent.prototype._getLocal = function () {
-            if(this._currentTarget instanceof volksoper.DisplayObject) {
-                this._localPosition = (this._currentTarget).globalToLocal(this._x, this._y);
-            } else {
-                this._localPosition = {
-                    x: this._x,
-                    y: this._y
-                };
-            }
-            return this._localPosition;
-        };
-        Object.defineProperty(TouchEvent.prototype, "currentTarget", {
-            get: function () {
-                return this._currentTarget;
-            },
-            set: function (actor) {
-                this._currentTarget = actor;
-                this._localPosition = null;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        return TouchEvent;
-    })(volksoper.Event);
-    volksoper.TouchEvent = TouchEvent;    
+        return HTMLStage;
+    })(volksoper.Stage);
+    volksoper.HTMLStage = HTMLStage;    
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
-    var Stage = (function (_super) {
-        __extends(Stage, _super);
-        function Stage() {
-                _super.call(this);
-            var self = this;
-            var addedListener = function (e) {
-                e.target.broadcastEvent(new volksoper.Event(volksoper.Event.ADDED_TO_STAGE), self);
-            };
-            var removeListener = function (e) {
-                e.target.broadcastEvent(new volksoper.Event(volksoper.Event.REMOVE_FROM_STAGE), self);
-            };
-            this.addEventListener(volksoper.Event.ADDED, addedListener, true, volksoper.SYSTEM_PRIORITY);
-            this.addEventListener(volksoper.Event.REMOVE, removeListener, true, volksoper.SYSTEM_PRIORITY);
+    var CanvasStage = (function (_super) {
+        __extends(CanvasStage, _super);
+        function CanvasStage() {
+            _super.apply(this, arguments);
+
         }
-        Stage.prototype.propagateTouchEvent = function (type, x, y, id) {
-            var stack = [];
-            var localStack = [];
-            var actorStack = [];
-            var target = this._findTouch(this, x, y);
-            if(target) {
-                target.propagateEvent(new volksoper.TouchEvent(type, x, y, id));
-            }
+        CanvasStage.prototype._preRender = function (o) {
         };
-        Stage.prototype._findTouch = function (target, x, y) {
-            var self = this;
-            var found = null;
-            if(!target.touchEnabled) {
-                return null;
-            }
-            target.forEachChild(function (a) {
-                found = self._findTouch(a, x, y);
-                return found;
-            });
-            if(found) {
-                return found;
-            }
-            if(target instanceof volksoper.DisplayObject) {
-                if(target.hitTest(x, y)) {
-                    return target;
-                } else {
-                    return null;
-                }
-            }
-            return null;
+        CanvasStage.prototype._postRender = function (o) {
         };
-        return Stage;
-    })(volksoper.DisplayObject);
-    volksoper.Stage = Stage;    
+        CanvasStage.prototype._render = function (o) {
+        };
+        return CanvasStage;
+    })(volksoper.HTMLStage);
+    volksoper.CanvasStage = CanvasStage;    
 })(volksoper || (volksoper = {}));

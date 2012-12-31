@@ -37,6 +37,7 @@ module volksoper{
                     this._surface.release();
                 }
                 this._surface = surface;
+                surface._onStage(this._stage);
                 surface.addRef();
             }else{
                 this._surface = surface;
@@ -78,6 +79,7 @@ module volksoper{
                 self._stage = <volksoper.Stage>e.target;
                 this._onStage = true;
                 if(this._surface){
+                    this._surface._onStage(self._stage);
                     this._surface.addRef();
                 }
             }, false, volksoper.SYSTEM_PRIORITY);

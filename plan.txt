@@ -14,12 +14,13 @@
 ・SceneDock
 ・TouchEvent
 ・KeyEvent
+・Easingの追加
+
 
 **ここまで**
 
 ・LiteSprite  =>いる？
-・bake
-・Easingの追加
+・bake                 =>これは必須
 ・Canvas:Sprite
 ・Canvas:Surface
 ・HTML5:Stage

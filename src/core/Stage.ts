@@ -3,6 +3,9 @@
 ///<reference path="Actor.ts"/>
 ///<reference path="Matrix4.ts"/>
 ///<reference path="TouchEvent.ts"/>
+///<reference path="Label.ts"/>
+///<reference path="Surface.ts"/>
+
 
 module volksoper{
     export class Stage extends volksoper.DisplayObject{
@@ -59,6 +62,18 @@ module volksoper{
                 }
             }
 
+            return null;
+        }
+
+        _preRender(o: DisplayObject): void {}
+        _postRender(o: DisplayObject): void {}
+        _render(o: DisplayObject): void {}
+
+        _createSurfaceImpl(width: number, height: number, renderer:any, primitive: bool, name: string): ISurfaceImpl{
+            return null;
+        }
+
+        _createLabelImpl(width: number, height: number, name: string): ILabelImpl{
             return null;
         }
     }
