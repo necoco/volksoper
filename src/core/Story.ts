@@ -71,7 +71,7 @@ module volksoper{
     }
 
 
-    function Tween(target: any, dst: Object, time: number, easing: (t:number)=>number){
+    function Tween(target: any, dst: Object, time: number, easing: (t,b,c,d)=>number){
         var src = {};
         var currentTime = 0;
         for(var key in dst){
@@ -85,8 +85,7 @@ module volksoper{
             if(consumed >= 0){
                 currentTime += consumed;
                 for(key in dst){
-                    var t = easing(currentTime / time);
-                    target[key] = (1-t)*src[key] + t*dst[key];
+                    target[key] = easing(currentTime, src[key], dst[key], time);
                 }
                 return true;
             }else{

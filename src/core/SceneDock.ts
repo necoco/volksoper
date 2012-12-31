@@ -48,6 +48,10 @@ module volksoper{
             return null;
         }
 
+        play(name: string): bool{
+            return false;
+        }
+
         copy(surface: volksoper.Surface): volksoper.Surface{
             return null;
         }

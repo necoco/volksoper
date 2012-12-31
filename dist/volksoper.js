@@ -815,10 +815,210 @@ var volksoper;
 var volksoper;
 (function (volksoper) {
     (function (Easing) {
-        function LINEAR(t) {
-            return t;
+        function LINEAR(t, b, c, d) {
+            return c * t / d + b;
         }
         Easing.LINEAR = LINEAR;
+        function SWING(t, b, c, d) {
+            return c * (0.5 - Math.cos(((t / d) * Math.PI)) / 2) + b;
+        }
+        Easing.SWING = SWING;
+        function QUAD_EASEIN(t, b, c, d) {
+            return c * (t /= d) * t + b;
+        }
+        Easing.QUAD_EASEIN = QUAD_EASEIN;
+        function QUAD_EASEOUT(t, b, c, d) {
+            return -c * (t /= d) * (t - 2) + b;
+        }
+        Easing.QUAD_EASEOUT = QUAD_EASEOUT;
+        function QUAD_EASEINOUT(t, b, c, d) {
+            if((t /= d / 2) < 1) {
+                return c / 2 * t * t + b;
+            }
+            return -c / 2 * ((--t) * (t - 2) - 1) + b;
+        }
+        Easing.QUAD_EASEINOUT = QUAD_EASEINOUT;
+        function CUBIC_EASEIN(t, b, c, d) {
+            return c * (t /= d) * t * t + b;
+        }
+        Easing.CUBIC_EASEIN = CUBIC_EASEIN;
+        function CUBIC_EASEOUT(t, b, c, d) {
+            return c * ((t = t / d - 1) * t * t + 1) + b;
+        }
+        Easing.CUBIC_EASEOUT = CUBIC_EASEOUT;
+        function CUBIC_EASEINOUT(t, b, c, d) {
+            if((t /= d / 2) < 1) {
+                return c / 2 * t * t * t + b;
+            }
+            return c / 2 * ((t -= 2) * t * t + 2) + b;
+        }
+        Easing.CUBIC_EASEINOUT = CUBIC_EASEINOUT;
+        function QUART_EASEIN(t, b, c, d) {
+            return c * (t /= d) * t * t * t + b;
+        }
+        Easing.QUART_EASEIN = QUART_EASEIN;
+        function QUART_EASEOUT(t, b, c, d) {
+            return -c * ((t = t / d - 1) * t * t * t - 1) + b;
+        }
+        Easing.QUART_EASEOUT = QUART_EASEOUT;
+        function QUART_EASEINOUT(t, b, c, d) {
+            if((t /= d / 2) < 1) {
+                return c / 2 * t * t * t * t + b;
+            }
+            return -c / 2 * ((t -= 2) * t * t * t - 2) + b;
+        }
+        Easing.QUART_EASEINOUT = QUART_EASEINOUT;
+        function QUINT_EASEIN(t, b, c, d) {
+            return c * (t /= d) * t * t * t * t + b;
+        }
+        Easing.QUINT_EASEIN = QUINT_EASEIN;
+        function QUINT_EASEOUT(t, b, c, d) {
+            return c * ((t = t / d - 1) * t * t * t * t + 1) + b;
+        }
+        Easing.QUINT_EASEOUT = QUINT_EASEOUT;
+        function QUINT_EASEINOUT(t, b, c, d) {
+            if((t /= d / 2) < 1) {
+                return c / 2 * t * t * t * t * t + b;
+            }
+            return c / 2 * ((t -= 2) * t * t * t * t + 2) + b;
+        }
+        Easing.QUINT_EASEINOUT = QUINT_EASEINOUT;
+        function SIN_EASEIN(t, b, c, d) {
+            return -c * Math.cos(t / d * (Math.PI / 2)) + c + b;
+        }
+        Easing.SIN_EASEIN = SIN_EASEIN;
+        function SIN_EASEOUT(t, b, c, d) {
+            return c * Math.sin(t / d * (Math.PI / 2)) + b;
+        }
+        Easing.SIN_EASEOUT = SIN_EASEOUT;
+        function SIN_EASEINOUT(t, b, c, d) {
+            return -c / 2 * (Math.cos(Math.PI * t / d) - 1) + b;
+        }
+        Easing.SIN_EASEINOUT = SIN_EASEINOUT;
+        function CIRC_EASEIN(t, b, c, d) {
+            return -c * (Math.sqrt(1 - (t /= d) * t) - 1) + b;
+        }
+        Easing.CIRC_EASEIN = CIRC_EASEIN;
+        function CIRC_EASEOUT(t, b, c, d) {
+            return c * Math.sqrt(1 - (t = t / d - 1) * t) + b;
+        }
+        Easing.CIRC_EASEOUT = CIRC_EASEOUT;
+        function CIRC_EASEINOUT(t, b, c, d) {
+            if((t /= d / 2) < 1) {
+                return -c / 2 * (Math.sqrt(1 - t * t) - 1) + b;
+            }
+            return c / 2 * (Math.sqrt(1 - (t -= 2) * t) + 1) + b;
+        }
+        Easing.CIRC_EASEINOUT = CIRC_EASEINOUT;
+        function ELASTIC_EASEIN(t, b, c, d) {
+            if(t === 0) {
+                return b;
+            }
+            if((t /= d) === 1) {
+                return b + c;
+            }
+            var p = d * 0.3;
+            var a = c;
+            var s = p / 4;
+            return -(a * Math.pow(2, 10 * (t -= 1)) * Math.sin((t * d - s) * (2 * Math.PI) / p)) + b;
+        }
+        Easing.ELASTIC_EASEIN = ELASTIC_EASEIN;
+        function ELASTIC_EASEOUT(t, b, c, d) {
+            if(t === 0) {
+                return b;
+            }
+            if((t /= d) === 1) {
+                return b + c;
+            }
+            var p = d * 0.3;
+            var a = c;
+            var s = p / 4;
+            return (a * Math.pow(2, -10 * t) * Math.sin((t * d - s) * (2 * Math.PI) / p) + c + b);
+        }
+        Easing.ELASTIC_EASEOUT = ELASTIC_EASEOUT;
+        function ELASTIC_EASEINOUT(t, b, c, d) {
+            if(t === 0) {
+                return b;
+            }
+            if((t /= d / 2) === 2) {
+                return b + c;
+            }
+            var p = d * (0.3 * 1.5);
+            var a = c;
+            var s = p / 4;
+            if(t < 1) {
+                return -0.5 * (a * Math.pow(2, 10 * (t -= 1)) * Math.sin((t * d - s) * (2 * Math.PI) / p)) + b;
+            }
+            return a * Math.pow(2, -10 * (t -= 1)) * Math.sin((t * d - s) * (2 * Math.PI) / p) * 0.5 + c + b;
+        }
+        Easing.ELASTIC_EASEINOUT = ELASTIC_EASEINOUT;
+        function BOUNCE_EASEIN(t, b, c, d) {
+            return c - volksoper.Easing.BOUNCE_EASEOUT(d - t, 0, c, d) + b;
+        }
+        Easing.BOUNCE_EASEIN = BOUNCE_EASEIN;
+        function BOUNCE_EASEOUT(t, b, c, d) {
+            if((t /= d) < (1 / 2.75)) {
+                return c * (7.5625 * t * t) + b;
+            } else {
+                if(t < (2 / 2.75)) {
+                    return c * (7.5625 * (t -= (1.5 / 2.75)) * t + 0.75) + b;
+                } else {
+                    if(t < (2.5 / 2.75)) {
+                        return c * (7.5625 * (t -= (2.25 / 2.75)) * t + 0.9375) + b;
+                    } else {
+                        return c * (7.5625 * (t -= (2.625 / 2.75)) * t + 0.984375) + b;
+                    }
+                }
+            }
+        }
+        Easing.BOUNCE_EASEOUT = BOUNCE_EASEOUT;
+        function BOUNCE_EASEINOUT(t, b, c, d) {
+            if(t < d / 2) {
+                return volksoper.Easing.BOUNCE_EASEIN(t * 2, 0, c, d) * 0.5 + b;
+            } else {
+                return volksoper.Easing.BOUNCE_EASEOUT(t * 2 - d, 0, c, d) * 0.5 + c * 0.5 + b;
+            }
+        }
+        Easing.BOUNCE_EASEINOUT = BOUNCE_EASEINOUT;
+        function BACK_EASEIN(t, b, c, d) {
+            var s = 1.70158;
+            return c * (t /= d) * t * ((s + 1) * t - s) + b;
+        }
+        Easing.BACK_EASEIN = BACK_EASEIN;
+        function BACK_EASEOUT(t, b, c, d) {
+            var s = 1.70158;
+            return c * ((t = t / d - 1) * t * ((s + 1) * t + s) + 1) + b;
+        }
+        Easing.BACK_EASEOUT = BACK_EASEOUT;
+        function BACK_EASEINOUT(t, b, c, d) {
+            var s = 1.70158;
+            if((t /= d / 2) < 1) {
+                return c / 2 * (t * t * (((s *= (1.525)) + 1) * t - s)) + b;
+            }
+            return c / 2 * ((t -= 2) * t * (((s *= (1.525)) + 1) * t + s) + 2) + b;
+        }
+        Easing.BACK_EASEINOUT = BACK_EASEINOUT;
+        function EXPO_EASEIN(t, b, c, d) {
+            return (t === 0) ? b : c * Math.pow(2, 10 * (t / d - 1)) + b;
+        }
+        Easing.EXPO_EASEIN = EXPO_EASEIN;
+        function EXPO_EASEOUT(t, b, c, d) {
+            return (t === d) ? b + c : c * (-Math.pow(2, -10 * t / d) + 1) + b;
+        }
+        Easing.EXPO_EASEOUT = EXPO_EASEOUT;
+        function EXPO_EASEINOUT(t, b, c, d) {
+            if(t === 0) {
+                return b;
+            }
+            if(t === d) {
+                return b + c;
+            }
+            if((t /= d / 2) < 1) {
+                return c / 2 * Math.pow(2, 10 * (t - 1)) + b;
+            }
+            return c / 2 * (-Math.pow(2, -10 * --t) + 2) + b;
+        }
+        Easing.EXPO_EASEINOUT = EXPO_EASEINOUT;
     })(volksoper.Easing || (volksoper.Easing = {}));
     var Easing = volksoper.Easing;
 })(volksoper || (volksoper = {}));
@@ -1054,8 +1254,7 @@ var volksoper;
             if(consumed >= 0) {
                 currentTime += consumed;
                 for(key in dst) {
-                    var t = easing(currentTime / time);
-                    target[key] = (1 - t) * src[key] + t * dst[key];
+                    target[key] = easing(currentTime, src[key], dst[key], time);
                 }
                 return true;
             } else {
@@ -1405,6 +1604,9 @@ var volksoper;
                 files[_i] = arguments[_i + 0];
             }
             return null;
+        };
+        SceneDock.prototype.play = function (name) {
+            return false;
         };
         SceneDock.prototype.copy = function (surface) {
             return null;

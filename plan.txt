@@ -17,8 +17,7 @@
 
 **ここまで**
 
-・SoundSystem
-・LiteSprite
+・LiteSprite  =>いる？
 ・bake
 ・Easingの追加
 ・Canvas:Sprite
