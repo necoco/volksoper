@@ -32,7 +32,7 @@ module volksoper{
             return 0 <= x && x <= this.width && 0 <= y && y <= this.height;
         }
 
-        hitTest(x: number, y: number){
+        hitTest(x: number, y: number): bool{
             var localPos = this.globalToLocal(x, y);
             return this.hitTestLocal(localPos.x, localPos.y);
         }

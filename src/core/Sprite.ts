@@ -7,6 +7,8 @@
 
 module volksoper{
     export class Sprite extends volksoper.DisplayObject{
+        private _onStage = false;
+
         private _scene: volksoper.Scene;
         get scene(): volksoper.Scene{
             return this._scene;
@@ -30,12 +32,15 @@ module volksoper{
         private _surface: volksoper.Surface;
         get surface():volksoper.Surface {return this._surface;}
         set surface(surface: volksoper.Surface){
-            if(this._surface){
-               this._surface.release();
+            if(this._onStage){
+                if(this._surface){
+                    this._surface.release();
+                }
+                this._surface = surface;
+                surface.addRef();
+            }else{
+                this._surface = surface;
             }
-
-            this._surface = surface;
-            surface.addRef();
         }
 
         get width(): number{
@@ -71,9 +76,17 @@ module volksoper{
 
             this.addEventListener(volksoper.Event.ADDED_TO_STAGE,(e)=>{
                 self._stage = <volksoper.Stage>e.target;
+                this._onStage = true;
+                if(this._surface){
+                    this._surface.addRef();
+                }
             }, false, volksoper.SYSTEM_PRIORITY);
             this.addEventListener(volksoper.Event.REMOVE_FROM_STAGE,(e)=>{
                 self._stage = null;
+                this._onStage = false;
+                if(this.surface){
+                    this._surface.release();
+                }
             });
         }
 

@@ -12,13 +12,14 @@
 ・Surface
 ・Label extends Surface
 ・SceneDock
+・TouchEvent
 
 **ここまで**
 
-・TouchEvent
 ・KeyEvent
 ・SoundSystem
 ・LiteSprite
+・flatten
 ・Canvas:Sprite
 ・Canvas:Surface
 ・HTML5:Stage

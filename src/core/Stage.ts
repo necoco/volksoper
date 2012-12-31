@@ -23,26 +23,26 @@ module volksoper{
             this.addEventListener(volksoper.Event.REMOVE, removeListener, true, volksoper.SYSTEM_PRIORITY);
         }
 
-        propagateTouchEvent(type: string, x: number, y: number, id: number, strict: bool){
+        propagateTouchEvent(type: string, x: number, y: number, id: number){
             var stack: Matrix4[] = [];
             var localStack: number[] = [];
             var actorStack: Actor[] = [];
 
-            var target: Actor = this._findTouch(this, x, y, strict);
+            var target: Actor = this._findTouch(this, x, y);
 
             if(target){
                 target.propagateEvent(new volksoper.TouchEvent(type, x, y, id));
             }
         }
 
-        private _findTouch(target: DisplayObject, x: number, y: number, strict: bool): DisplayObject{
+        private _findTouch(target: DisplayObject, x: number, y: number): DisplayObject{
             var self = this;
             var found = null;
 
             if(!target.touchEnabled)return null;
 
             target.forEachChild((a: DisplayObject)=>{
-                found = self._findTouch(a, x, y, strict);
+                found = self._findTouch(a, x, y);
 
                 return found;
             });
@@ -52,16 +52,10 @@ module volksoper{
             }
 
             if(target instanceof DisplayObject){
-                var l = target.globalToLocal(x, y);
-                if(l.x < target.width && l.y < target.height){
-                    if(strict){
-                        if(target.hitTestLocal(l.x, l.y)){
-                            return target;
-                        }else{
-                            return null;
-                        }
-                    }
+                if(target.hitTest(x, y)){
                     return target;
+                }else{
+                    return null;
                 }
             }
 
