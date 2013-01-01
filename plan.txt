@@ -19,6 +19,8 @@
 
 **ここまで**
 
+明日の作業：Surfaceのレンダリングを可能にする。
+
 ・LiteSprite  =>いる？
 ・bake                 =>これは必須
 ・Canvas:Sprite

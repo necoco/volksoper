@@ -140,29 +140,31 @@ module volksoper{
 
 
             var mouseDown = false;
-            var mouseListener = (type, down, move, reg, unreg)=>{
-                return (e: MouseEvent)=>{
-                    var x = (e.pageX - this._pageX) / this.scale;
-                    var y = (e.pageY - this._pageY) / this.scale;
-                    var id = this._mouseId;
-                    if(!move){
-                        mouseDown = down;
-                    }
-                    if(mouseDown){
-                        var obj = this.propagateTouchEvent(type, x, y, id);
-                        if(reg){
-                            this.registerTouchReceiver(obj, id);
-                        }
-                        if(unreg){
-                            this.unregisterTouchReceiver(id);
-                        }
-                    }
-                }
-            };
 
-            s.addEventListener('mousedown', mouseListener(volksoper.TouchEvent.TOUCH_START, true, false, true, false), false);
-            document.addEventListener('mouseup', mouseListener(volksoper.TouchEvent.TOUCH_END, false, false, true, false), false);
-            s.addEventListener('mousemove', mouseListener(volksoper.TouchEvent.TOUCH_MOVE, false, true, false, false), false);
+            s.addEventListener('mousedown',(e)=>{
+                var x = (e.pageX - this._pageX) / this.scale;
+                var y = (e.pageY - this._pageY) / this.scale;
+                var id = this._mouseId;
+                mouseDown = true;
+                var obj = this.propagateTouchEvent(volksoper.TouchEvent.TOUCH_START, x, y, id);
+                this.registerTouchReceiver(obj, id);
+            }, false);
+            document.addEventListener('mouseup',(e)=>{
+                var x = (e.pageX - this._pageX) / this.scale;
+                var y = (e.pageY - this._pageY) / this.scale;
+                var id = this._mouseId;
+                mouseDown = false;
+                this.propagateTouchEvent(volksoper.TouchEvent.TOUCH_END, x, y, id);
+                this.unregisterTouchReceiver(id);
+            }, false);
+            s.addEventListener('mousemove',(e)=>{
+                var x = (e.pageX - this._pageX) / this.scale;
+                var y = (e.pageY - this._pageY) / this.scale;
+                var id = this._mouseId;
+                if(mouseDown){
+                    this.propagateTouchEvent(volksoper.TouchEvent.TOUCH_MOVE, x, y, id);
+                }
+            }, false);
         }
     }
 }
