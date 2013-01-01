@@ -8,10 +8,7 @@ module volksoper{
     export interface ISurfaceImpl{
         addRef(): number;
         release(): number;
-        name(): string;
         invalidate(): void;
-        width(): number;
-        height(): number;
         render(): void;
     }
 
@@ -67,7 +64,7 @@ module volksoper{
 
         constructor(private _width: number,
                     private _height: number,
-                    private _renderer: (surface:Surface, ctx:any)=>bool,
+                    private _renderer?: (surface:Surface, ctx:any)=>bool,
                     private _primitive?: bool,
                     private _name?: string){
             super();

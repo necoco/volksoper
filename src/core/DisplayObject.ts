@@ -164,19 +164,5 @@ module volksoper{
         }
 
         visible: bool = true;
-
-        render(stage: any): void{    // render(stage: Stage) avoid compiler bug
-            stage._preRender(this);
-
-            this.forEachChild((child: DisplayObject)=>{
-                if(child.render){
-                    child.render(stage);
-                }
-            });
-
-            stage._render(this);
-
-            stage._postRender(this);
-        }
     }
 }

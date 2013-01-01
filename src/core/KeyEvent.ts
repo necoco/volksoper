@@ -7,11 +7,15 @@ module volksoper{
         static KEY_DOWN = "keyDown";
         static KEY_UP = "keyUp";
 
-        get keyCode(): number{
+        get keyCode(){
             return this._keyCode;
         }
 
-        constructor(name: string, private _keyCode: number){
+        get keyName(){
+            return this._keyName;
+        }
+
+        constructor(name: string, private _keyCode: number, private _keyName: string){
             super(name);
         }
     }

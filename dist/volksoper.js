@@ -1,6 +1,6 @@
-/*! Volksoper - v0.1.0 - 2012-12-31
+/*! Volksoper - v0.1.0 - 2013-01-01
 * http://PROJECT_WEBSITE/
-* Copyright (c) 2012 tshinsay; Licensed MIT */
+* Copyright (c) 2013 tshinsay; Licensed MIT */
 
 var volksoper;
 (function (volksoper) {
@@ -808,16 +808,6 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
-        DisplayObject.prototype.render = function (stage) {
-            stage._preRender(this);
-            this.forEachChild(function (child) {
-                if(child.render) {
-                    child.render(stage);
-                }
-            });
-            stage._render(this);
-            stage._postRender(this);
-        };
         return DisplayObject;
     })(volksoper.Actor);
     volksoper.DisplayObject = DisplayObject;    
@@ -1036,15 +1026,23 @@ var volksoper;
 (function (volksoper) {
     var KeyEvent = (function (_super) {
         __extends(KeyEvent, _super);
-        function KeyEvent(name, _keyCode) {
+        function KeyEvent(name, _keyCode, _keyName) {
                 _super.call(this, name);
             this._keyCode = _keyCode;
+            this._keyName = _keyName;
         }
         KeyEvent.KEY_DOWN = "keyDown";
         KeyEvent.KEY_UP = "keyUp";
         Object.defineProperty(KeyEvent.prototype, "keyCode", {
             get: function () {
                 return this._keyCode;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(KeyEvent.prototype, "keyName", {
+            get: function () {
+                return this._keyName;
             },
             enumerable: true,
             configurable: true
@@ -1097,10 +1095,10 @@ var volksoper;
             this._y = _y;
             this._id = _id;
         }
-        TouchEvent.TOUCH_UP = "touchUp";
-        TouchEvent.TOUCH_DOWN = "touchDown";
+        TouchEvent.TOUCH_END = "touchEnd";
+        TouchEvent.TOUCH_START = "touchStart";
         TouchEvent.TOUCH_MOVE = "touchMove";
-        TouchEvent.TOUCH_CANCELED = "touchCanceled";
+        TouchEvent.TOUCH_CANCEL = "touchCancel";
         Object.defineProperty(TouchEvent.prototype, "x", {
             get: function () {
                 return this._x;
@@ -1166,8 +1164,19 @@ var volksoper;
 (function (volksoper) {
     var Stage = (function (_super) {
         __extends(Stage, _super);
-        function Stage() {
+        function Stage(options) {
                 _super.call(this);
+            this._ready = false;
+            this._running = false;
+            this._touchReceivers = {
+            };
+            this._width = options.width || 320;
+            this._height = options.height || 320;
+            this._fps = options.fps;
+            this._scale = options.scale || 1;
+            this._autoScale = options.autoScale || false;
+            this._keyMap = options.keys || {
+            };
             var self = this;
             var addedListener = function (e) {
                 e.target.broadcastEvent(new volksoper.Event(volksoper.Event.ADDED_TO_STAGE), self);
@@ -1178,14 +1187,92 @@ var volksoper;
             this.addEventListener(volksoper.Event.ADDED, addedListener, true, volksoper.SYSTEM_PRIORITY);
             this.addEventListener(volksoper.Event.REMOVE, removeListener, true, volksoper.SYSTEM_PRIORITY);
         }
+        Object.defineProperty(Stage.prototype, "ready", {
+            get: function () {
+                return this._ready;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Stage.prototype, "running", {
+            get: function () {
+                return this._running;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Stage.prototype, "width", {
+            get: function () {
+                return this._width;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Stage.prototype, "height", {
+            get: function () {
+                return this._height;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Stage.prototype, "fps", {
+            get: function () {
+                return this._fps;
+            },
+            set: function (fps) {
+                this._fps = fps;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Stage.prototype, "scale", {
+            get: function () {
+                return this._scale;
+            },
+            set: function (scale) {
+                this._scale = scale;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Stage.prototype, "autoScale", {
+            get: function () {
+                return this._autoScale;
+            },
+            set: function (autoScale) {
+                this._autoScale = autoScale;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Stage.prototype, "keyMap", {
+            get: function () {
+                return this._keyMap;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Stage.prototype.registerTouchReceiver = function (obj, id) {
+            this._touchReceivers[id] = obj;
+        };
+        Stage.prototype.unregisterTouchReceiver = function (id) {
+            delete this._touchReceivers[id];
+        };
         Stage.prototype.propagateTouchEvent = function (type, x, y, id) {
             var stack = [];
             var localStack = [];
             var actorStack = [];
-            var target = this._findTouch(this, x, y);
+            var target = this._touchReceivers[id];
+            if(!target) {
+                var target = this._findTouch(this.topChild, x, y);
+            }
             if(target) {
                 target.propagateEvent(new volksoper.TouchEvent(type, x, y, id));
             }
+            return target;
+        };
+        Stage.prototype.broadcastKeyEvent = function (type, keyCode, keyName) {
+            this.topChild.broadcastEvent(new volksoper.KeyEvent(type, keyCode, keyName));
         };
         Stage.prototype._findTouch = function (target, x, y) {
             var self = this;
@@ -1213,7 +1300,25 @@ var volksoper;
         };
         Stage.prototype._postRender = function (o) {
         };
-        Stage.prototype._render = function (o) {
+        Stage.prototype._inRender = function (o) {
+        };
+        Stage.prototype.render = function () {
+            if(!this.visible) {
+                return;
+            }
+            this._render(this.topChild);
+        };
+        Stage.prototype._render = function (obj) {
+            var _this = this;
+            if(!obj.visible) {
+                return;
+            }
+            this._preRender(obj);
+            this._inRender(obj);
+            this.forEachChild(function (child) {
+                _this._render(child);
+            });
+            this._postRender(obj);
         };
         Stage.prototype._createSurfaceImpl = function (width, height, renderer, primitive, name) {
             return null;
@@ -1943,22 +2048,185 @@ var volksoper;
 (function (volksoper) {
     var HTMLStage = (function (_super) {
         __extends(HTMLStage, _super);
-        function HTMLStage() {
-            _super.apply(this, arguments);
-
+        function HTMLStage(options) {
+            var _this = this;
+                _super.call(this, options);
+            this._mouseId = 0;
+            var stageId = options.stageId || 'volksoper-stage';
+            var stage = document.getElementById(stageId);
+            if(!stage) {
+                stage = document.createElement('div');
+                stage.style.position = 'absolute';
+                document.body.appendChild(stage);
+            }
+            var style = window.getComputedStyle(stage, '');
+            var currentWidth = parseInt(style.width);
+            var currentHeight = parseInt(style.height);
+            if(currentWidth && currentHeight) {
+                this.scale = Math.min(currentWidth / this.width, currentHeight / this.height);
+            } else {
+                stage.style.width = this.width + 'px';
+                stage.style.height = this.height + 'px';
+            }
+            (window).onscroll = function (e) {
+                var bound = stage.getBoundingClientRect();
+                _this._pageX = (window).scrollX || window.pageXOffset + bound.left;
+                _this._pageY = (window).scrollY || window.pageYOffset + bound.top;
+            };
+            (window).onscroll();
+            this._element = stage;
+            this._initListeners();
         }
+        HTMLStage.USE_DEFAULT = [
+            'input', 
+            'textarea', 
+            'select', 
+            'area'
+        ];
+        Object.defineProperty(HTMLStage.prototype, "pageX", {
+            get: function () {
+                return this._pageX;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(HTMLStage.prototype, "pageY", {
+            get: function () {
+                return this._pageY;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        HTMLStage.prototype._initListeners = function () {
+            var _this = this;
+            var s = this._element;
+            document.addEventListener('keydown', function (e) {
+                if(_this.keyMap[e.keyCode]) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                if(_this.running) {
+                    _this.broadcastKeyEvent(volksoper.KeyEvent.KEY_DOWN, e.keyCode, _this.keyMap[e.keyCode]);
+                }
+            }, true);
+            document.addEventListener('keyup', function (e) {
+                if(_this.running) {
+                    _this.broadcastKeyEvent(volksoper.KeyEvent.KEY_UP, e.keyCode, _this.keyMap[e.keyCode]);
+                }
+            }, true);
+            var preventTouchDefault = function (e) {
+                var tag = (e.target.tagName).toLowerCase();
+                if(HTMLStage.USE_DEFAULT.indexOf(tag) >= 0) {
+                    e.preventDefault();
+                    if(!_this.running) {
+                        e.stopPropagation();
+                    }
+                }
+            };
+            s.addEventListener('touchstart', preventTouchDefault, true);
+            s.addEventListener('touchmove', preventTouchDefault, true);
+            s.addEventListener('touchend', preventTouchDefault, true);
+            s.addEventListener('touchcancel', preventTouchDefault, true);
+            var preventMouseDefault = function (incr) {
+                return function (e) {
+                    var tag = (e.target.tagName).toLowerCase();
+                    if(HTMLStage.USE_DEFAULT.indexOf(tag) >= 0) {
+                        if(incr) {
+                            _this._mouseId++;
+                        }
+                        e.preventDefault();
+                        if(!_this.running) {
+                            e.stopPropagation();
+                        }
+                    }
+                }
+            };
+            s.addEventListener('mousedown', preventMouseDefault(true), true);
+            s.addEventListener('mouseup', preventMouseDefault(false), true);
+            s.addEventListener('mousemove', preventMouseDefault(false), true);
+            var touchListener = function (type, reg, unreg) {
+                return function (e) {
+                    var touches = e.changedTouches;
+                    var len = touches.length;
+                    for(var n = 0; n < len; n++) {
+                        var touch = touches[n];
+                        var id = touch.identifier;
+                        var x = (touch.pageX - _this._pageX) / _this.scale;
+                        var y = (touch.pageY - _this._pageY) / _this.scale;
+                        var obj = _this.propagateTouchEvent(type, x, y, id);
+                        if(reg) {
+                            _this.registerTouchReceiver(obj, id);
+                        }
+                        if(unreg) {
+                            _this.unregisterTouchReceiver(id);
+                        }
+                    }
+                }
+            };
+            s.addEventListener('touchstart', touchListener(volksoper.TouchEvent.TOUCH_START, true, false), false);
+            s.addEventListener('touchend', touchListener(volksoper.TouchEvent.TOUCH_END, false, true), false);
+            s.addEventListener('touchmove', touchListener(volksoper.TouchEvent.TOUCH_MOVE, false, false), false);
+            s.addEventListener('touchcancel', touchListener(volksoper.TouchEvent.TOUCH_CANCEL, false, true), false);
+            var mouseListener = function (type, reg, unreg) {
+                return function (e) {
+                    var x = (e.pageX - _this._pageX) / _this.scale;
+                    var y = (e.pageY - _this._pageY) / _this.scale;
+                    var id = _this._mouseId;
+                    var obj = _this.propagateTouchEvent(type, x, y, id);
+                    if(reg) {
+                        _this.registerTouchReceiver(obj, id);
+                    }
+                    if(unreg) {
+                        _this.unregisterTouchReceiver(id);
+                    }
+                }
+            };
+            s.addEventListener('mousedown', mouseListener(volksoper.TouchEvent.TOUCH_START, true, false), false);
+            s.addEventListener('mouseup', mouseListener(volksoper.TouchEvent.TOUCH_END, true, false), false);
+            s.addEventListener('mousemove', mouseListener(volksoper.TouchEvent.TOUCH_MOVE, true, false), false);
+        };
         return HTMLStage;
     })(volksoper.Stage);
     volksoper.HTMLStage = HTMLStage;    
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
-    var CanvasStage = (function (_super) {
-        __extends(CanvasStage, _super);
-        function CanvasStage() {
+    var Platform = (function () {
+        function Platform() { }
+        return Platform;
+    })();    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var CanvasSceneDock = (function (_super) {
+        __extends(CanvasSceneDock, _super);
+        function CanvasSceneDock() {
             _super.apply(this, arguments);
 
         }
+        CanvasSceneDock.prototype.addDirtySurfaceImpl = function (impl) {
+        };
+        return CanvasSceneDock;
+    })(volksoper.SceneDock);
+    volksoper.CanvasSceneDock = CanvasSceneDock;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var CanvasStage = (function (_super) {
+        __extends(CanvasStage, _super);
+        function CanvasStage(options) {
+                _super.call(this, options);
+        }
+        Object.defineProperty(CanvasStage.prototype, "fps", {
+            get: function () {
+                return this._fps;
+            },
+            set: function (fps) {
+                this._fps = fps;
+            },
+            enumerable: true,
+            configurable: true
+        });
         CanvasStage.prototype._preRender = function (o) {
         };
         CanvasStage.prototype._postRender = function (o) {
@@ -1968,4 +2236,55 @@ var volksoper;
         return CanvasStage;
     })(volksoper.HTMLStage);
     volksoper.CanvasStage = CanvasStage;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var CanvasSurfaceImpl = (function () {
+        function CanvasSurfaceImpl(width, height, _renderer, _primitive, _name, _dock, _renderContext) {
+            this._renderer = _renderer;
+            this._primitive = _primitive;
+            this._name = _name;
+            this._dock = _dock;
+            this._renderContext = _renderContext;
+            this._referenceCount = 0;
+            var element = document.createElement('canvas');
+            element.width = width;
+            element.height = height;
+            element.style.position = 'absolute';
+            this._element = element;
+            this._context = element.getContext("2d");
+        }
+        CanvasSurfaceImpl.prototype.addRef = function () {
+            return ++this._referenceCount;
+        };
+        CanvasSurfaceImpl.prototype.release = function () {
+            return --this._referenceCount;
+        };
+        CanvasSurfaceImpl.prototype.count = function () {
+            return this._referenceCount;
+        };
+        Object.defineProperty(CanvasSurfaceImpl.prototype, "name", {
+            get: function () {
+                return this._name;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        CanvasSurfaceImpl.prototype.invalidate = function () {
+            if(!this._primitive) {
+                this._dock.addDirtySurfaceImpl(this);
+            }
+        };
+        CanvasSurfaceImpl.prototype.render = function () {
+            if(this._primitive) {
+                this._renderer(this, this._renderContext);
+            } else {
+                this._renderContext.drawImage(this._element, 0, 0);
+            }
+        };
+        CanvasSurfaceImpl.prototype.renderContent = function () {
+            this._renderer(this, this._context);
+        };
+        return CanvasSurfaceImpl;
+    })();    
 })(volksoper || (volksoper = {}));

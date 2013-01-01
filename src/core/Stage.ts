@@ -9,8 +9,70 @@
 
 module volksoper{
     export class Stage extends volksoper.DisplayObject{
-        constructor(){
+        private _ready = false;
+        get ready(){
+            return this._ready;
+        }
+        private _running = false;
+        get running(){
+            return this._running;
+        }
+
+        private _width: number;
+        get width(){
+            return this._width;
+        }
+
+        private _height: number;
+        get height(){
+            return this._height;
+        }
+
+        private _fps: number;
+        get fps(){
+            return this._fps;
+        }
+        set fps(fps){
+            this._fps = fps;
+        }
+
+        private _scale: number;
+        get scale(){
+            return this._scale;
+        }
+        set scale(scale){
+            this._scale = scale;
+        }
+
+        private _autoScale: bool;
+        get autoScale(){
+            return this._autoScale;
+        }
+        set autoScale(autoScale){
+            this._autoScale = autoScale;
+        }
+
+        private _keyMap: any;
+        get keyMap(){
+            return this._keyMap;
+        }
+
+        _touchReceivers: any = {};
+        registerTouchReceiver(obj, id){
+            this._touchReceivers[id] = obj;
+        }
+        unregisterTouchReceiver(id){
+            delete this._touchReceivers[id];
+        }
+
+        constructor(options: any){
             super();
+            this._width = options.width || 320;
+            this._height = options.height || 320;
+            this._fps = options.fps;
+            this._scale = options.scale || 1;
+            this._autoScale = options.autoScale || false;
+            this._keyMap = options.keys || {};
 
             var self = this;
 
@@ -26,16 +88,25 @@ module volksoper{
             this.addEventListener(volksoper.Event.REMOVE, removeListener, true, volksoper.SYSTEM_PRIORITY);
         }
 
-        propagateTouchEvent(type: string, x: number, y: number, id: number){
+        propagateTouchEvent(type: string, x: number, y: number, id: number): DisplayObject{
             var stack: Matrix4[] = [];
             var localStack: number[] = [];
             var actorStack: Actor[] = [];
 
-            var target: Actor = this._findTouch(this, x, y);
+            var target = this._touchReceivers[id];
+            if(!target){
+                var target = this._findTouch(<DisplayObject>this.topChild, x, y);
+            }
 
             if(target){
                 target.propagateEvent(new volksoper.TouchEvent(type, x, y, id));
             }
+
+            return target;
+        }
+
+        broadcastKeyEvent(type: string, keyCode: number, keyName: string){
+            this.topChild.broadcastEvent(new KeyEvent(type, keyCode, keyName));
         }
 
         private _findTouch(target: DisplayObject, x: number, y: number): DisplayObject{
@@ -65,9 +136,31 @@ module volksoper{
             return null;
         }
 
-        _preRender(o: DisplayObject): void {}
-        _postRender(o: DisplayObject): void {}
-        _render(o: DisplayObject): void {}
+        private _preRender(o: DisplayObject): void {}
+        private _postRender(o: DisplayObject): void {}
+        private _inRender(o: DisplayObject): void {}
+
+        render(){
+            if(!this.visible)return;
+
+            this._render(<DisplayObject>this.topChild);
+        }
+
+        private _render(obj: DisplayObject): void{
+            if(!obj.visible){
+                return;
+            }
+
+            this._preRender(obj);
+            this._inRender(obj);
+
+            this.forEachChild((child: DisplayObject)=>{
+                this._render(child);
+            });
+
+
+            this._postRender(obj);
+        }
 
         _createSurfaceImpl(width: number, height: number, renderer:any, primitive: bool, name: string): ISurfaceImpl{
             return null;

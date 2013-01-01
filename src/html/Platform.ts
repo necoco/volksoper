@@ -1,0 +1,5 @@
+
+module volksoper{
+    class Platform{
+    }
+}

@@ -5,10 +5,10 @@
 
 module volksoper{
     export class TouchEvent extends volksoper.Event{
-        static TOUCH_UP = "touchUp";
-        static TOUCH_DOWN = "touchDown";
+        static TOUCH_END = "touchEnd";
+        static TOUCH_START = "touchStart";
         static TOUCH_MOVE = "touchMove";
-        static TOUCH_CANCELED = "touchCanceled";
+        static TOUCH_CANCEL = "touchCancel";
 
         get x(){
             return this._x;
