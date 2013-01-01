@@ -79,7 +79,7 @@ module volksoper{
 
             var preventTouchDefault = (e: any)=>{
                 var tag = (e.target.tagName).toLowerCase();
-                if(HTMLStage.USE_DEFAULT.indexOf(tag) >= 0){
+                if(HTMLStage.USE_DEFAULT.indexOf(tag) < 0){
                     e.preventDefault();
                     if(!this.running){
                         e.stopPropagation();
@@ -95,7 +95,7 @@ module volksoper{
             var preventMouseDefault = (incr)=>{
                 return (e: any)=>{
                     var tag = (e.target.tagName).toLowerCase();
-                    if(HTMLStage.USE_DEFAULT.indexOf(tag) >= 0){
+                    if(HTMLStage.USE_DEFAULT.indexOf(tag) < 0){
                         if(incr){
                             this._mouseId++;
                         }
@@ -139,25 +139,30 @@ module volksoper{
             s.addEventListener('touchcancel', touchListener(volksoper.TouchEvent.TOUCH_CANCEL, false, true), false);
 
 
-            var mouseListener = (type, reg, unreg)=>{
+            var mouseDown = false;
+            var mouseListener = (type, down, move, reg, unreg)=>{
                 return (e: MouseEvent)=>{
                     var x = (e.pageX - this._pageX) / this.scale;
                     var y = (e.pageY - this._pageY) / this.scale;
                     var id = this._mouseId;
-
-                    var obj = this.propagateTouchEvent(type, x, y, id);
-                    if(reg){
-                        this.registerTouchReceiver(obj, id);
+                    if(!move){
+                        mouseDown = down;
                     }
-                    if(unreg){
-                        this.unregisterTouchReceiver(id);
+                    if(mouseDown){
+                        var obj = this.propagateTouchEvent(type, x, y, id);
+                        if(reg){
+                            this.registerTouchReceiver(obj, id);
+                        }
+                        if(unreg){
+                            this.unregisterTouchReceiver(id);
+                        }
                     }
                 }
             };
 
-            s.addEventListener('mousedown', mouseListener(volksoper.TouchEvent.TOUCH_START, true, false), false);
-            s.addEventListener('mouseup', mouseListener(volksoper.TouchEvent.TOUCH_END, true, false), false);
-            s.addEventListener('mousemove', mouseListener(volksoper.TouchEvent.TOUCH_MOVE, true, false), false);
+            s.addEventListener('mousedown', mouseListener(volksoper.TouchEvent.TOUCH_START, true, false, true, false), false);
+            document.addEventListener('mouseup', mouseListener(volksoper.TouchEvent.TOUCH_END, false, false, true, false), false);
+            s.addEventListener('mousemove', mouseListener(volksoper.TouchEvent.TOUCH_MOVE, false, true, false, false), false);
         }
     }
 }

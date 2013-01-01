@@ -1181,8 +1181,8 @@ var volksoper;
         __extends(Stage, _super);
         function Stage(options) {
                 _super.call(this);
-            this._ready = false;
-            this._running = false;
+            this._ready = true;
+            this._running = true;
             this._touchReceivers = {
             };
             this._width = options.width || 320;
@@ -1274,12 +1274,9 @@ var volksoper;
             delete this._touchReceivers[id];
         };
         Stage.prototype.propagateTouchEvent = function (type, x, y, id) {
-            var stack = [];
-            var localStack = [];
-            var actorStack = [];
             var target = this._touchReceivers[id];
             if(!target) {
-                var target = this._findTouch(this.topChild, x, y);
+                target = this._findTouch(this.topChild, x, y);
             }
             if(target) {
                 target.propagateEvent(new volksoper.TouchEvent(type, x, y, id));
@@ -2129,7 +2126,7 @@ var volksoper;
             }, true);
             var preventTouchDefault = function (e) {
                 var tag = (e.target.tagName).toLowerCase();
-                if(HTMLStage.USE_DEFAULT.indexOf(tag) >= 0) {
+                if(HTMLStage.USE_DEFAULT.indexOf(tag) < 0) {
                     e.preventDefault();
                     if(!_this.running) {
                         e.stopPropagation();
@@ -2143,7 +2140,7 @@ var volksoper;
             var preventMouseDefault = function (incr) {
                 return function (e) {
                     var tag = (e.target.tagName).toLowerCase();
-                    if(HTMLStage.USE_DEFAULT.indexOf(tag) >= 0) {
+                    if(HTMLStage.USE_DEFAULT.indexOf(tag) < 0) {
                         if(incr) {
                             _this._mouseId++;
                         }
@@ -2180,23 +2177,29 @@ var volksoper;
             s.addEventListener('touchend', touchListener(volksoper.TouchEvent.TOUCH_END, false, true), false);
             s.addEventListener('touchmove', touchListener(volksoper.TouchEvent.TOUCH_MOVE, false, false), false);
             s.addEventListener('touchcancel', touchListener(volksoper.TouchEvent.TOUCH_CANCEL, false, true), false);
-            var mouseListener = function (type, reg, unreg) {
+            var mouseDown = false;
+            var mouseListener = function (type, down, move, reg, unreg) {
                 return function (e) {
                     var x = (e.pageX - _this._pageX) / _this.scale;
                     var y = (e.pageY - _this._pageY) / _this.scale;
                     var id = _this._mouseId;
-                    var obj = _this.propagateTouchEvent(type, x, y, id);
-                    if(reg) {
-                        _this.registerTouchReceiver(obj, id);
+                    if(!move) {
+                        mouseDown = down;
                     }
-                    if(unreg) {
-                        _this.unregisterTouchReceiver(id);
+                    if(mouseDown) {
+                        var obj = _this.propagateTouchEvent(type, x, y, id);
+                        if(reg) {
+                            _this.registerTouchReceiver(obj, id);
+                        }
+                        if(unreg) {
+                            _this.unregisterTouchReceiver(id);
+                        }
                     }
                 }
             };
-            s.addEventListener('mousedown', mouseListener(volksoper.TouchEvent.TOUCH_START, true, false), false);
-            s.addEventListener('mouseup', mouseListener(volksoper.TouchEvent.TOUCH_END, true, false), false);
-            s.addEventListener('mousemove', mouseListener(volksoper.TouchEvent.TOUCH_MOVE, true, false), false);
+            s.addEventListener('mousedown', mouseListener(volksoper.TouchEvent.TOUCH_START, true, false, true, false), false);
+            document.addEventListener('mouseup', mouseListener(volksoper.TouchEvent.TOUCH_END, false, false, true, false), false);
+            s.addEventListener('mousemove', mouseListener(volksoper.TouchEvent.TOUCH_MOVE, false, true, false, false), false);
         };
         return HTMLStage;
     })(volksoper.Stage);

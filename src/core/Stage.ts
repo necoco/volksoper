@@ -9,11 +9,11 @@
 
 module volksoper{
     export class Stage extends volksoper.DisplayObject{
-        private _ready = false;
+        private _ready = true;
         get ready(){
             return this._ready;
         }
-        private _running = false;
+        private _running = true;
         get running(){
             return this._running;
         }
@@ -89,13 +89,9 @@ module volksoper{
         }
 
         propagateTouchEvent(type: string, x: number, y: number, id: number): DisplayObject{
-            var stack: Matrix4[] = [];
-            var localStack: number[] = [];
-            var actorStack: Actor[] = [];
-
             var target = this._touchReceivers[id];
             if(!target){
-                var target = this._findTouch(<DisplayObject>this.topChild, x, y);
+                target = this._findTouch(<DisplayObject>this.topChild, x, y);
             }
 
             if(target){
