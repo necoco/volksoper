@@ -9,11 +9,11 @@
 
 module volksoper{
     export class Stage extends volksoper.DisplayObject{
-        private _ready = true;
+        private _ready = false;
         get ready(){
             return this._ready;
         }
-        private _running = true;
+        private _running = false;
         get running(){
             return this._running;
         }
@@ -22,10 +22,18 @@ module volksoper{
         get width(){
             return this._width;
         }
+        set width(width){
+            this._width = width;
+            this._adjustStage();
+        }
 
         private _height: number;
         get height(){
             return this._height;
+        }
+        set height(height){
+            this._height = height;
+            this._adjustStage();
         }
 
         private _fps: number;
@@ -50,7 +58,34 @@ module volksoper{
         }
         set autoScale(autoScale){
             this._autoScale = autoScale;
+            if(autoScale){
+                this._autoSize = false;
+            }
+            this._adjustStage();
         }
+
+        private _fullScreen: bool;
+        get fullScreen(){
+            return this._fullScreen;
+        }
+        set fullScreen(fullScreen){
+            this._fullScreen = fullScreen;
+            this._adjustStage();
+        }
+
+        private _autoSize: bool;
+        get autoSize(){
+            return this._autoSize;
+        }
+        set autoSize(autoSize){
+            this._autoSize = autoSize;
+            if(autoSize){
+                this._autoScale = false;
+            }
+            this._adjustStage();
+        }
+
+        private _adjustStage(){}
 
         private _keyMap: any;
         get keyMap(){
@@ -71,8 +106,11 @@ module volksoper{
             this._height = options.height || 320;
             this._fps = options.fps;
             this._scale = options.scale || 1;
-            this._autoScale = options.autoScale || false;
+            this._autoScale = options.autoScale;
             this._keyMap = options.keys || {};
+            this._fullScreen = options.fullScreen;
+            this.autoSize = options.autoSize;
+
 
             var self = this;
 

@@ -19,18 +19,19 @@ module volksoper{
 
 
 
+
         private _element: HTMLElement;
 
         constructor(options: any){
             super(options);
+
 
             var stageId = options.stageId || 'volksoper-stage';
 
             var stage = document.getElementById(stageId);
             if(!stage){
                 stage = document.createElement('div');
-                stage.style.position = 'absolute';
-
+                stage.id = stageId;
                 document.body.appendChild(stage);
             }
 
@@ -52,9 +53,43 @@ module volksoper{
             };
             (<any>window).onscroll();
 
+            window.onresize = ()=>{
+                this._adjustStage();
+            }
+
             this._element = stage;
 
             this._initListeners();
+            this._adjustStage();
+        }
+
+        private _adjusting = false;
+        private _adjustStage(){
+
+            if(!this._adjusting && this._element){
+                this._adjusting = true;
+
+                if(this.fullScreen){
+                    document.body.style.margin = '0px';
+                    document.body.style.padding = '0px';
+                    document.body.style.height = '100%';
+                    document.body.style.width = '100%';
+
+                    if(this.autoScale){
+                        this.scale = Math.min(window.innerWidth/this.width, window.innerHeight/this.height);
+                    }else if(this.autoSize){
+                        this.scale = 1;
+                        this.width = window.innerWidth;
+                        this.height = window.innerHeight;
+                        console.log(window.innerWidth, window.innerHeight);
+                    }
+                }
+                this._element.style.width = Math.round(this.scale * this.width) + 'px';
+                this._element.style.height = Math.round(this.scale * this.height) + 'px';
+                this._element.style.margin = 'auto auto';
+
+                this._adjusting = false;
+            }
         }
 
         private _initListeners(){

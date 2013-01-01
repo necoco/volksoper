@@ -1181,17 +1181,19 @@ var volksoper;
         __extends(Stage, _super);
         function Stage(options) {
                 _super.call(this);
-            this._ready = true;
-            this._running = true;
+            this._ready = false;
+            this._running = false;
             this._touchReceivers = {
             };
             this._width = options.width || 320;
             this._height = options.height || 320;
             this._fps = options.fps;
             this._scale = options.scale || 1;
-            this._autoScale = options.autoScale || false;
+            this._autoScale = options.autoScale;
             this._keyMap = options.keys || {
             };
+            this._fullScreen = options.fullScreen;
+            this.autoSize = options.autoSize;
             var self = this;
             var addedListener = function (e) {
                 e.target.broadcastEvent(new volksoper.Event(volksoper.Event.ADDED_TO_STAGE), self);
@@ -1220,12 +1222,20 @@ var volksoper;
             get: function () {
                 return this._width;
             },
+            set: function (width) {
+                this._width = width;
+                this._adjustStage();
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(Stage.prototype, "height", {
             get: function () {
                 return this._height;
+            },
+            set: function (height) {
+                this._height = height;
+                this._adjustStage();
             },
             enumerable: true,
             configurable: true
@@ -1256,10 +1266,41 @@ var volksoper;
             },
             set: function (autoScale) {
                 this._autoScale = autoScale;
+                if(autoScale) {
+                    this._autoSize = false;
+                }
+                this._adjustStage();
             },
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(Stage.prototype, "fullScreen", {
+            get: function () {
+                return this._fullScreen;
+            },
+            set: function (fullScreen) {
+                this._fullScreen = fullScreen;
+                this._adjustStage();
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Stage.prototype, "autoSize", {
+            get: function () {
+                return this._autoSize;
+            },
+            set: function (autoSize) {
+                this._autoSize = autoSize;
+                if(autoSize) {
+                    this._autoScale = false;
+                }
+                this._adjustStage();
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Stage.prototype._adjustStage = function () {
+        };
         Object.defineProperty(Stage.prototype, "keyMap", {
             get: function () {
                 return this._keyMap;
@@ -2062,11 +2103,12 @@ var volksoper;
             var _this = this;
                 _super.call(this, options);
             this._mouseId = 0;
+            this._adjusting = false;
             var stageId = options.stageId || 'volksoper-stage';
             var stage = document.getElementById(stageId);
             if(!stage) {
                 stage = document.createElement('div');
-                stage.style.position = 'absolute';
+                stage.id = stageId;
                 document.body.appendChild(stage);
             }
             var style = window.getComputedStyle(stage, '');
@@ -2084,8 +2126,12 @@ var volksoper;
                 _this._pageY = (window).scrollY || window.pageYOffset + bound.top;
             };
             (window).onscroll();
+            window.onresize = function () {
+                _this._adjustStage();
+            };
             this._element = stage;
             this._initListeners();
+            this._adjustStage();
         }
         HTMLStage.USE_DEFAULT = [
             'input', 
@@ -2107,6 +2153,31 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
+        HTMLStage.prototype._adjustStage = function () {
+            if(!this._adjusting && this._element) {
+                this._adjusting = true;
+                if(this.fullScreen) {
+                    document.body.style.margin = '0px';
+                    document.body.style.padding = '0px';
+                    document.body.style.height = '100%';
+                    document.body.style.width = '100%';
+                    if(this.autoScale) {
+                        this.scale = Math.min(window.innerWidth / this.width, window.innerHeight / this.height);
+                    } else {
+                        if(this.autoSize) {
+                            this.scale = 1;
+                            this.width = window.innerWidth;
+                            this.height = window.innerHeight;
+                            console.log(window.innerWidth, window.innerHeight);
+                        }
+                    }
+                }
+                this._element.style.width = Math.round(this.scale * this.width) + 'px';
+                this._element.style.height = Math.round(this.scale * this.height) + 'px';
+                this._element.style.margin = 'auto auto';
+                this._adjusting = false;
+            }
+        };
         HTMLStage.prototype._initListeners = function () {
             var _this = this;
             var s = this._element;
