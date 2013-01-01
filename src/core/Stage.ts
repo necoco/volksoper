@@ -119,7 +119,7 @@ module volksoper{
                 found = self._findTouch(a, x, y);
 
                 return found;
-            });
+            }, true);
 
             if(found){
                 return found;

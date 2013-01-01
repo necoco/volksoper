@@ -233,13 +233,22 @@ var volksoper;
                 child.broadcast(name, args);
             });
         };
-        Actor.prototype.forEachChild = function (fn) {
+        Actor.prototype.forEachChild = function (fn, invert) {
             this._forEach++;
             if(this._children) {
                 var len = this._children.length;
-                for(var n = 0; n < len; ++n) {
-                    if(fn(this._children[n])) {
-                        break;
+                var n = 0;
+                if(invert) {
+                    for(n = len - 1; n >= 0; --n) {
+                        if(fn(this._children[n])) {
+                            break;
+                        }
+                    }
+                } else {
+                    for(n = 0; n < len; ++n) {
+                        if(fn(this._children[n])) {
+                            break;
+                        }
                     }
                 }
             }
@@ -645,8 +654,16 @@ var volksoper;
             this._localMatrix = new volksoper.Matrix4();
             this.alpha = 1;
             this.touchEnabled = true;
+            this._x = 0;
+            this._y = 0;
+            this._z = 0;
             this.width = 0;
             this.height = 0;
+            this._rotation = 0;
+            this._rotationX = 0;
+            this._rotationY = 0;
+            this._scaleX = 1;
+            this._scaleY = 1;
             this.visible = true;
         }
         Object.defineProperty(DisplayObject.prototype, "localMatrix", {
@@ -671,15 +688,13 @@ var volksoper;
             return this.hitTestLocal(localPos.x, localPos.y);
         };
         DisplayObject.prototype.getWorldMatrix = function (m) {
-            var current = this;
+            var p = this.parent;
             if(!m) {
                 m = new volksoper.Matrix4();
             }
-            do {
-                if(current.getWorldMatrix) {
-                    current.getWorldMatrix(m);
-                }
-            }while(current = current.parent)
+            if(p && p.getWorldMatrix) {
+                p.getWorldMatrix(m);
+            }
             m.multiply(this.localMatrix);
             return m;
         };
@@ -1283,7 +1298,7 @@ var volksoper;
             target.forEachChild(function (a) {
                 found = self._findTouch(a, x, y);
                 return found;
-            });
+            }, true);
             if(found) {
                 return found;
             }
@@ -2019,7 +2034,6 @@ var volksoper;
                 return (this._surface) ? this._surface.width : 0;
             },
             set: function (_) {
-                throw new Error("cannot set width");
             },
             enumerable: true,
             configurable: true
@@ -2029,7 +2043,6 @@ var volksoper;
                 return (this._surface) ? this._surface.height : 0;
             },
             set: function (_) {
-                throw new Error("cannot set height");
             },
             enumerable: true,
             configurable: true
@@ -2212,33 +2225,6 @@ var volksoper;
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
-    var CanvasStage = (function (_super) {
-        __extends(CanvasStage, _super);
-        function CanvasStage(options) {
-                _super.call(this, options);
-        }
-        Object.defineProperty(CanvasStage.prototype, "fps", {
-            get: function () {
-                return this._fps;
-            },
-            set: function (fps) {
-                this._fps = fps;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        CanvasStage.prototype._preRender = function (o) {
-        };
-        CanvasStage.prototype._postRender = function (o) {
-        };
-        CanvasStage.prototype._render = function (o) {
-        };
-        return CanvasStage;
-    })(volksoper.HTMLStage);
-    volksoper.CanvasStage = CanvasStage;    
-})(volksoper || (volksoper = {}));
-var volksoper;
-(function (volksoper) {
     var CanvasSurfaceImpl = (function () {
         function CanvasSurfaceImpl(width, height, _renderer, _primitive, _name, _dock, _renderContext) {
             this._renderer = _renderer;
@@ -2286,5 +2272,37 @@ var volksoper;
             this._renderer(this, this._context);
         };
         return CanvasSurfaceImpl;
-    })();    
+    })();
+    volksoper.CanvasSurfaceImpl = CanvasSurfaceImpl;    
 })(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var CanvasStage = (function (_super) {
+        __extends(CanvasStage, _super);
+        function CanvasStage(options) {
+                _super.call(this, options);
+        }
+        Object.defineProperty(CanvasStage.prototype, "fps", {
+            get: function () {
+                return this._fps;
+            },
+            set: function (fps) {
+                this._fps = fps;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        CanvasStage.prototype._preRender = function (o) {
+        };
+        CanvasStage.prototype._postRender = function (o) {
+        };
+        CanvasStage.prototype._render = function (o) {
+        };
+        CanvasStage.prototype._createSurfaceImpl = function (width, height, renderer, primitive, name) {
+            return new volksoper.CanvasSurfaceImpl(width, height, renderer, primitive, name, new volksoper.CanvasSceneDock(), null);
+        };
+        return CanvasStage;
+    })(volksoper.HTMLStage);
+    volksoper.CanvasStage = CanvasStage;    
+})(volksoper || (volksoper = {}));
+//@ sourceMappingURL=volksoper-canvas.js.map

@@ -10,7 +10,7 @@ module volksoper{
         private _id = 0;
 
 
-        constructor(private _parentDock: volksoper.SceneDock){
+        constructor(private _parentDock?: volksoper.SceneDock){
             super();
         }
 

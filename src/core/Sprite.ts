@@ -47,12 +47,12 @@ module volksoper{
         get width(): number{
             return (this._surface)? this._surface.width: 0;
         }
-        set width(_: number){throw new Error("cannot set width");}
+        set width(_: number){}
 
         get height(): number{
             return (this._surface)? this._surface.height: 0;
         }
-        set height(_: number){throw new Error("cannot set height");}
+        set height(_: number){}
 
         hitTestLocal(x: number, y: number){
             if(this._surface){

@@ -7,7 +7,7 @@
 
 
 module volksoper{
-    class CanvasSurfaceImpl implements ISurfaceImpl{
+    export class CanvasSurfaceImpl implements ISurfaceImpl{
         private _referenceCount = 0;
         addRef(){
             return ++this._referenceCount;

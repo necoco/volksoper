@@ -1,5 +1,7 @@
 
 ///<reference path="../html/HTMLStage.ts"/>
+///<reference path="CanvasSurfaceImpl.ts"/>
+///<reference path="CanvasSceneDock.ts"/>
 
 module volksoper{
     export class CanvasStage extends volksoper.HTMLStage{
@@ -21,6 +23,10 @@ module volksoper{
 
         private _render(o: DisplayObject){
 
+        }
+
+        _createSurfaceImpl(width: number, height: number, renderer:any, primitive: bool, name: string): ISurfaceImpl{
+            return new CanvasSurfaceImpl(width, height, renderer, primitive, name, new volksoper.CanvasSceneDock(), null);
         }
 
         constructor(options: any){

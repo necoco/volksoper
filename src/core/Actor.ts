@@ -205,13 +205,22 @@ module volksoper{
             });
         }
 
-        forEachChild(fn: (child:any)=> void): void{
+        forEachChild(fn: (child:any)=> void, invert?: bool): void{
             this._forEach++;
             if(this._children){
                 var len = this._children.length;
-                for(var n: number = 0; n < len; ++n){
-                    if(fn(this._children[n])){
-                        break;
+                var n = 0;
+                if(invert){
+                    for(n = len-1; n >= 0; --n){
+                        if(fn(this._children[n])){
+                            break;
+                        }
+                    }
+                }else{
+                    for(n = 0; n < len; ++n){
+                        if(fn(this._children[n])){
+                            break;
+                        }
                     }
                 }
             }

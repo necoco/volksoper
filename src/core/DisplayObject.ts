@@ -38,16 +38,14 @@ module volksoper{
         }
 
         getWorldMatrix(m?: Matrix4): Matrix4{
-            var current:any = this;
+            var p: any = this.parent;
             if(!m){
                 m = new volksoper.Matrix4();
             }
 
-            do{
-                if(current.getWorldMatrix){
-                    current.getWorldMatrix(m);
-                }
-            }while(current = current.parent);
+            if(p && p.getWorldMatrix){
+                p.getWorldMatrix(m);
+            }
 
             m.multiply(this.localMatrix);
 
@@ -71,7 +69,7 @@ module volksoper{
         alpha: number = 1;
         touchEnabled: bool = true;
         
-        private _x: number;
+        private _x: number = 0;
         get x(): number{
             return this._x;
         }
@@ -80,7 +78,7 @@ module volksoper{
             this._dirty = true;
         }
 
-        private _y: number;
+        private _y: number = 0;
         get y(): number{
             return this._y;
         }
@@ -89,7 +87,7 @@ module volksoper{
             this._dirty = true;
         }
         
-        private _z: number;
+        private _z: number = 0;
         get z(): number{
             return this._z;
         }
@@ -106,6 +104,7 @@ module volksoper{
             this._pivotX = value;
             this._dirty = true;
         }
+
         private _pivotY: number;
         get pivotY(): number{
             return this._pivotY;
@@ -119,7 +118,7 @@ module volksoper{
         height: number = 0;
 
 
-        private _rotation: number;
+        private _rotation: number = 0;
         get rotation(): number{
             return this._rotation;
         }
@@ -127,7 +126,7 @@ module volksoper{
             this._rotation = value;
             this._dirty = true;
         }
-        private _rotationX: number;
+        private _rotationX: number = 0;
         get rotationX(): number{
             return this._rotationX;
         }
@@ -135,7 +134,7 @@ module volksoper{
             this._rotationX = value;
             this._dirty = true;
         }
-        private _rotationY: number;
+        private _rotationY: number = 0;
         get rotationY(): number{
             return this._rotationY;
         }
@@ -145,7 +144,7 @@ module volksoper{
         }
 
 
-        private _scaleX: number;
+        private _scaleX: number = 1;
         get scaleX(): number{
             return this._scaleX;
         }
@@ -154,7 +153,7 @@ module volksoper{
             this._dirty = true;
         }
         
-        private _scaleY: number;
+        private _scaleY: number = 1;
         get scaleY(): number{
             return this._scaleY;
         }

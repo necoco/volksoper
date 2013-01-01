@@ -10,6 +10,7 @@ module.exports = function (grunt) {
     grunt.initConfig({
         meta: {
             version: '0.1.0',
+            sourcemap: '//@ sourceMappingURL=./volksoper-canvas.js.map',
             banner: '/*! Volksoper - v<%= meta.version %> - ' +
                 '<%= grunt.template.today("yyyy-mm-dd") %>\n' +
                 '* http://PROJECT_WEBSITE/\n' +
@@ -26,6 +27,13 @@ module.exports = function (grunt) {
                     'tmp/volksoper-canvas.js'
                 ],
                 dest: 'dist/volksoper.js'
+            },
+            canvas: {
+                src:[
+                    '<banner:meta.sourcemap>',
+                    'tmp/volksoper-canvas.js'
+                ],
+                dest: 'tmp/volksoper-canvas.js'
             }
         },
         typescript: {
@@ -34,6 +42,7 @@ module.exports = function (grunt) {
                 dest: 'tmp/volksoper-canvas.js',
                 options: {
                     target: "es5",
+                    sourcemap: "true",
                     base_path: "src/"
                 }
             },
@@ -90,6 +99,6 @@ module.exports = function (grunt) {
 
     // Default task.
     grunt.registerTask('default',
-        'lint typescript:canvas concat typescript:specs jasmine min');
+        'lint typescript:canvas concat:dist concat:canvas typescript:specs jasmine min');
 
 };

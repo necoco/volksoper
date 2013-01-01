@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <script type="text/javascript" src="../tmp/volksoper-canvas.js"></script>
+</head>
+<body>
+
+<script>
+    var vo = volksoper;
+    var stage = new vo.CanvasStage({});
+    var scene = new vo.Scene();
+    var sprite = new vo.Sprite();
+    var surface = new vo.Surface(320,320);
+    sprite.surface = surface;
+    stage.addChild(scene);
+    scene.addChild(sprite);
+
+    stage.addEventListener(vo.TouchEvent.TOUCH_MOVE, function(e){
+        console.log(e.x, e.y);
+    })
+</script>
+
+</body>
+</html>
