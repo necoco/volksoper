@@ -14,9 +14,6 @@ module volksoper{
 
     export class Surface extends Resource{
         private _impl: ISurfaceImpl;
-        get impl(): ISurfaceImpl{
-            return this._impl;
-        }
 
         private _invalidate: bool = false;
         invalidate(): void{
@@ -27,7 +24,6 @@ module volksoper{
             this._impl.invalidate();
         }
 
-        _referenceCount: number = 0;
         addRef(): number{
             return this._impl.addRef();
         }
@@ -50,10 +46,8 @@ module volksoper{
             this._impl.render();
         }
 
-        _setStage(stage: Stage): void{
-            if(!stage){
-                this._impl = null;
-            }else if(!this._impl){
+        _setStage(stage: Stage){
+            if(!this._impl){
                 this._impl = stage._createSurfaceImpl(
                         this._width, this._height, this._renderer, this._primitive, this._name);
                 if(this._invalidate){

@@ -1095,6 +1095,7 @@ var volksoper;
         function Resource() {
             this._listeners = [];
             this._usable = false;
+            this._valid = false;
         }
         Object.defineProperty(Resource.prototype, "usable", {
             get: function () {
@@ -1112,11 +1113,22 @@ var volksoper;
                 this._listeners = null;
             }
         };
+        Resource.prototype._setError = function () {
+            for(var n = 0; n < this._listeners.length; ++n) {
+                this._listeners[n](null);
+            }
+            this._valid = false;
+            this._listeners = null;
+        };
         Resource.prototype.addUsableListener = function (fn) {
             if(this._listeners) {
                 this._listeners.push(fn);
             } else {
-                fn(this);
+                if(this._valid) {
+                    fn(this);
+                } else {
+                    fn(null);
+                }
             }
         };
         return Resource;
@@ -1364,6 +1376,8 @@ var volksoper;
             }
             if(target) {
                 target.propagateEvent(new volksoper.TouchEvent(type, x, y, id));
+            } else {
+                this.dispatchEvent(new volksoper.TouchEvent(type, x, y, id));
             }
             return target;
         };
@@ -1416,9 +1430,19 @@ var volksoper;
         Stage.prototype._createLabelImpl = function (width, height, name) {
             return null;
         };
+        Stage.prototype._createSceneDock = function () {
+            return null;
+        };
         Stage.prototype._visitRendering = function (v) {
             v.visitStage(this);
         };
+        Object.defineProperty(Stage.prototype, "topScene", {
+            get: function () {
+                return this.topChild;
+            },
+            enumerable: true,
+            configurable: true
+        });
         return Stage;
     })(volksoper.DisplayActor);
     volksoper.Stage = Stage;    
@@ -1443,7 +1467,6 @@ var volksoper;
             this._primitive = _primitive;
             this._name = _name;
             this._invalidate = false;
-            this._referenceCount = 0;
             if(this._renderer) {
                 this._invalidate = true;
             }
@@ -1451,13 +1474,6 @@ var volksoper;
                 this._name = volksoper.generateUniqueName();
             }
         }
-        Object.defineProperty(Surface.prototype, "impl", {
-            get: function () {
-                return this._impl;
-            },
-            enumerable: true,
-            configurable: true
-        });
         Surface.prototype.invalidate = function () {
             if(!this._impl) {
                 this._invalidate = true;
@@ -1496,15 +1512,11 @@ var volksoper;
             this._impl.render();
         };
         Surface.prototype._setStage = function (stage) {
-            if(!stage) {
-                this._impl = null;
-            } else {
-                if(!this._impl) {
-                    this._impl = stage._createSurfaceImpl(this._width, this._height, this._renderer, this._primitive, this._name);
-                    if(this._invalidate) {
-                        this._invalidate = false;
-                        this._impl.invalidate();
-                    }
+            if(!this._impl) {
+                this._impl = stage._createSurfaceImpl(this._width, this._height, this._renderer, this._primitive, this._name);
+                if(this._invalidate) {
+                    this._invalidate = false;
+                    this._impl.invalidate();
                 }
             }
         };
@@ -2003,6 +2015,7 @@ var volksoper;
             configurable: true
         });
         Scene.prototype._setStage = function () {
+            this._dock = this.stage._createSceneDock();
         };
         Scene.prototype._unsetStage = function () {
             this._dock = null;
@@ -2154,7 +2167,6 @@ var volksoper;
         Sprite.prototype._unsetStage = function () {
             if(this.surface) {
                 this._surface.release();
-                this._surface._setStage(null);
             }
         };
         Object.defineProperty(Sprite.prototype, "width", {
@@ -2187,6 +2199,131 @@ var volksoper;
         return Sprite;
     })(volksoper.SceneNode);
     volksoper.Sprite = Sprite;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var HTMLImage = (function (_super) {
+        __extends(HTMLImage, _super);
+        function HTMLImage(_name, listener) {
+                _super.call(this, 0, 0);
+            this._name = _name;
+            this._width = 0;
+            this._height = 0;
+            this._instance = null;
+            this._referenceCount = 0;
+            this.addUsableListener(listener);
+        }
+        Object.defineProperty(HTMLImage.prototype, "image", {
+            get: function () {
+                if(this._instance) {
+                    return this._instance.image;
+                }
+                return this._image;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        HTMLImage.prototype.addRef = function () {
+            return ++this._referenceCount;
+        };
+        HTMLImage.prototype.release = function () {
+            var count = --this._referenceCount;
+            if(this._instance && count <= 0) {
+                this._instance.release();
+            }
+            return count;
+        };
+        HTMLImage.prototype._setStage = function (stage) {
+            var _this = this;
+            var found = (stage.topScene.dock).find(this._name);
+            if(found) {
+                this._instance = found;
+                if(found.usable) {
+                    this._setUsable();
+                } else {
+                    found.addUsableListener(function (obj) {
+                        if(obj) {
+                            _this._setUsable();
+                        } else {
+                            _this._setError();
+                        }
+                    });
+                }
+            } else {
+                var img = new HTMLImageElement();
+                img.onerror = function () {
+                    _this._setError();
+                };
+                img.onload = function () {
+                    _this._width = img.width;
+                    _this._height = img.height;
+                    _this._setUsable();
+                };
+                this._image = img;
+                img.src = this._name;
+            }
+        };
+        return HTMLImage;
+    })(volksoper.Surface);
+    volksoper.HTMLImage = HTMLImage;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var HTMLSceneDock = (function (_super) {
+        __extends(HTMLSceneDock, _super);
+        function HTMLSceneDock(parentDock) {
+                _super.call(this, parentDock);
+            this._currentResouce = 0;
+            this._totalResource = 0;
+        }
+        HTMLSceneDock.prototype.find = function (name) {
+            return null;
+        };
+        HTMLSceneDock.prototype.load = function () {
+            var files = [];
+            for (var _i = 0; _i < (arguments.length - 0); _i++) {
+                files[_i] = arguments[_i + 0];
+            }
+            var l = files.length;
+            var result = [];
+            for(var n = 0; n < l; ++n) {
+                result.push(this._loadResource(files[n]));
+            }
+            return result;
+        };
+        HTMLSceneDock.prototype._loadResource = function (file) {
+            var _this = this;
+            var ext = this._extractExt(file);
+            switch(ext) {
+                case 'jpg':
+                case 'png':
+                case 'jpeg':
+                case 'gif': {
+                    this._totalResource++;
+                    return new volksoper.HTMLImage(file, function (img) {
+                        _this.broadcastEvent(new volksoper.Event(volksoper.Event.LOADED), img);
+                        _this._currentResouce++;
+                        if(_this._currentResouce >= _this._totalResource) {
+                            _this.broadcastEvent(new volksoper.Event(volksoper.Event.COMPLETE));
+                        }
+                    });
+
+                }
+            }
+        };
+        HTMLSceneDock.prototype._extractExt = function (path) {
+            var matched = path.match(/\.\w+$/);
+            if(matched && matched.length > 0) {
+                return matched[0].slice(1).toLowerCase();
+            }
+            return null;
+        };
+        HTMLSceneDock.prototype.play = function (name) {
+            return false;
+        };
+        return HTMLSceneDock;
+    })(volksoper.SceneDock);
+    volksoper.HTMLSceneDock = HTMLSceneDock;    
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
@@ -2316,9 +2453,7 @@ var volksoper;
                 stage.style.height = this.height + 'px';
             }
             (window).onscroll = function (e) {
-                var bound = stage.getBoundingClientRect();
-                _this._pageX = (window).scrollX || window.pageXOffset + bound.left;
-                _this._pageY = (window).scrollY || window.pageYOffset + bound.top;
+                _this._adjustStage();
             };
             (window).onscroll();
             window.onresize = function () {
@@ -2387,6 +2522,9 @@ var volksoper;
                 this._element.style.height = Math.round(this.scale * this.height) + 'px';
                 this._element.style.margin = 'auto auto';
                 this._adjustCanvas();
+                var bound = this._element.getBoundingClientRect();
+                this._pageX = (window).scrollX + bound.left || window.pageXOffset + bound.left;
+                this._pageY = (window).scrollY + bound.top || window.pageYOffset + bound.top;
                 this._adjusting = false;
             }
         };
@@ -2486,6 +2624,10 @@ var volksoper;
                 }
             }, false);
         };
+        HTMLStage.prototype._createSceneDock = function () {
+            var parent = (this.numChildren !== 0) ? this.topScene.dock : null;
+            return new volksoper.HTMLSceneDock(parent);
+        };
         return HTMLStage;
     })(volksoper.Stage);
     volksoper.HTMLStage = HTMLStage;    
@@ -2514,7 +2656,7 @@ var volksoper;
         }
         ProcessCanvasRenderingVisitor.prototype.visitSprite = function (sprite) {
             if(sprite.surface) {
-                sprite.surface.impl.render();
+                sprite.surface._render();
             }
         };
         return ProcessCanvasRenderingVisitor;

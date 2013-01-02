@@ -23,7 +23,7 @@ module volksoper{
 
         visitSprite(sprite: Sprite){
             if(sprite.surface){
-                sprite.surface.impl.render();
+                sprite.surface._render();
             }
         }
     }

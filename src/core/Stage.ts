@@ -140,6 +140,8 @@ module volksoper{
 
             if(target){
                 target.propagateEvent(new volksoper.TouchEvent(type, x, y, id));
+            }else{
+                this.dispatchEvent(new volksoper.TouchEvent(type, x, y, id));
             }
 
             return target;
@@ -208,8 +210,16 @@ module volksoper{
             return null;
         }
 
+        _createSceneDock(): SceneDock{
+            return null;
+        }
+
         _visitRendering(v: RenderingVisitor){
             v.visitStage(this);
+        }
+
+        get topScene(): Scene{
+            return <Scene>this.topChild;
         }
     }
 }

@@ -54,9 +54,7 @@ module volksoper{
             }
 
             (<any>window).onscroll = (e: any)=>{
-                var bound = stage.getBoundingClientRect();
-                this._pageX = (<any>window).scrollX || window.pageXOffset + bound.left;
-                this._pageY = (<any>window).scrollY || window.pageYOffset + bound.top;
+                this._adjustStage();
             };
             (<any>window).onscroll();
 
@@ -97,6 +95,10 @@ module volksoper{
                 this._element.style.margin = 'auto auto';
 
                 this._adjustCanvas();
+
+                var bound = this._element.getBoundingClientRect();
+                this._pageX = (<any>window).scrollX + bound.left || window.pageXOffset + bound.left;
+                this._pageY = (<any>window).scrollY + bound.top || window.pageYOffset + bound.top;
 
                 this._adjusting = false;
             }
@@ -211,5 +213,12 @@ module volksoper{
                 }
             }, false);
         }
+
+        _createSceneDock(): SceneDock{
+            var parent = (this.numChildren !== 0)? this.topScene.dock: null;
+            return new volksoper.HTMLSceneDock(parent);
+        }
     }
+
+
 }

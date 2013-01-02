@@ -29,7 +29,7 @@ module volksoper{
         }
 
         private _setStage(){
-            //this._dock = this.stage.createSceneDock();
+            this._dock = this.stage._createSceneDock();
         }
 
         private _unsetStage(){
