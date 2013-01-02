@@ -7,24 +7,27 @@
 <body>
 
 <script>
-    var vo = volksoper;
-    var stage = new vo.CanvasStage({fullScreen: true, autoScale: true});
-    var scene = new vo.Scene();
-    var sprite = new vo.Sprite();
-    var surface = new vo.Picture("test.png");
-    sprite.surface = surface;
-    stage.addChild(scene);
-    scene.addChild(sprite);
+    window.onload = function(){
+        var vo = volksoper;
+        var stage = new vo.CanvasStage({fullScreen: true, autoScale: true, width: 500, height: 500});
+        var scene = new vo.Scene();
+        var sprite = new vo.Sprite();
+        var surface = new vo.Picture("test.png");
+        sprite.surface = surface;
+        sprite.x = 30;
+        stage.addChild(scene);
+        scene.addChild(sprite);
 
-    stage.addEventListener(vo.TouchEvent.TOUCH_MOVE, function(e){
-        console.log(e.x, e.y, e.id);
-    });
+        stage.addEventListener(vo.TouchEvent.TOUCH_MOVE, function(e){
+            console.log(e.x, e.y, e.id);
+        });
 
-    surface.addUsableListener(function(){
+        surface.addUsableListener(function(){
+            stage.render();
+        });
+        stage.backgroundColor = 0xffffcc;
         stage.render();
-        stage.context.fillRect(0,0, 30, 30);
-    });
-    stage.render();
+    };
 
 
 

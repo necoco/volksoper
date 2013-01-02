@@ -1291,6 +1291,7 @@ var volksoper;
         function Stage(options) {
                 _super.call(this);
             this._running = true;
+            this._backgroundColor = 16777215;
             this._touchReceivers = {
             };
             this._width = options.width || 320;
@@ -1325,6 +1326,8 @@ var volksoper;
         Stage.prototype.resume = function () {
             this._running = true;
         };
+        Stage.prototype.render = function () {
+        };
         Object.defineProperty(Stage.prototype, "width", {
             get: function () {
                 return this._width;
@@ -1332,6 +1335,16 @@ var volksoper;
             set: function (width) {
                 this._width = width;
                 this._adjustStage();
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Stage.prototype, "backgroundColor", {
+            get: function () {
+                return this._backgroundColor;
+            },
+            set: function (color) {
+                this._backgroundColor = color;
             },
             enumerable: true,
             configurable: true
@@ -2561,6 +2574,7 @@ var volksoper;
                 stage.id = stageId;
                 document.body.appendChild(stage);
             }
+            stage.style.overflow = "hidden";
             var style = window.getComputedStyle(stage, '');
             var currentWidth = parseInt(style.width);
             var currentHeight = parseInt(style.height);
@@ -2570,16 +2584,17 @@ var volksoper;
                 stage.style.width = this.width + 'px';
                 stage.style.height = this.height + 'px';
             }
-            (window).onscroll = function (e) {
-                _this._adjustStage();
-            };
-            (window).onscroll();
-            window.onresize = function () {
-                _this._adjustStage();
-            };
             this._element = stage;
             this._initListeners();
             this._adjustStage();
+            (window).onscroll = function (e) {
+                _this._adjustStage();
+                _this.render();
+            };
+            window.onresize = function () {
+                _this._adjustStage();
+                _this.render();
+            };
         }
         HTMLStage.USE_DEFAULT = [
             'input', 
@@ -2759,7 +2774,6 @@ var volksoper;
             this._stage = _stage;
         }
         CanvasImageImpl.prototype.render = function () {
-            (this._stage).context.setTransform(1, 0, 0, 1, 0, 0);
             (this._stage).context.drawImage(this._getImage(), 0, 0);
         };
         return CanvasImageImpl;
@@ -2777,7 +2791,8 @@ var volksoper;
         PreCanvasRenderingVisitor.prototype.visitDisplayObject = function (o) {
             var m = o.localMatrix.m;
             this._context.save();
-            this._context.transform(m[0], m[1], m[4], m[5], m[3], m[7]);
+            this._context.transform(m[0], m[4], m[1], m[5], m[12], m[13]);
+            console.log("mat", m);
         };
         return PreCanvasRenderingVisitor;
     })(volksoper.RenderingVisitor);
@@ -2791,6 +2806,7 @@ var volksoper;
         ProcessCanvasRenderingVisitor.prototype.visitSprite = function (sprite) {
             if(sprite.surface) {
                 sprite.surface._render();
+                console.log("render");
             }
         };
         return ProcessCanvasRenderingVisitor;
@@ -2921,6 +2937,8 @@ var volksoper;
         };
         CanvasStage.prototype.render = function () {
             this.invalidateSurfaceImpl();
+            this.context.fillStyle = '#' + this.backgroundColor.toString(16);
+            this.context.fillRect(0, 0, this.width, this.height);
             this._render(this._pre, this._process, this._post);
         };
         CanvasStage.prototype.invalidateSurfaceImpl = function () {

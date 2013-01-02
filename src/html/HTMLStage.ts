@@ -41,6 +41,7 @@ module volksoper{
                 stage.id = stageId;
                 document.body.appendChild(stage);
             }
+            stage.style.overflow = "hidden";
 
             var style = window.getComputedStyle(stage, '');
             var currentWidth = parseInt(style.width);
@@ -53,19 +54,20 @@ module volksoper{
                 stage.style.height = this.height + 'px';
             }
 
-            (<any>window).onscroll = (e: any)=>{
-                this._adjustStage();
-            };
-            (<any>window).onscroll();
-
-            window.onresize = ()=>{
-                this._adjustStage();
-            }
-
             this._element = stage;
 
             this._initListeners();
             this._adjustStage();
+
+            (<any>window).onscroll = (e: any)=>{
+                this._adjustStage();
+                this.render();
+            };
+
+            window.onresize = ()=>{
+                this._adjustStage();
+                this.render();
+            }
         }
 
         private _adjusting = false;

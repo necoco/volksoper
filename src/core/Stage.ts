@@ -24,6 +24,8 @@ module volksoper{
             this._running = true;
         }
 
+        render(){}
+
         private _width: number;
         get width(){
             return this._width;
@@ -31,6 +33,14 @@ module volksoper{
         set width(width){
             this._width = width;
             this._adjustStage();
+        }
+
+        private _backgroundColor: number = 0xffffff;
+        get backgroundColor(){
+            return this._backgroundColor;
+        }
+        set backgroundColor(color){
+            this._backgroundColor = color;
         }
 
         private _height: number;

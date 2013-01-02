@@ -28,6 +28,7 @@ module volksoper{
 
         private _adjustCanvas(){
             var c = this._canvas;
+
             if(!c){
                 c = <HTMLCanvasElement>document.createElement('canvas');
                 this.element.appendChild(c);
@@ -57,6 +58,8 @@ module volksoper{
         render(){
             this.invalidateSurfaceImpl();
 
+            this.context.fillStyle = '#' + this.backgroundColor.toString(16);
+            this.context.fillRect(0, 0, this.width, this.height);
             this._render(this._pre, this._process, this._post);
         }
 
