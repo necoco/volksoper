@@ -5,7 +5,7 @@
 declare class Stage{}
 
 module volksoper{
-    export class DisplayObject extends volksoper.Actor{
+    export class DisplayActor extends volksoper.Actor{
         private _dirty: bool = true;
 
         private _stage: volksoper.Stage;

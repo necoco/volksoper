@@ -12,7 +12,7 @@
 
 
 module volksoper{
-    export class Stage extends volksoper.DisplayObject{
+    export class Stage extends volksoper.DisplayActor{
         private _running = true;
         get running(){
             return this._running;
@@ -132,10 +132,10 @@ module volksoper{
             this.addEventListener(volksoper.Event.REMOVE, removeListener, true, volksoper.SYSTEM_PRIORITY);
         }
 
-        propagateTouchEvent(type: string, x: number, y: number, id: number): DisplayObject{
+        propagateTouchEvent(type: string, x: number, y: number, id: number): DisplayActor{
             var target = this._touchReceivers[id];
             if(!target){
-                target = this._findTouch(<DisplayObject>this.topChild, x, y);
+                target = this._findTouch(<DisplayActor>this.topChild, x, y);
             }
 
             if(target){
@@ -149,13 +149,13 @@ module volksoper{
             this.topChild.broadcastEvent(new KeyEvent(type, keyCode, keyName));
         }
 
-        private _findTouch(target: DisplayObject, x: number, y: number): DisplayObject{
+        private _findTouch(target: DisplayActor, x: number, y: number): DisplayActor{
             var self = this;
             var found = null;
 
             if(!target.touchEnabled)return null;
 
-            target.forEachChild((a: DisplayObject)=>{
+            target.forEachChild((a: DisplayActor)=>{
                 found = self._findTouch(a, x, y);
 
                 return found;
@@ -165,7 +165,7 @@ module volksoper{
                 return found;
             }
 
-            if(target instanceof DisplayObject){
+            if(target instanceof DisplayActor){
                 if(target.hitTest(x, y)){
                     return target;
                 }else{
@@ -179,10 +179,10 @@ module volksoper{
         _render(pre: RenderingVisitor, process: RenderingVisitor, post: RenderingVisitor){
             if(!this.visible)return;
 
-            this._innerRender(<DisplayObject>this.topChild, pre, process, post);
+            this._innerRender(<DisplayActor>this.topChild, pre, process, post);
         }
 
-        private _innerRender(obj: DisplayObject,
+        private _innerRender(obj: DisplayActor,
                         pre: RenderingVisitor, process: RenderingVisitor, post: RenderingVisitor): void{
             if(!obj.visible){
                 return;
@@ -192,7 +192,7 @@ module volksoper{
             obj._visitRendering(process);
 
 
-            obj.forEachChild((child: DisplayObject)=>{
+            obj.forEachChild((child: DisplayActor)=>{
                 this._innerRender(child, pre, process, post);
             });
 

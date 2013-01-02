@@ -3,10 +3,10 @@
 ///<reference path="Scene.ts"/>
 ///<reference path="StoryBoard.ts"/>
 ///<reference path="Story.ts"/>
-///<reference path="DisplayObject.ts"/>
+///<reference path="DisplayActor.ts"/>
 
 module volksoper{
-    export class SceneNode extends volksoper.DisplayObject{
+    export class SceneNode extends volksoper.DisplayActor{
         private _scene: volksoper.Scene;
         get scene(): volksoper.Scene{
             return this._scene;

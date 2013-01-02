@@ -8,7 +8,7 @@ module volksoper{
             super();
         }
 
-        visitDisplayObject(o: DisplayObject){
+        visitDisplayObject(o: DisplayActor){
             var m = o.localMatrix.m;
 
             this._context.save();
@@ -33,7 +33,7 @@ module volksoper{
             super();
         }
 
-        visitDisplayObject(o: DisplayObject){
+        visitDisplayObject(o: DisplayActor){
             this._context.restore();
         }
     }

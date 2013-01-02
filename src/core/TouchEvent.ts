@@ -1,7 +1,7 @@
 
 ///<reference path="Event.ts"/>
 ///<reference path="Actor.ts"/>
-///<reference path="DisplayObject.ts"/>
+///<reference path="DisplayActor.ts"/>
 
 module volksoper{
     export class TouchEvent extends volksoper.Event{
@@ -30,8 +30,8 @@ module volksoper{
         }
 
         private _getLocal(): any{
-            if(this._currentTarget instanceof DisplayObject){
-                this._localPosition = (<DisplayObject>this._currentTarget).globalToLocal(this._x, this._y);
+            if(this._currentTarget instanceof DisplayActor){
+                this._localPosition = (<DisplayActor>this._currentTarget).globalToLocal(this._x, this._y);
             }else{
                 this._localPosition = {x: this._x, y: this._y};
             }

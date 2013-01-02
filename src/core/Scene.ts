@@ -2,13 +2,13 @@
 ///<reference path="Event.ts"/>
 ///<reference path="Actor.ts"/>
 ///<reference path="StoryBoard.ts"/>
-///<reference path="DisplayObject.ts"/>
+///<reference path="DisplayActor.ts"/>
 ///<reference path="SceneDock.ts"/>
 
 
 module volksoper{
 
-    export class Scene extends volksoper.DisplayObject{
+    export class Scene extends volksoper.DisplayActor{
         private _registry: Object = {};
         private _execFind = 0;
         private _unregister = [];

@@ -646,9 +646,9 @@ var __extends = this.__extends || function (d, b) {
 
 var volksoper;
 (function (volksoper) {
-    var DisplayObject = (function (_super) {
-        __extends(DisplayObject, _super);
-        function DisplayObject() {
+    var DisplayActor = (function (_super) {
+        __extends(DisplayActor, _super);
+        function DisplayActor() {
             var _this = this;
                 _super.call(this);
             this._dirty = true;
@@ -675,18 +675,18 @@ var volksoper;
                 _this._unsetStage();
             }, false, volksoper.SYSTEM_PRIORITY);
         }
-        Object.defineProperty(DisplayObject.prototype, "stage", {
+        Object.defineProperty(DisplayActor.prototype, "stage", {
             get: function () {
                 return this._stage;
             },
             enumerable: true,
             configurable: true
         });
-        DisplayObject.prototype._setStage = function () {
+        DisplayActor.prototype._setStage = function () {
         };
-        DisplayObject.prototype._unsetStage = function () {
+        DisplayActor.prototype._unsetStage = function () {
         };
-        Object.defineProperty(DisplayObject.prototype, "localMatrix", {
+        Object.defineProperty(DisplayActor.prototype, "localMatrix", {
             get: function () {
                 var m = this._localMatrix;
                 if(this._dirty) {
@@ -700,17 +700,17 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
-        DisplayObject.prototype._visitRendering = function (v) {
+        DisplayActor.prototype._visitRendering = function (v) {
             v.visitDisplayObject(this);
         };
-        DisplayObject.prototype.hitTestLocal = function (x, y) {
+        DisplayActor.prototype.hitTestLocal = function (x, y) {
             return 0 <= x && x <= this.width && 0 <= y && y <= this.height;
         };
-        DisplayObject.prototype.hitTest = function (x, y) {
+        DisplayActor.prototype.hitTest = function (x, y) {
             var localPos = this.globalToLocal(x, y);
             return this.hitTestLocal(localPos.x, localPos.y);
         };
-        DisplayObject.prototype.getWorldMatrix = function (m) {
+        DisplayActor.prototype.getWorldMatrix = function (m) {
             var p = this.parent;
             if(!m) {
                 m = new volksoper.Matrix4();
@@ -721,7 +721,7 @@ var volksoper;
             m.multiply(this.localMatrix);
             return m;
         };
-        DisplayObject.prototype.globalToLocal = function (x, y) {
+        DisplayActor.prototype.globalToLocal = function (x, y) {
             var mat = this.getWorldMatrix();
             var m = mat.m;
             if(mat.invert()) {
@@ -736,7 +736,7 @@ var volksoper;
                 };
             }
         };
-        Object.defineProperty(DisplayObject.prototype, "x", {
+        Object.defineProperty(DisplayActor.prototype, "x", {
             get: function () {
                 return this._x;
             },
@@ -747,7 +747,7 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(DisplayObject.prototype, "y", {
+        Object.defineProperty(DisplayActor.prototype, "y", {
             get: function () {
                 return this._y;
             },
@@ -758,7 +758,7 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(DisplayObject.prototype, "z", {
+        Object.defineProperty(DisplayActor.prototype, "z", {
             get: function () {
                 return this._z;
             },
@@ -769,7 +769,7 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(DisplayObject.prototype, "pivotX", {
+        Object.defineProperty(DisplayActor.prototype, "pivotX", {
             get: function () {
                 return this._pivotX;
             },
@@ -780,7 +780,7 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(DisplayObject.prototype, "pivotY", {
+        Object.defineProperty(DisplayActor.prototype, "pivotY", {
             get: function () {
                 return this._pivotY;
             },
@@ -791,7 +791,7 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(DisplayObject.prototype, "rotation", {
+        Object.defineProperty(DisplayActor.prototype, "rotation", {
             get: function () {
                 return this._rotation;
             },
@@ -802,7 +802,7 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(DisplayObject.prototype, "rotationX", {
+        Object.defineProperty(DisplayActor.prototype, "rotationX", {
             get: function () {
                 return this._rotationX;
             },
@@ -813,7 +813,7 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(DisplayObject.prototype, "rotationY", {
+        Object.defineProperty(DisplayActor.prototype, "rotationY", {
             get: function () {
                 return this._rotationY;
             },
@@ -824,7 +824,7 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(DisplayObject.prototype, "scaleX", {
+        Object.defineProperty(DisplayActor.prototype, "scaleX", {
             get: function () {
                 return this._scaleX;
             },
@@ -835,7 +835,7 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(DisplayObject.prototype, "scaleY", {
+        Object.defineProperty(DisplayActor.prototype, "scaleY", {
             get: function () {
                 return this._scaleY;
             },
@@ -846,9 +846,9 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
-        return DisplayObject;
+        return DisplayActor;
     })(volksoper.Actor);
-    volksoper.DisplayObject = DisplayObject;    
+    volksoper.DisplayActor = DisplayActor;    
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
@@ -1173,7 +1173,7 @@ var volksoper;
             configurable: true
         });
         TouchEvent.prototype._getLocal = function () {
-            if(this._currentTarget instanceof volksoper.DisplayObject) {
+            if(this._currentTarget instanceof volksoper.DisplayActor) {
                 this._localPosition = (this._currentTarget).globalToLocal(this._x, this._y);
             } else {
                 this._localPosition = {
@@ -1383,7 +1383,7 @@ var volksoper;
             if(found) {
                 return found;
             }
-            if(target instanceof volksoper.DisplayObject) {
+            if(target instanceof volksoper.DisplayActor) {
                 if(target.hitTest(x, y)) {
                     return target;
                 } else {
@@ -1420,7 +1420,7 @@ var volksoper;
             v.visitStage(this);
         };
         return Stage;
-    })(volksoper.DisplayObject);
+    })(volksoper.DisplayActor);
     volksoper.Stage = Stage;    
 })(volksoper || (volksoper = {}));
 var volksoper;
@@ -2069,7 +2069,7 @@ var volksoper;
             v.visitScene(this);
         };
         return Scene;
-    })(volksoper.DisplayObject);
+    })(volksoper.DisplayActor);
     volksoper.Scene = Scene;    
 })(volksoper || (volksoper = {}));
 var volksoper;
@@ -2115,7 +2115,7 @@ var volksoper;
             v.visitSceneNode(this);
         };
         return SceneNode;
-    })(volksoper.DisplayObject);
+    })(volksoper.DisplayActor);
     volksoper.SceneNode = SceneNode;    
 })(volksoper || (volksoper = {}));
 var volksoper;
