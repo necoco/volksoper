@@ -23,9 +23,6 @@
 
 ・LiteSprite  =>いる？
 ・bake                 =>これは必須
-・Canvas:Sprite
-・Canvas:Surface
-・HTML5:Stage
 ・WebGL:Sprite
 ・WebGL:Surface
 
