@@ -89,7 +89,6 @@ module volksoper{
                         this.scale = 1;
                         this.width = window.innerWidth;
                         this.height = window.innerHeight;
-                        console.log(window.innerWidth, window.innerHeight);
                     }
                 }
                 this._element.style.width = Math.round(this.scale * this.width) + 'px';

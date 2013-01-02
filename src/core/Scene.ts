@@ -36,6 +36,14 @@ module volksoper{
             this._dock = null;
         }
 
+        addChild(child: Actor): void{
+            if(child instanceof SceneNode){
+                super.addChild(child);
+            }else{
+                throw Error("Scene can hold SceneNode only.");
+            }
+        }
+
         constructor(){
             super();
 
@@ -81,7 +89,6 @@ module volksoper{
         private _unregisterTarget(target: Actor): void {
             if(this._execFind === 0){
                 this._iterateTable(target, (table)=>{
-                    console.log(table.indexOf(target));
                     table.splice(table.indexOf(target), 1);
                 });
             }else{

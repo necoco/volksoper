@@ -25,6 +25,14 @@ module volksoper{
             return this._story;
         }
 
+        addChild(child: Actor): void{
+            if(child instanceof SceneNode){
+                super.addChild(child);
+            }else{
+                throw Error("SceneNode can hold SceneNode only.");
+            }
+        }
+
 
         _visitRendering(v: RenderingVisitor){
             v.visitSceneNode(this);

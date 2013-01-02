@@ -13,7 +13,6 @@ module volksoper{
 
             this._context.save();
             this._context.transform(m[0], m[4], m[1], m[5], m[12], m[13]);
-            console.log("mat", m);
         }
     }
     export class ProcessCanvasRenderingVisitor extends RenderingVisitor{
@@ -25,7 +24,6 @@ module volksoper{
         visitSprite(sprite: Sprite){
             if(sprite.surface){
                 sprite.surface._render();
-                console.log("render");
             }
         }
     }

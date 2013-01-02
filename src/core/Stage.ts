@@ -24,6 +24,15 @@ module volksoper{
             this._running = true;
         }
 
+
+        addChild(child: Actor): void{
+            if(child instanceof Scene){
+                super.addChild(child);
+            }else{
+                throw Error("Stage can hold Scene only.");
+            }
+        }
+
         render(){}
 
         private _width: number;
