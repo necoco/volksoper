@@ -3,6 +3,8 @@
 ///<reference path="Actor.ts"/>
 ///<reference path="StoryBoard.ts"/>
 ///<reference path="DisplayObject.ts"/>
+///<reference path="SceneDock.ts"/>
+
 
 module volksoper{
 
@@ -16,23 +18,36 @@ module volksoper{
             return this._board;
         }
 
+        private _stage: volksoper.Stage;
+        get stage(): volksoper.Stage{
+            return this._stage;
+        }
+
+        private _dock: SceneDock;
+        get dock(){
+            return this._dock;
+        }
+
+        private _setStage(){
+            //this._dock = this.stage.createSceneDock();
+        }
+
+        private _unsetStage(){
+            this._dock = null;
+        }
 
         constructor(){
             super();
-            var self: Scene = this;
 
-            var addedListener = (e: volksoper.Event)=>{
-                self._registerTarget(e.target);
-                e.target.broadcastEvent(new volksoper.Event(volksoper.Event.ADDED_TO_SCENE), self);
-            };
+            this.addEventListener(volksoper.Event.ADDED, (e: volksoper.Event)=>{
+                this._registerTarget(e.target);
+                e.target.broadcastEvent(new volksoper.Event(volksoper.Event.ADDED_TO_SCENE), this);
+            }, true, volksoper.SYSTEM_PRIORITY);
 
-            var removeListener = (e: volksoper.Event)=>{
-                e.target.broadcastEvent(new volksoper.Event(volksoper.Event.REMOVE_FROM_SCENE), self);
-                self._unregisterTarget(e.target);
-            };
-
-            this.addEventListener(volksoper.Event.ADDED, addedListener, true, volksoper.SYSTEM_PRIORITY);
-            this.addEventListener(volksoper.Event.REMOVE, removeListener, true, volksoper.SYSTEM_PRIORITY);
+            this.addEventListener(volksoper.Event.REMOVE, (e: volksoper.Event)=>{
+                e.target.broadcastEvent(new volksoper.Event(volksoper.Event.REMOVE_FROM_SCENE), this);
+                this._unregisterTarget(e.target);
+            }, true, volksoper.SYSTEM_PRIORITY);
         }
 
         private _registerTarget(target): void {

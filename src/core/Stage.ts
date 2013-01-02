@@ -6,6 +6,8 @@
 ///<reference path="Label.ts"/>
 ///<reference path="Surface.ts"/>
 ///<reference path="KeyEvent.ts"/>
+///<reference path="RenderingVisitor.ts"/>
+
 
 
 

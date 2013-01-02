@@ -1,23 +1,18 @@
 
-///<reference path="DisplayObject.ts"/>
-///<reference path="Sprite.ts"/>
-///<reference path="Scene.ts"/>
-///<reference path="Stage.ts"/>
-
 
 module volksoper{
     export class RenderingVisitor{
-        visitDisplayObject(o: DisplayObject){}
-        visitSprite(o: Sprite){
+        visitDisplayObject(o){}
+        visitSprite(o){
             this.visitDisplayObject(o);
         }
-        visitScene(o: Scene){
+        visitScene(o){
             this.visitDisplayObject(o);
         }
-        visitStage(o: Stage){
+        visitStage(o){
             this.visitDisplayObject(o);
         }
-        visitSceneNode(o: SceneNode){
+        visitSceneNode(o){
             this.visitDisplayObject(o);
         }
     }

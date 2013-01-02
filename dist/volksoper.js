@@ -1,5 +1,5 @@
-/*! Volksoper - v0.1.0 - 2013-01-02
-* http://PROJECT_WEBSITE/
+/*! Volksoper - v0.0.1 - 2013-01-02
+* https://github.com/necoco/volksoper
 * Copyright (c) 2013 tshinsay; Licensed MIT */
 
 var volksoper;
@@ -643,13 +643,14 @@ var __extends = this.__extends || function (d, b) {
     __.prototype = b.prototype;
     d.prototype = new __();
 };
+
 var volksoper;
 (function (volksoper) {
     var DisplayObject = (function (_super) {
         __extends(DisplayObject, _super);
         function DisplayObject() {
-            _super.apply(this, arguments);
-
+            var _this = this;
+                _super.call(this);
             this._dirty = true;
             this._localMatrix = new volksoper.Matrix4();
             this.alpha = 1;
@@ -665,7 +666,26 @@ var volksoper;
             this._scaleX = 1;
             this._scaleY = 1;
             this.visible = true;
+            this.addEventListener(volksoper.Event.ADDED_TO_STAGE, function (e) {
+                _this._stage = e.target;
+                _this._setStage();
+            }, false, volksoper.SYSTEM_PRIORITY);
+            this.addEventListener(volksoper.Event.REMOVE_FROM_STAGE, function (e) {
+                _this._stage = null;
+                _this._unsetStage();
+            }, false, volksoper.SYSTEM_PRIORITY);
         }
+        Object.defineProperty(DisplayObject.prototype, "stage", {
+            get: function () {
+                return this._stage;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        DisplayObject.prototype._setStage = function () {
+        };
+        DisplayObject.prototype._unsetStage = function () {
+        };
         Object.defineProperty(DisplayObject.prototype, "localMatrix", {
             get: function () {
                 var m = this._localMatrix;
@@ -1177,6 +1197,28 @@ var volksoper;
         return TouchEvent;
     })(volksoper.Event);
     volksoper.TouchEvent = TouchEvent;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var RenderingVisitor = (function () {
+        function RenderingVisitor() { }
+        RenderingVisitor.prototype.visitDisplayObject = function (o) {
+        };
+        RenderingVisitor.prototype.visitSprite = function (o) {
+            this.visitDisplayObject(o);
+        };
+        RenderingVisitor.prototype.visitScene = function (o) {
+            this.visitDisplayObject(o);
+        };
+        RenderingVisitor.prototype.visitStage = function (o) {
+            this.visitDisplayObject(o);
+        };
+        RenderingVisitor.prototype.visitSceneNode = function (o) {
+            this.visitDisplayObject(o);
+        };
+        return RenderingVisitor;
+    })();
+    volksoper.RenderingVisitor = RenderingVisitor;    
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
@@ -1894,26 +1936,50 @@ var volksoper;
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
+    var SceneDock = (function (_super) {
+        __extends(SceneDock, _super);
+        function SceneDock(_parentDock) {
+                _super.call(this);
+            this._parentDock = _parentDock;
+            this._id = 0;
+        }
+        SceneDock.prototype.find = function (name) {
+            return null;
+        };
+        SceneDock.prototype.load = function () {
+            var files = [];
+            for (var _i = 0; _i < (arguments.length - 0); _i++) {
+                files[_i] = arguments[_i + 0];
+            }
+            return null;
+        };
+        SceneDock.prototype.play = function (name) {
+            return false;
+        };
+        return SceneDock;
+    })(volksoper.Actor);
+    volksoper.SceneDock = SceneDock;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
     var Scene = (function (_super) {
         __extends(Scene, _super);
         function Scene() {
+            var _this = this;
                 _super.call(this);
             this._registry = {
             };
             this._execFind = 0;
             this._unregister = [];
             this._board = new volksoper.StoryBoard();
-            var self = this;
-            var addedListener = function (e) {
-                self._registerTarget(e.target);
-                e.target.broadcastEvent(new volksoper.Event(volksoper.Event.ADDED_TO_SCENE), self);
-            };
-            var removeListener = function (e) {
-                e.target.broadcastEvent(new volksoper.Event(volksoper.Event.REMOVE_FROM_SCENE), self);
-                self._unregisterTarget(e.target);
-            };
-            this.addEventListener(volksoper.Event.ADDED, addedListener, true, volksoper.SYSTEM_PRIORITY);
-            this.addEventListener(volksoper.Event.REMOVE, removeListener, true, volksoper.SYSTEM_PRIORITY);
+            this.addEventListener(volksoper.Event.ADDED, function (e) {
+                _this._registerTarget(e.target);
+                e.target.broadcastEvent(new volksoper.Event(volksoper.Event.ADDED_TO_SCENE), _this);
+            }, true, volksoper.SYSTEM_PRIORITY);
+            this.addEventListener(volksoper.Event.REMOVE, function (e) {
+                e.target.broadcastEvent(new volksoper.Event(volksoper.Event.REMOVE_FROM_SCENE), _this);
+                _this._unregisterTarget(e.target);
+            }, true, volksoper.SYSTEM_PRIORITY);
         }
         Object.defineProperty(Scene.prototype, "storyBoard", {
             get: function () {
@@ -1922,6 +1988,25 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(Scene.prototype, "stage", {
+            get: function () {
+                return this._stage;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Scene.prototype, "dock", {
+            get: function () {
+                return this._dock;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Scene.prototype._setStage = function () {
+        };
+        Scene.prototype._unsetStage = function () {
+            this._dock = null;
+        };
         Scene.prototype._registerTarget = function (target) {
             this._iterateTable(target, function (a) {
                 a.push(target);
@@ -1999,18 +2084,10 @@ var volksoper;
                 if(_this._story) {
                     _this._story._attachStoryBoard(_this._scene.storyBoard);
                 }
-            }, false, volksoper.SYSTEM_PRIORITY);
+            }, true, volksoper.SYSTEM_PRIORITY);
             this.addEventListener(volksoper.Event.REMOVE_FROM_SCENE, function (e) {
                 _this._scene = null;
-            });
-            this.addEventListener(volksoper.Event.ADDED_TO_STAGE, function (e) {
-                _this._stage = e.target;
-                _this._setStage();
-            }, false, volksoper.SYSTEM_PRIORITY);
-            this.addEventListener(volksoper.Event.REMOVE_FROM_STAGE, function (e) {
-                _this._stage = null;
-                _this._unsetStage();
-            });
+            }, true, volksoper.SYSTEM_PRIORITY);
         }
         Object.defineProperty(SceneNode.prototype, "scene", {
             get: function () {
@@ -2019,17 +2096,6 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(SceneNode.prototype, "stage", {
-            get: function () {
-                return this._stage;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        SceneNode.prototype._setStage = function () {
-        };
-        SceneNode.prototype._unsetStage = function () {
-        };
         Object.defineProperty(SceneNode.prototype, "story", {
             get: function () {
                 if(this._story) {
@@ -2121,54 +2187,6 @@ var volksoper;
         return Sprite;
     })(volksoper.SceneNode);
     volksoper.Sprite = Sprite;    
-})(volksoper || (volksoper = {}));
-var volksoper;
-(function (volksoper) {
-    var RenderingVisitor = (function () {
-        function RenderingVisitor() { }
-        RenderingVisitor.prototype.visitDisplayObject = function (o) {
-        };
-        RenderingVisitor.prototype.visitSprite = function (o) {
-            this.visitDisplayObject(o);
-        };
-        RenderingVisitor.prototype.visitScene = function (o) {
-            this.visitDisplayObject(o);
-        };
-        RenderingVisitor.prototype.visitStage = function (o) {
-            this.visitDisplayObject(o);
-        };
-        RenderingVisitor.prototype.visitSceneNode = function (o) {
-            this.visitDisplayObject(o);
-        };
-        return RenderingVisitor;
-    })();
-    volksoper.RenderingVisitor = RenderingVisitor;    
-})(volksoper || (volksoper = {}));
-var volksoper;
-(function (volksoper) {
-    var SceneDock = (function (_super) {
-        __extends(SceneDock, _super);
-        function SceneDock(_parentDock) {
-                _super.call(this);
-            this._parentDock = _parentDock;
-            this._id = 0;
-        }
-        SceneDock.prototype.find = function (name) {
-            return null;
-        };
-        SceneDock.prototype.load = function () {
-            var files = [];
-            for (var _i = 0; _i < (arguments.length - 0); _i++) {
-                files[_i] = arguments[_i + 0];
-            }
-            return null;
-        };
-        SceneDock.prototype.play = function (name) {
-            return false;
-        };
-        return SceneDock;
-    })(volksoper.Actor);
-    volksoper.SceneDock = SceneDock;    
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {

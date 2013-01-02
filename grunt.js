@@ -9,11 +9,11 @@ module.exports = function (grunt) {
     // Project configuration.
     grunt.initConfig({
         meta: {
-            version: '0.1.0',
+            version: '0.0.1',
             sourcemap: '//@ sourceMappingURL=./volksoper-canvas.js.map',
             banner: '/*! Volksoper - v<%= meta.version %> - ' +
                 '<%= grunt.template.today("yyyy-mm-dd") %>\n' +
-                '* http://PROJECT_WEBSITE/\n' +
+                '* https://github.com/necoco/volksoper\n' +
                 '* Copyright (c) <%= grunt.template.today("yyyy") %> ' +
                 'tshinsay; Licensed MIT */'
         },
@@ -47,7 +47,7 @@ module.exports = function (grunt) {
                 }
             },
             specs: {
-                src: ['specs/**/*Spec.ts'],
+                src: ['src/core/*.ts', 'specs/**/*Spec.ts'],
                 dest: "tmp/specs.js",
                 options: {
                     target: "es5",

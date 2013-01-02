@@ -2,10 +2,31 @@
 ///<reference path="Actor.ts"/>
 ///<reference path="Matrix4.ts"/>
 
+declare class Stage{}
 
 module volksoper{
     export class DisplayObject extends volksoper.Actor{
         private _dirty: bool = true;
+
+        private _stage: volksoper.Stage;
+        get stage(): volksoper.Stage{
+            return this._stage;
+        }
+        private _setStage(){}
+        private _unsetStage(){}
+
+        constructor(){
+            super();
+
+            this.addEventListener(volksoper.Event.ADDED_TO_STAGE,(e)=>{
+                this._stage = <Stage>e.target;
+                this._setStage();
+            }, false, volksoper.SYSTEM_PRIORITY);
+            this.addEventListener(volksoper.Event.REMOVE_FROM_STAGE,(e)=>{
+                this._stage = null;
+                this._unsetStage();
+            }, false, volksoper.SYSTEM_PRIORITY);
+        }
 
         private _localMatrix: volksoper.Matrix4 = new volksoper.Matrix4();
         get localMatrix(): volksoper.Matrix4{

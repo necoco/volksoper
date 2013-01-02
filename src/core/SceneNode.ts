@@ -12,13 +12,6 @@ module volksoper{
             return this._scene;
         }
 
-        private _stage: volksoper.Stage;
-        get stage(): volksoper.Stage{
-            return this._stage;
-        }
-        private _setStage(){}
-        private _unsetStage(){}
-
         private _story: volksoper.Story;
         get story(): volksoper.Story{
             if(this._story){
@@ -46,20 +39,12 @@ module volksoper{
                 if(this._story){
                     this._story._attachStoryBoard(this._scene.storyBoard);
                 }
-            }, false, volksoper.SYSTEM_PRIORITY);
+            }, true, volksoper.SYSTEM_PRIORITY);
             this.addEventListener(volksoper.Event.REMOVE_FROM_SCENE,(e)=>{
                 this._scene = null;
-            });
+            }, true, volksoper.SYSTEM_PRIORITY);
 
 
-            this.addEventListener(volksoper.Event.ADDED_TO_STAGE,(e)=>{
-                this._stage = <Stage>e.target;
-                this._setStage();
-            }, false, volksoper.SYSTEM_PRIORITY);
-            this.addEventListener(volksoper.Event.REMOVE_FROM_STAGE,(e)=>{
-                this._stage = null;
-                this._unsetStage();
-            });
         }
 
 
