@@ -1,5 +1,7 @@
 
 ///<reference path="../core/Stage.ts"/>
+///<reference path="Platform.ts"/>
+
 
 
 module volksoper{
@@ -17,10 +19,15 @@ module volksoper{
             return this._pageY;
         }
 
-
-
-
         private _element: HTMLElement;
+        get element(){
+            return this._element;
+        }
+
+        private _platform: Platform = Platform.create();
+        get platform(){
+            return this._platform;
+        }
 
         constructor(options: any){
             super(options);
@@ -64,6 +71,7 @@ module volksoper{
         }
 
         private _adjusting = false;
+        private _adjustCanvas(){}
         private _adjustStage(){
 
             if(!this._adjusting && this._element){
@@ -87,6 +95,8 @@ module volksoper{
                 this._element.style.width = Math.round(this.scale * this.width) + 'px';
                 this._element.style.height = Math.round(this.scale * this.height) + 'px';
                 this._element.style.margin = 'auto auto';
+
+                this._adjustCanvas();
 
                 this._adjusting = false;
             }

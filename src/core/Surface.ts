@@ -14,6 +14,9 @@ module volksoper{
 
     export class Surface extends Resource{
         private _impl: ISurfaceImpl;
+        get impl(): ISurfaceImpl{
+            return this._impl;
+        }
 
         private _invalidate: bool = false;
         invalidate(): void{
@@ -47,8 +50,10 @@ module volksoper{
             this._impl.render();
         }
 
-        _onStage(stage: Stage): void{
-            if(!this._impl){
+        _setStage(stage: Stage): void{
+            if(!stage){
+                this._impl = null;
+            }else if(!this._impl){
                 this._impl = stage._createSurfaceImpl(
                         this._width, this._height, this._renderer, this._primitive, this._name);
                 if(this._invalidate){
@@ -68,6 +73,9 @@ module volksoper{
                     private _primitive?: bool,
                     private _name?: string){
             super();
+            if(this._renderer){
+                this._invalidate = true;
+            }
             if(!this._name){
                 this._name = volksoper.generateUniqueName();
             }

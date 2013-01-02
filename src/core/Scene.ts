@@ -97,6 +97,10 @@ module volksoper{
                 r.splice(0);
             }
         }
+
+        _visitRendering(v: any){
+            v.visitScene(this);
+        }
     }
 
 }

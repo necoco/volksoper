@@ -28,6 +28,10 @@ module volksoper{
             return m;
         }
 
+        _visitRendering(v: any){
+            v.visitDisplayObject(this);
+        }
+
         hitTestLocal(x: number,y :number): bool{
             return 0 <= x && x <= this.width && 0 <= y && y <= this.height;
         }

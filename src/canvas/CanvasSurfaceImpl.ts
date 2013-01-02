@@ -28,15 +28,15 @@ module volksoper{
 
         invalidate(){
             if(!this._primitive){
-                 this._dock.addDirtySurfaceImpl(this);
+                 this._stage._addDirtySurfaceImpl(this);
             }
         }
 
         render(){
             if(this._primitive){
-                this._renderer(this, this._renderContext);
+                this._renderer(this, this._stage.context);
             }else{
-                this._renderContext.drawImage(this._element, 0, 0);
+                this._stage.context.drawImage(this._element, 0, 0);
             }
         }
 
@@ -46,10 +46,10 @@ module volksoper{
 
 
         constructor(width: number, height: number, private _renderer: any, private _primitive: bool,
-                    private _name: string, private _dock: CanvasSceneDock, private _renderContext: any){
+                    private _name: string, private _stage: CanvasStage){
             var element: HTMLCanvasElement = <HTMLCanvasElement>document.createElement('canvas');
-            element.width = width;
-            element.height = height;
+            element.style.width = width + 'px';
+            element.style.height = height + 'px';
             element.style.position = 'absolute';
             this._element = element;
             this._context = <CanvasRenderingContext2D>element.getContext("2d");

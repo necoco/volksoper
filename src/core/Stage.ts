@@ -5,17 +5,21 @@
 ///<reference path="TouchEvent.ts"/>
 ///<reference path="Label.ts"/>
 ///<reference path="Surface.ts"/>
+///<reference path="KeyEvent.ts"/>
+
 
 
 module volksoper{
     export class Stage extends volksoper.DisplayObject{
-        private _ready = false;
-        get ready(){
-            return this._ready;
-        }
-        private _running = false;
+        private _running = true;
         get running(){
             return this._running;
+        }
+        suspend(){
+            this._running = false;
+        }
+        resume(){
+            this._running = true;
         }
 
         private _width: number;
@@ -170,30 +174,28 @@ module volksoper{
             return null;
         }
 
-        private _preRender(o: DisplayObject): void {}
-        private _postRender(o: DisplayObject): void {}
-        private _inRender(o: DisplayObject): void {}
-
-        render(){
+        _render(pre: RenderingVisitor, process: RenderingVisitor, post: RenderingVisitor){
             if(!this.visible)return;
 
-            this._render(<DisplayObject>this.topChild);
+            this._innerRender(<DisplayObject>this.topChild, pre, process, post);
         }
 
-        private _render(obj: DisplayObject): void{
+        private _innerRender(obj: DisplayObject,
+                        pre: RenderingVisitor, process: RenderingVisitor, post: RenderingVisitor): void{
             if(!obj.visible){
                 return;
             }
 
-            this._preRender(obj);
-            this._inRender(obj);
+            obj._visitRendering(pre);
+            obj._visitRendering(process);
 
-            this.forEachChild((child: DisplayObject)=>{
-                this._render(child);
+
+            obj.forEachChild((child: DisplayObject)=>{
+                this._innerRender(child, pre, process, post);
             });
 
 
-            this._postRender(obj);
+            obj._visitRendering(post);
         }
 
         _createSurfaceImpl(width: number, height: number, renderer:any, primitive: bool, name: string): ISurfaceImpl{
@@ -202,6 +204,10 @@ module volksoper{
 
         _createLabelImpl(width: number, height: number, name: string): ILabelImpl{
             return null;
+        }
+
+        _visitRendering(v: RenderingVisitor){
+            v.visitStage(this);
         }
     }
 }

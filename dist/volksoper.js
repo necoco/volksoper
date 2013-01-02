@@ -1,4 +1,4 @@
-/*! Volksoper - v0.1.0 - 2013-01-01
+/*! Volksoper - v0.1.0 - 2013-01-02
 * http://PROJECT_WEBSITE/
 * Copyright (c) 2013 tshinsay; Licensed MIT */
 
@@ -680,6 +680,9 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
+        DisplayObject.prototype._visitRendering = function (v) {
+            v.visitDisplayObject(this);
+        };
         DisplayObject.prototype.hitTestLocal = function (x, y) {
             return 0 <= x && x <= this.width && 0 <= y && y <= this.height;
         };
@@ -1181,8 +1184,7 @@ var volksoper;
         __extends(Stage, _super);
         function Stage(options) {
                 _super.call(this);
-            this._ready = false;
-            this._running = false;
+            this._running = true;
             this._touchReceivers = {
             };
             this._width = options.width || 320;
@@ -1204,13 +1206,6 @@ var volksoper;
             this.addEventListener(volksoper.Event.ADDED, addedListener, true, volksoper.SYSTEM_PRIORITY);
             this.addEventListener(volksoper.Event.REMOVE, removeListener, true, volksoper.SYSTEM_PRIORITY);
         }
-        Object.defineProperty(Stage.prototype, "ready", {
-            get: function () {
-                return this._ready;
-            },
-            enumerable: true,
-            configurable: true
-        });
         Object.defineProperty(Stage.prototype, "running", {
             get: function () {
                 return this._running;
@@ -1218,6 +1213,12 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
+        Stage.prototype.suspend = function () {
+            this._running = false;
+        };
+        Stage.prototype.resume = function () {
+            this._running = true;
+        };
         Object.defineProperty(Stage.prototype, "width", {
             get: function () {
                 return this._width;
@@ -1349,35 +1350,32 @@ var volksoper;
             }
             return null;
         };
-        Stage.prototype._preRender = function (o) {
-        };
-        Stage.prototype._postRender = function (o) {
-        };
-        Stage.prototype._inRender = function (o) {
-        };
-        Stage.prototype.render = function () {
+        Stage.prototype._render = function (pre, process, post) {
             if(!this.visible) {
                 return;
             }
-            this._render(this.topChild);
+            this._innerRender(this.topChild, pre, process, post);
         };
-        Stage.prototype._render = function (obj) {
+        Stage.prototype._innerRender = function (obj, pre, process, post) {
             var _this = this;
             if(!obj.visible) {
                 return;
             }
-            this._preRender(obj);
-            this._inRender(obj);
-            this.forEachChild(function (child) {
-                _this._render(child);
+            obj._visitRendering(pre);
+            obj._visitRendering(process);
+            obj.forEachChild(function (child) {
+                _this._innerRender(child, pre, process, post);
             });
-            this._postRender(obj);
+            obj._visitRendering(post);
         };
         Stage.prototype._createSurfaceImpl = function (width, height, renderer, primitive, name) {
             return null;
         };
         Stage.prototype._createLabelImpl = function (width, height, name) {
             return null;
+        };
+        Stage.prototype._visitRendering = function (v) {
+            v.visitStage(this);
         };
         return Stage;
     })(volksoper.DisplayObject);
@@ -1404,10 +1402,20 @@ var volksoper;
             this._name = _name;
             this._invalidate = false;
             this._referenceCount = 0;
+            if(this._renderer) {
+                this._invalidate = true;
+            }
             if(!this._name) {
                 this._name = volksoper.generateUniqueName();
             }
         }
+        Object.defineProperty(Surface.prototype, "impl", {
+            get: function () {
+                return this._impl;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Surface.prototype.invalidate = function () {
             if(!this._impl) {
                 this._invalidate = true;
@@ -1445,12 +1453,16 @@ var volksoper;
         Surface.prototype._render = function () {
             this._impl.render();
         };
-        Surface.prototype._onStage = function (stage) {
-            if(!this._impl) {
-                this._impl = stage._createSurfaceImpl(this._width, this._height, this._renderer, this._primitive, this._name);
-                if(this._invalidate) {
-                    this._invalidate = false;
-                    this._impl.invalidate();
+        Surface.prototype._setStage = function (stage) {
+            if(!stage) {
+                this._impl = null;
+            } else {
+                if(!this._impl) {
+                    this._impl = stage._createSurfaceImpl(this._width, this._height, this._renderer, this._primitive, this._name);
+                    if(this._invalidate) {
+                        this._invalidate = false;
+                        this._impl.invalidate();
+                    }
                 }
             }
         };
@@ -1962,9 +1974,162 @@ var volksoper;
                 r.splice(0);
             }
         };
+        Scene.prototype._visitRendering = function (v) {
+            v.visitScene(this);
+        };
         return Scene;
     })(volksoper.DisplayObject);
     volksoper.Scene = Scene;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var SceneNode = (function (_super) {
+        __extends(SceneNode, _super);
+        function SceneNode() {
+            var _this = this;
+                _super.call(this);
+            this.addEventListener(volksoper.Event.ADDED_TO_SCENE, function (e) {
+                _this._scene = e.target;
+            }, false, volksoper.SYSTEM_PRIORITY);
+            this.addEventListener(volksoper.Event.REMOVE_FROM_SCENE, function (e) {
+                _this._scene = null;
+            });
+            this.addEventListener(volksoper.Event.ADDED_TO_STAGE, function (e) {
+                _this._stage = e.target;
+                _this._setStage();
+            }, false, volksoper.SYSTEM_PRIORITY);
+            this.addEventListener(volksoper.Event.REMOVE_FROM_STAGE, function (e) {
+                _this._stage = null;
+                _this._unsetStage();
+            });
+        }
+        Object.defineProperty(SceneNode.prototype, "scene", {
+            get: function () {
+                return this._scene;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(SceneNode.prototype, "stage", {
+            get: function () {
+                return this._stage;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        SceneNode.prototype._setStage = function () {
+        };
+        SceneNode.prototype._unsetStage = function () {
+        };
+        Object.defineProperty(SceneNode.prototype, "story", {
+            get: function () {
+                if(this._story) {
+                    return this._story;
+                }
+                this._story = this._scene.storyBoard.story(this);
+                return this._story;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        SceneNode.prototype._visitRendering = function (v) {
+            v.visitSceneNode(this);
+        };
+        return SceneNode;
+    })(volksoper.DisplayObject);
+    volksoper.SceneNode = SceneNode;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var Sprite = (function (_super) {
+        __extends(Sprite, _super);
+        function Sprite() {
+            _super.apply(this, arguments);
+
+        }
+        Object.defineProperty(Sprite.prototype, "surface", {
+            get: function () {
+                return this._surface;
+            },
+            set: function (surface) {
+                if(this.stage) {
+                    if(this._surface) {
+                        this._surface.release();
+                    }
+                    this._surface = surface;
+                    surface._setStage(this.stage);
+                    surface.addRef();
+                } else {
+                    this._surface = surface;
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Sprite.prototype._setStage = function () {
+            if(this._surface) {
+                this._surface._setStage(this.stage);
+                this._surface.addRef();
+            }
+        };
+        Sprite.prototype._unsetStage = function () {
+            if(this.surface) {
+                this._surface.release();
+                this._surface._setStage(null);
+            }
+        };
+        Object.defineProperty(Sprite.prototype, "width", {
+            get: function () {
+                return (this._surface) ? this._surface.width : 0;
+            },
+            set: function (_) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Sprite.prototype, "height", {
+            get: function () {
+                return (this._surface) ? this._surface.height : 0;
+            },
+            set: function (_) {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Sprite.prototype.hitTestLocal = function (x, y) {
+            if(this._surface) {
+                return this._surface.hitTest(x, y);
+            }
+            return false;
+        };
+        Sprite.prototype._visitRendering = function (v) {
+            v.visitSprite(this);
+        };
+        return Sprite;
+    })(volksoper.SceneNode);
+    volksoper.Sprite = Sprite;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var RenderingVisitor = (function () {
+        function RenderingVisitor() { }
+        RenderingVisitor.prototype.visitDisplayObject = function (o) {
+        };
+        RenderingVisitor.prototype.visitSprite = function (o) {
+            this.visitDisplayObject(o);
+        };
+        RenderingVisitor.prototype.visitScene = function (o) {
+            this.visitDisplayObject(o);
+        };
+        RenderingVisitor.prototype.visitStage = function (o) {
+            this.visitDisplayObject(o);
+        };
+        RenderingVisitor.prototype.visitSceneNode = function (o) {
+            this.visitDisplayObject(o);
+        };
+        return RenderingVisitor;
+    })();
+    volksoper.RenderingVisitor = RenderingVisitor;    
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
@@ -1994,106 +2159,104 @@ var volksoper;
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
-    var Sprite = (function (_super) {
-        __extends(Sprite, _super);
-        function Sprite() {
-            var _this = this;
-                _super.call(this);
-            this._onStage = false;
-            var self = this;
-            this.addEventListener(volksoper.Event.ADDED_TO_SCENE, function (e) {
-                self._scene = e.target;
-            }, false, volksoper.SYSTEM_PRIORITY);
-            this.addEventListener(volksoper.Event.REMOVE_FROM_SCENE, function (e) {
-                self._scene = null;
-            });
-            this.addEventListener(volksoper.Event.ADDED_TO_STAGE, function (e) {
-                self._stage = e.target;
-                _this._onStage = true;
-                if(_this._surface) {
-                    _this._surface._onStage(self._stage);
-                    _this._surface.addRef();
-                }
-            }, false, volksoper.SYSTEM_PRIORITY);
-            this.addEventListener(volksoper.Event.REMOVE_FROM_STAGE, function (e) {
-                self._stage = null;
-                _this._onStage = false;
-                if(_this.surface) {
-                    _this._surface.release();
-                }
-            });
-        }
-        Object.defineProperty(Sprite.prototype, "scene", {
+    var Platform = (function () {
+        function Platform() { }
+        Object.defineProperty(Platform.prototype, "prefix", {
             get: function () {
-                return this._scene;
+                return '';
             },
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(Sprite.prototype, "stage", {
-            get: function () {
-                return this._stage;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Sprite.prototype, "story", {
-            get: function () {
-                if(this._story) {
-                    return this._story;
-                }
-                this._story = this._scene.storyBoard.story(this);
-                return this._story;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Sprite.prototype, "surface", {
-            get: function () {
-                return this._surface;
-            },
-            set: function (surface) {
-                if(this._onStage) {
-                    if(this._surface) {
-                        this._surface.release();
-                    }
-                    this._surface = surface;
-                    surface._onStage(this._stage);
-                    surface.addRef();
+        Platform.create = function create() {
+            var ua = navigator.userAgent;
+            if(ua.indexOf('Opera') >= 0) {
+                return new OperaPlatform();
+            } else {
+                if(ua.indexOf('MSIE') >= 0) {
+                    return new MsPlatform();
                 } else {
-                    this._surface = surface;
+                    if(ua.indexOf('WebKit') >= 0) {
+                        return new WebkitPlatform();
+                    } else {
+                        if(navigator.product === 'Gecko') {
+                            return new MozPlatform();
+                        } else {
+                            return new Platform();
+                        }
+                    }
                 }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Sprite.prototype, "width", {
-            get: function () {
-                return (this._surface) ? this._surface.width : 0;
-            },
-            set: function (_) {
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Sprite.prototype, "height", {
-            get: function () {
-                return (this._surface) ? this._surface.height : 0;
-            },
-            set: function (_) {
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Sprite.prototype.hitTestLocal = function (x, y) {
-            if(this._surface) {
-                return this._surface.hitTest(x, y);
             }
-            return false;
+        }
+        Platform.prototype.setTransformOrigin = function (e, value) {
+            e.style[this.prefix + 'TransformOrigin'] = value;
         };
-        return Sprite;
-    })(volksoper.DisplayObject);
-    volksoper.Sprite = Sprite;    
+        Platform.prototype.setTransform = function (e, value) {
+            e.style[this.prefix + 'Transform'] = value;
+        };
+        return Platform;
+    })();
+    volksoper.Platform = Platform;    
+    var WebkitPlatform = (function (_super) {
+        __extends(WebkitPlatform, _super);
+        function WebkitPlatform() {
+            _super.apply(this, arguments);
+
+        }
+        Object.defineProperty(WebkitPlatform.prototype, "prefix", {
+            get: function () {
+                return 'webkit';
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return WebkitPlatform;
+    })(Platform);    
+    var MozPlatform = (function (_super) {
+        __extends(MozPlatform, _super);
+        function MozPlatform() {
+            _super.apply(this, arguments);
+
+        }
+        Object.defineProperty(MozPlatform.prototype, "prefix", {
+            get: function () {
+                return 'moz';
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return MozPlatform;
+    })(Platform);    
+    var OperaPlatform = (function (_super) {
+        __extends(OperaPlatform, _super);
+        function OperaPlatform() {
+            _super.apply(this, arguments);
+
+        }
+        Object.defineProperty(OperaPlatform.prototype, "prefix", {
+            get: function () {
+                return 'o';
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return OperaPlatform;
+    })(Platform);    
+    var MsPlatform = (function (_super) {
+        __extends(MsPlatform, _super);
+        function MsPlatform() {
+            _super.apply(this, arguments);
+
+        }
+        Object.defineProperty(MsPlatform.prototype, "prefix", {
+            get: function () {
+                return 'ms';
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return MsPlatform;
+    })(Platform);    
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
@@ -2103,6 +2266,7 @@ var volksoper;
             var _this = this;
                 _super.call(this, options);
             this._mouseId = 0;
+            this._platform = volksoper.Platform.create();
             this._adjusting = false;
             var stageId = options.stageId || 'volksoper-stage';
             var stage = document.getElementById(stageId);
@@ -2153,6 +2317,22 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(HTMLStage.prototype, "element", {
+            get: function () {
+                return this._element;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(HTMLStage.prototype, "platform", {
+            get: function () {
+                return this._platform;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        HTMLStage.prototype._adjustCanvas = function () {
+        };
         HTMLStage.prototype._adjustStage = function () {
             if(!this._adjusting && this._element) {
                 this._adjusting = true;
@@ -2175,6 +2355,7 @@ var volksoper;
                 this._element.style.width = Math.round(this.scale * this.width) + 'px';
                 this._element.style.height = Math.round(this.scale * this.height) + 'px';
                 this._element.style.margin = 'auto auto';
+                this._adjustCanvas();
                 this._adjusting = false;
             }
         };
@@ -2280,38 +2461,59 @@ var volksoper;
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
-    var Platform = (function () {
-        function Platform() { }
-        return Platform;
-    })();    
-})(volksoper || (volksoper = {}));
-var volksoper;
-(function (volksoper) {
-    var CanvasSceneDock = (function (_super) {
-        __extends(CanvasSceneDock, _super);
-        function CanvasSceneDock() {
-            _super.apply(this, arguments);
-
+    var PreCanvasRenderingVisitor = (function (_super) {
+        __extends(PreCanvasRenderingVisitor, _super);
+        function PreCanvasRenderingVisitor(_context) {
+                _super.call(this);
+            this._context = _context;
         }
-        CanvasSceneDock.prototype.addDirtySurfaceImpl = function (impl) {
+        PreCanvasRenderingVisitor.prototype.visitDisplayObject = function (o) {
+            var m = o.localMatrix.m;
+            this._context.save();
+            this._context.transform(m[0], m[1], m[4], m[5], m[3], m[7]);
         };
-        return CanvasSceneDock;
-    })(volksoper.SceneDock);
-    volksoper.CanvasSceneDock = CanvasSceneDock;    
+        return PreCanvasRenderingVisitor;
+    })(volksoper.RenderingVisitor);
+    volksoper.PreCanvasRenderingVisitor = PreCanvasRenderingVisitor;    
+    var ProcessCanvasRenderingVisitor = (function (_super) {
+        __extends(ProcessCanvasRenderingVisitor, _super);
+        function ProcessCanvasRenderingVisitor(_context) {
+                _super.call(this);
+            this._context = _context;
+        }
+        ProcessCanvasRenderingVisitor.prototype.visitSprite = function (sprite) {
+            if(sprite.surface) {
+                sprite.surface.impl.render();
+            }
+        };
+        return ProcessCanvasRenderingVisitor;
+    })(volksoper.RenderingVisitor);
+    volksoper.ProcessCanvasRenderingVisitor = ProcessCanvasRenderingVisitor;    
+    var PostCanvasRenderingVisitor = (function (_super) {
+        __extends(PostCanvasRenderingVisitor, _super);
+        function PostCanvasRenderingVisitor(_context) {
+                _super.call(this);
+            this._context = _context;
+        }
+        PostCanvasRenderingVisitor.prototype.visitDisplayObject = function (o) {
+            this._context.restore();
+        };
+        return PostCanvasRenderingVisitor;
+    })(volksoper.RenderingVisitor);
+    volksoper.PostCanvasRenderingVisitor = PostCanvasRenderingVisitor;    
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
     var CanvasSurfaceImpl = (function () {
-        function CanvasSurfaceImpl(width, height, _renderer, _primitive, _name, _dock, _renderContext) {
+        function CanvasSurfaceImpl(width, height, _renderer, _primitive, _name, _stage) {
             this._renderer = _renderer;
             this._primitive = _primitive;
             this._name = _name;
-            this._dock = _dock;
-            this._renderContext = _renderContext;
+            this._stage = _stage;
             this._referenceCount = 0;
             var element = document.createElement('canvas');
-            element.width = width;
-            element.height = height;
+            element.style.width = width + 'px';
+            element.style.height = height + 'px';
             element.style.position = 'absolute';
             this._element = element;
             this._context = element.getContext("2d");
@@ -2334,14 +2536,14 @@ var volksoper;
         });
         CanvasSurfaceImpl.prototype.invalidate = function () {
             if(!this._primitive) {
-                this._dock.addDirtySurfaceImpl(this);
+                this._stage._addDirtySurfaceImpl(this);
             }
         };
         CanvasSurfaceImpl.prototype.render = function () {
             if(this._primitive) {
-                this._renderer(this, this._renderContext);
+                this._renderer(this, this._stage.context);
             } else {
-                this._renderContext.drawImage(this._element, 0, 0);
+                this._stage.context.drawImage(this._element, 0, 0);
             }
         };
         CanvasSurfaceImpl.prototype.renderContent = function () {
@@ -2357,6 +2559,7 @@ var volksoper;
         __extends(CanvasStage, _super);
         function CanvasStage(options) {
                 _super.call(this, options);
+            this._dirty = [];
         }
         Object.defineProperty(CanvasStage.prototype, "fps", {
             get: function () {
@@ -2368,14 +2571,48 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
-        CanvasStage.prototype._preRender = function (o) {
-        };
-        CanvasStage.prototype._postRender = function (o) {
-        };
-        CanvasStage.prototype._render = function (o) {
+        Object.defineProperty(CanvasStage.prototype, "context", {
+            get: function () {
+                return this._context;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        CanvasStage.prototype._adjustCanvas = function () {
+            var c = this._canvas;
+            if(!c) {
+                c = document.createElement('canvas');
+                this.element.appendChild(c);
+                this._canvas = c;
+                var context = c.getContext('2d');
+                this._pre = new volksoper.PreCanvasRenderingVisitor(context);
+                this._process = new volksoper.ProcessCanvasRenderingVisitor(context);
+                this._post = new volksoper.PostCanvasRenderingVisitor(context);
+                this._context = context;
+            }
+            c.style.width = this.width + 'px';
+            c.style.height = this.height + 'px';
+            this.platform.setTransformOrigin(c, '0 0');
+            this.platform.setTransform(c, 'scale(' + this.scale + ')');
         };
         CanvasStage.prototype._createSurfaceImpl = function (width, height, renderer, primitive, name) {
-            return new volksoper.CanvasSurfaceImpl(width, height, renderer, primitive, name, new volksoper.CanvasSceneDock(), null);
+            return new volksoper.CanvasSurfaceImpl(width, height, renderer, primitive, name, this);
+        };
+        CanvasStage.prototype.render = function () {
+            this.invalidateSurfaceImpl();
+            this._render(this._pre, this._process, this._post);
+        };
+        CanvasStage.prototype.invalidateSurfaceImpl = function () {
+            if(this._dirty.length >= 0) {
+                var l = this._dirty.length;
+                for(var n = 0; n < l; ++n) {
+                    this._dirty[n].renderContent();
+                }
+                this._dirty.splice(0);
+            }
+        };
+        CanvasStage.prototype._addDirtySurfaceImpl = function (dirty) {
+            this._dirty.push(dirty);
         };
         return CanvasStage;
     })(volksoper.HTMLStage);
