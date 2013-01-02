@@ -1,16 +1,18 @@
 
 ///<reference path="Actor.ts"/>
 ///<reference path="Surface.ts"/>
-///<reference path="Label.ts"/>
 ///<reference path="Resource.ts"/>
 
 
 module volksoper{
     export class SceneDock extends volksoper.Actor{
         private _id = 0;
+        get stage(){
+            return this._stage;
+        }
 
 
-        constructor(private _parentDock?: volksoper.SceneDock){
+        constructor(private _stage: Stage, private _parentDock?: volksoper.SceneDock){
             super();
         }
 
@@ -24,6 +26,10 @@ module volksoper{
 
         play(name: string): bool{
             return false;
+        }
+
+        _createImageImpl(src: string): SurfaceImpl{
+            return null;
         }
     }
 }

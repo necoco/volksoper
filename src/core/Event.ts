@@ -12,6 +12,8 @@ module volksoper{
         static COMPLETE = "complete";
         static LOADED = "loaded";
 
+        static LOADING_FAILED = "loadingFailed";
+
         currentTarget: Actor;
         target: Actor;
 

@@ -40,13 +40,13 @@ module volksoper{
                 this._context = context;
             }
 
-            c.style.width = this.width + 'px';
-            c.style.height = this.height + 'px';
+            c.width = this.width;
+            c.height = this.height;
             this.platform.setTransformOrigin(c, '0 0');
             this.platform.setTransform(c, 'scale(' + this.scale + ')');
         }
 
-        _createSurfaceImpl(width: number, height: number, renderer:any, primitive: bool, name: string): ISurfaceImpl{
+        _createSurfaceImpl(width: number, height: number, renderer:any, primitive: bool, name: string): SurfaceImpl{
             return new CanvasSurfaceImpl(width, height, renderer, primitive, name, this);
         }
 
@@ -72,6 +72,11 @@ module volksoper{
 
         _addDirtySurfaceImpl(dirty: CanvasSurfaceImpl){
             this._dirty.push(dirty);
+        }
+
+        _createSceneDock(): SceneDock{
+            var parent = (this.numChildren !== 0)? this.topScene.dock: null;
+            return new volksoper.CanvasSceneDock(this, parent);
         }
     }
 }

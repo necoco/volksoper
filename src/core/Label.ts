@@ -3,16 +3,16 @@
 
 module volksoper{
 
-    export interface ILabelImpl extends ISurfaceImpl{
-        text(text: string): void;
-        align(align: number): void;
-        lineGap(lineGap: number): void;
-        textColor(textColor: number): void;
-        font(font: Font): void;
+    export class LabelImpl extends SurfaceImpl{
+        text(text: string): void{}
+        align(align: number): void{}
+        lineGap(lineGap: number): void{}
+        textColor(textColor: number): void{}
+        font(font: Font): void{}
     }
 
-    export class Label extends volksoper.Surface{
-        private _impl: ILabelImpl;
+    export class Label extends Surface{
+        private _impl: LabelImpl;
 
         private _font: volksoper.Font;
         get font(): Font{

@@ -5,15 +5,15 @@
 
 module volksoper{
 
-    export interface ISurfaceImpl{
-        addRef(): number;
-        release(): number;
-        invalidate(): void;
-        render(): void;
+    export class SurfaceImpl extends ResourceImpl{
+        invalidate(): void{}
+        render(): void{}
+        width(): number{return 0;}
+        height(): number{return 0;}
     }
 
     export class Surface extends Resource{
-        private _impl: ISurfaceImpl;
+        private _impl: SurfaceImpl;
 
         private _invalidate: bool = false;
         invalidate(): void{
@@ -24,22 +24,12 @@ module volksoper{
             this._impl.invalidate();
         }
 
-        addRef(): number{
-            return this._impl.addRef();
-        }
-        release(): number{
-            return this._impl.release();
-        }
-        get name(): string{
-            return this._name;
-        }
-
         get width(){
-            return this._width;
+            return this._impl.width();
         }
 
         get height(){
-            return this._height;
+            return this._impl.height();
         }
 
         _render(){
@@ -47,14 +37,17 @@ module volksoper{
         }
 
         _setStage(stage: Stage){
-            if(!this._impl){
-                this._impl = stage._createSurfaceImpl(
-                        this._width, this._height, this._renderer, this._primitive, this._name);
-                if(this._invalidate){
-                    this._invalidate = false;
-                    this._impl.invalidate();
-                }
+            super._setStage(stage);
+
+            if(this._invalidate){
+                this._invalidate = false;
+                this._impl.invalidate();
             }
+        }
+
+        private _createImpl(stage: Stage): ResourceImpl{
+            return stage._createSurfaceImpl(
+                    this._width, this._height, this._renderer, this._primitive, this._name);
         }
 
         hitTest(x: number, y: number): bool{
@@ -69,9 +62,6 @@ module volksoper{
             super();
             if(this._renderer){
                 this._invalidate = true;
-            }
-            if(!this._name){
-                this._name = volksoper.generateUniqueName();
             }
         }
 

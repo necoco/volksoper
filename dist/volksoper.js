@@ -18,6 +18,7 @@ var volksoper;
         Event.REMOVE_FROM_STAGE = "removeFromScene";
         Event.COMPLETE = "complete";
         Event.LOADED = "loaded";
+        Event.LOADING_FAILED = "loadingFailed";
         Object.defineProperty(Event.prototype, "type", {
             get: function () {
                 return this._type;
@@ -1062,49 +1063,21 @@ var volksoper;
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
-    var KeyEvent = (function (_super) {
-        __extends(KeyEvent, _super);
-        function KeyEvent(name, _keyCode, _keyName) {
-                _super.call(this, name);
-            this._keyCode = _keyCode;
-            this._keyName = _keyName;
-        }
-        KeyEvent.KEY_DOWN = "keyDown";
-        KeyEvent.KEY_UP = "keyUp";
-        Object.defineProperty(KeyEvent.prototype, "keyCode", {
-            get: function () {
-                return this._keyCode;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(KeyEvent.prototype, "keyName", {
-            get: function () {
-                return this._keyName;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        return KeyEvent;
-    })(volksoper.Event);
-    volksoper.KeyEvent = KeyEvent;    
-})(volksoper || (volksoper = {}));
-var volksoper;
-(function (volksoper) {
-    var Resource = (function () {
-        function Resource() {
+    var ResourceImpl = (function () {
+        function ResourceImpl() {
             this._listeners = [];
             this._usable = false;
             this._valid = false;
+            this._referenceCount = 0;
         }
-        Object.defineProperty(Resource.prototype, "usable", {
+        Object.defineProperty(ResourceImpl.prototype, "usable", {
             get: function () {
                 return this._usable;
             },
             enumerable: true,
             configurable: true
         });
-        Resource.prototype._setUsable = function () {
+        ResourceImpl.prototype._setUsable = function () {
             if(!this._usable) {
                 this._usable = true;
                 for(var n = 0; n < this._listeners.length; ++n) {
@@ -1113,14 +1086,14 @@ var volksoper;
                 this._listeners = null;
             }
         };
-        Resource.prototype._setError = function () {
+        ResourceImpl.prototype._setError = function () {
             for(var n = 0; n < this._listeners.length; ++n) {
                 this._listeners[n](null);
             }
             this._valid = false;
             this._listeners = null;
         };
-        Resource.prototype.addUsableListener = function (fn) {
+        ResourceImpl.prototype.addUsableListener = function (fn) {
             if(this._listeners) {
                 this._listeners.push(fn);
             } else {
@@ -1130,6 +1103,55 @@ var volksoper;
                     fn(null);
                 }
             }
+        };
+        ResourceImpl.prototype.addRef = function () {
+            return ++this._referenceCount;
+        };
+        ResourceImpl.prototype.release = function () {
+            return --this._referenceCount;
+        };
+        ResourceImpl.prototype.name = function () {
+            return null;
+        };
+        return ResourceImpl;
+    })();
+    volksoper.ResourceImpl = ResourceImpl;    
+    var Resource = (function () {
+        function Resource() { }
+        Resource.prototype.addRef = function () {
+            return this._impl.addRef();
+        };
+        Resource.prototype.release = function () {
+            return this._impl.release();
+        };
+        Object.defineProperty(Resource.prototype, "name", {
+            get: function () {
+                return this._impl.name();
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Resource.prototype.addUsableListener = function (fn) {
+            if(this._impl) {
+                this._impl.addUsableListener(fn);
+            } else {
+                this._listeners = this._listeners || [];
+                this._listeners.push(fn);
+            }
+        };
+        Resource.prototype._setStage = function (stage) {
+            if(!this._impl) {
+                this._impl = this._createImpl(stage);
+                if(this._listeners) {
+                    for(var n = 0; n < this._listeners.length; ++n) {
+                        this._impl.addUsableListener(this._listeners[n]);
+                    }
+                    this._listeners = null;
+                }
+            }
+        };
+        Resource.prototype._createImpl = function (stage) {
+            return null;
         };
         return Resource;
     })();
@@ -1212,6 +1234,35 @@ var volksoper;
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
+    var KeyEvent = (function (_super) {
+        __extends(KeyEvent, _super);
+        function KeyEvent(name, _keyCode, _keyName) {
+                _super.call(this, name);
+            this._keyCode = _keyCode;
+            this._keyName = _keyName;
+        }
+        KeyEvent.KEY_DOWN = "keyDown";
+        KeyEvent.KEY_UP = "keyUp";
+        Object.defineProperty(KeyEvent.prototype, "keyCode", {
+            get: function () {
+                return this._keyCode;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(KeyEvent.prototype, "keyName", {
+            get: function () {
+                return this._keyName;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return KeyEvent;
+    })(volksoper.Event);
+    volksoper.KeyEvent = KeyEvent;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
     var RenderingVisitor = (function () {
         function RenderingVisitor() { }
         RenderingVisitor.prototype.visitDisplayObject = function (o) {
@@ -1234,6 +1285,7 @@ var volksoper;
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
+    
     var Stage = (function (_super) {
         __extends(Stage, _super);
         function Stage(options) {
@@ -1427,6 +1479,9 @@ var volksoper;
         Stage.prototype._createSurfaceImpl = function (width, height, renderer, primitive, name) {
             return null;
         };
+        Stage.prototype._createImageImpl = function (src) {
+            return this.topScene.dock._createImageImpl(src);
+        };
         Stage.prototype._createLabelImpl = function (width, height, name) {
             return null;
         };
@@ -1450,13 +1505,32 @@ var volksoper;
 var volksoper;
 (function (volksoper) {
     var ID = 0;
-    function generateUniqueName() {
-        return "volksoper-" + (++ID).toString();
+    function generateUniqueName(prefix) {
+        return "volksoper-" + prefix + "-" + (++ID).toString();
     }
     volksoper.generateUniqueName = generateUniqueName;
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
+    var SurfaceImpl = (function (_super) {
+        __extends(SurfaceImpl, _super);
+        function SurfaceImpl() {
+            _super.apply(this, arguments);
+
+        }
+        SurfaceImpl.prototype.invalidate = function () {
+        };
+        SurfaceImpl.prototype.render = function () {
+        };
+        SurfaceImpl.prototype.width = function () {
+            return 0;
+        };
+        SurfaceImpl.prototype.height = function () {
+            return 0;
+        };
+        return SurfaceImpl;
+    })(volksoper.ResourceImpl);
+    volksoper.SurfaceImpl = SurfaceImpl;    
     var Surface = (function (_super) {
         __extends(Surface, _super);
         function Surface(_width, _height, _renderer, _primitive, _name) {
@@ -1470,9 +1544,6 @@ var volksoper;
             if(this._renderer) {
                 this._invalidate = true;
             }
-            if(!this._name) {
-                this._name = volksoper.generateUniqueName();
-            }
         }
         Surface.prototype.invalidate = function () {
             if(!this._impl) {
@@ -1481,29 +1552,16 @@ var volksoper;
             }
             this._impl.invalidate();
         };
-        Surface.prototype.addRef = function () {
-            return this._impl.addRef();
-        };
-        Surface.prototype.release = function () {
-            return this._impl.release();
-        };
-        Object.defineProperty(Surface.prototype, "name", {
-            get: function () {
-                return this._name;
-            },
-            enumerable: true,
-            configurable: true
-        });
         Object.defineProperty(Surface.prototype, "width", {
             get: function () {
-                return this._width;
+                return this._impl.width();
             },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(Surface.prototype, "height", {
             get: function () {
-                return this._height;
+                return this._impl.height();
             },
             enumerable: true,
             configurable: true
@@ -1512,13 +1570,14 @@ var volksoper;
             this._impl.render();
         };
         Surface.prototype._setStage = function (stage) {
-            if(!this._impl) {
-                this._impl = stage._createSurfaceImpl(this._width, this._height, this._renderer, this._primitive, this._name);
-                if(this._invalidate) {
-                    this._invalidate = false;
-                    this._impl.invalidate();
-                }
+            _super.prototype._setStage.call(this, stage);
+            if(this._invalidate) {
+                this._invalidate = false;
+                this._impl.invalidate();
             }
+        };
+        Surface.prototype._createImpl = function (stage) {
+            return stage._createSurfaceImpl(this._width, this._height, this._renderer, this._primitive, this._name);
         };
         Surface.prototype.hitTest = function (x, y) {
             return 0 <= x && x <= this._width && 0 <= y && y <= this._height;
@@ -1529,6 +1588,40 @@ var volksoper;
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
+    var Picture = (function (_super) {
+        __extends(Picture, _super);
+        function Picture(_src) {
+                _super.call(this, 0, 0);
+            this._src = _src;
+        }
+        Picture.prototype._createImpl = function (stage) {
+            return stage._createImageImpl(this._src);
+        };
+        return Picture;
+    })(volksoper.Surface);
+    volksoper.Picture = Picture;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var LabelImpl = (function (_super) {
+        __extends(LabelImpl, _super);
+        function LabelImpl() {
+            _super.apply(this, arguments);
+
+        }
+        LabelImpl.prototype.text = function (text) {
+        };
+        LabelImpl.prototype.align = function (align) {
+        };
+        LabelImpl.prototype.lineGap = function (lineGap) {
+        };
+        LabelImpl.prototype.textColor = function (textColor) {
+        };
+        LabelImpl.prototype.font = function (font) {
+        };
+        return LabelImpl;
+    })(volksoper.SurfaceImpl);
+    volksoper.LabelImpl = LabelImpl;    
     var Label = (function (_super) {
         __extends(Label, _super);
         function Label(width, height, name) {
@@ -1950,11 +2043,19 @@ var volksoper;
 (function (volksoper) {
     var SceneDock = (function (_super) {
         __extends(SceneDock, _super);
-        function SceneDock(_parentDock) {
+        function SceneDock(_stage, _parentDock) {
                 _super.call(this);
+            this._stage = _stage;
             this._parentDock = _parentDock;
             this._id = 0;
         }
+        Object.defineProperty(SceneDock.prototype, "stage", {
+            get: function () {
+                return this._stage;
+            },
+            enumerable: true,
+            configurable: true
+        });
         SceneDock.prototype.find = function (name) {
             return null;
         };
@@ -1967,6 +2068,9 @@ var volksoper;
         };
         SceneDock.prototype.play = function (name) {
             return false;
+        };
+        SceneDock.prototype._createImageImpl = function (src) {
+            return null;
         };
         return SceneDock;
     })(volksoper.Actor);
@@ -2200,81 +2304,67 @@ var volksoper;
     })(volksoper.SceneNode);
     volksoper.Sprite = Sprite;    
 })(volksoper || (volksoper = {}));
+
 var volksoper;
 (function (volksoper) {
-    var HTMLImage = (function (_super) {
-        __extends(HTMLImage, _super);
-        function HTMLImage(_name, listener) {
-                _super.call(this, 0, 0);
-            this._name = _name;
+    var HTMLImageImpl = (function (_super) {
+        __extends(HTMLImageImpl, _super);
+        function HTMLImageImpl(_src) {
+            var _this = this;
+                _super.call(this);
+            this._src = _src;
             this._width = 0;
             this._height = 0;
-            this._instance = null;
             this._referenceCount = 0;
-            this.addUsableListener(listener);
+            var img = new Image();
+            img.onerror = function () {
+                _this._setError();
+            };
+            img.onload = function () {
+                _this._width = img.width;
+                _this._height = img.height;
+                _this._setUsable();
+            };
+            this._image = img;
+            img.src = this._src;
         }
-        Object.defineProperty(HTMLImage.prototype, "image", {
-            get: function () {
-                if(this._instance) {
-                    return this._instance.image;
-                }
-                return this._image;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        HTMLImage.prototype.addRef = function () {
+        HTMLImageImpl.prototype.width = function () {
+            return this._width;
+        };
+        HTMLImageImpl.prototype.height = function () {
+            return this._height;
+        };
+        HTMLImageImpl.prototype._getImage = function () {
+            return this._image;
+        };
+        HTMLImageImpl.prototype.addRef = function () {
             return ++this._referenceCount;
         };
-        HTMLImage.prototype.release = function () {
-            var count = --this._referenceCount;
-            if(this._instance && count <= 0) {
-                this._instance.release();
-            }
-            return count;
+        HTMLImageImpl.prototype.release = function () {
+            return --this._referenceCount;
         };
-        HTMLImage.prototype._setStage = function (stage) {
-            var _this = this;
-            var found = (stage.topScene.dock).find(this._name);
-            if(found) {
-                this._instance = found;
-                if(found.usable) {
-                    this._setUsable();
-                } else {
-                    found.addUsableListener(function (obj) {
-                        if(obj) {
-                            _this._setUsable();
-                        } else {
-                            _this._setError();
-                        }
-                    });
-                }
-            } else {
-                var img = new HTMLImageElement();
-                img.onerror = function () {
-                    _this._setError();
-                };
-                img.onload = function () {
-                    _this._width = img.width;
-                    _this._height = img.height;
-                    _this._setUsable();
-                };
-                this._image = img;
-                img.src = this._name;
-            }
+        HTMLImageImpl.prototype.render = function () {
         };
-        return HTMLImage;
-    })(volksoper.Surface);
-    volksoper.HTMLImage = HTMLImage;    
+        HTMLImageImpl.prototype.invalidate = function () {
+        };
+        HTMLImageImpl.prototype.name = function () {
+            return this._src;
+        };
+        return HTMLImageImpl;
+    })(volksoper.SurfaceImpl);
+    volksoper.HTMLImageImpl = HTMLImageImpl;    
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
     var HTMLSceneDock = (function (_super) {
         __extends(HTMLSceneDock, _super);
-        function HTMLSceneDock(parentDock) {
-                _super.call(this, parentDock);
+        function HTMLSceneDock(stage, _parentDock) {
+                _super.call(this, stage, _parentDock);
+            this._parentDock = _parentDock;
             this._currentResouce = 0;
             this._totalResource = 0;
+            this._surfaceImpls = {
+            };
         }
         HTMLSceneDock.prototype.find = function (name) {
             return null;
@@ -2294,27 +2384,55 @@ var volksoper;
         HTMLSceneDock.prototype._loadResource = function (file) {
             var _this = this;
             var ext = this._extractExt(file);
+            var res = null;
             switch(ext) {
                 case 'jpg':
                 case 'png':
                 case 'jpeg':
                 case 'gif': {
                     this._totalResource++;
-                    return new volksoper.HTMLImage(file, function (img) {
-                        _this.broadcastEvent(new volksoper.Event(volksoper.Event.LOADED), img);
-                        _this._currentResouce++;
-                        if(_this._currentResouce >= _this._totalResource) {
-                            _this.broadcastEvent(new volksoper.Event(volksoper.Event.COMPLETE));
+                    res = new volksoper.Picture(file);
+                    res.addUsableListener(function (img) {
+                        if(img) {
+                            _this.broadcastEvent(new volksoper.Event(volksoper.Event.LOADED), img);
+                            _this._currentResouce++;
+                            if(_this._currentResouce >= _this._totalResource) {
+                                _this.broadcastEvent(new volksoper.Event(volksoper.Event.COMPLETE));
+                            }
+                        } else {
+                            _this.broadcastEvent(new volksoper.Event(volksoper.Event.LOADING_FAILED));
                         }
                     });
+                    break;
 
                 }
             }
+            return res;
         };
         HTMLSceneDock.prototype._extractExt = function (path) {
             var matched = path.match(/\.\w+$/);
             if(matched && matched.length > 0) {
                 return matched[0].slice(1).toLowerCase();
+            }
+            return null;
+        };
+        HTMLSceneDock.prototype._createImageImpl = function (src) {
+            var impl = this._findImageImpl(src);
+            if(impl) {
+                return impl;
+            } else {
+                impl = this._newImageImpl(src);
+                this._surfaceImpls[src] = impl;
+                return impl;
+            }
+        };
+        HTMLSceneDock.prototype._newImageImpl = function (src) {
+            return new volksoper.HTMLImageImpl(src);
+        };
+        HTMLSceneDock.prototype._findImageImpl = function (name) {
+            var impl = this._surfaceImpls[name];
+            if(!impl && this._parentDock) {
+                return (this._parentDock)._findImageImpl(name);
             }
             return null;
         };
@@ -2626,11 +2744,27 @@ var volksoper;
         };
         HTMLStage.prototype._createSceneDock = function () {
             var parent = (this.numChildren !== 0) ? this.topScene.dock : null;
-            return new volksoper.HTMLSceneDock(parent);
+            return new volksoper.HTMLSceneDock(this, parent);
         };
         return HTMLStage;
     })(volksoper.Stage);
     volksoper.HTMLStage = HTMLStage;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var CanvasImageImpl = (function (_super) {
+        __extends(CanvasImageImpl, _super);
+        function CanvasImageImpl(src, _stage) {
+                _super.call(this, src);
+            this._stage = _stage;
+        }
+        CanvasImageImpl.prototype.render = function () {
+            (this._stage).context.setTransform(1, 0, 0, 1, 0, 0);
+            (this._stage).context.drawImage(this._getImage(), 0, 0);
+        };
+        return CanvasImageImpl;
+    })(volksoper.HTMLImageImpl);
+    volksoper.CanvasImageImpl = CanvasImageImpl;    
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
@@ -2677,36 +2811,50 @@ var volksoper;
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
-    var CanvasSurfaceImpl = (function () {
-        function CanvasSurfaceImpl(width, height, _renderer, _primitive, _name, _stage) {
+    var CanvasSceneDock = (function (_super) {
+        __extends(CanvasSceneDock, _super);
+        function CanvasSceneDock() {
+            _super.apply(this, arguments);
+
+        }
+        CanvasSceneDock.prototype._newImageImpl = function (src) {
+            return new volksoper.CanvasImageImpl(src, this.stage);
+        };
+        return CanvasSceneDock;
+    })(volksoper.HTMLSceneDock);
+    volksoper.CanvasSceneDock = CanvasSceneDock;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var CanvasSurfaceImpl = (function (_super) {
+        __extends(CanvasSurfaceImpl, _super);
+        function CanvasSurfaceImpl(_width, _height, _renderer, _primitive, _name, _stage) {
+                _super.call(this);
+            this._width = _width;
+            this._height = _height;
             this._renderer = _renderer;
             this._primitive = _primitive;
             this._name = _name;
             this._stage = _stage;
-            this._referenceCount = 0;
+            if(!this._name) {
+                this._name = volksoper.generateUniqueName("surface");
+            }
             var element = document.createElement('canvas');
-            element.style.width = width + 'px';
-            element.style.height = height + 'px';
+            element.style.width = this._width + 'px';
+            element.style.height = this._height + 'px';
             element.style.position = 'absolute';
             this._element = element;
             this._context = element.getContext("2d");
         }
-        CanvasSurfaceImpl.prototype.addRef = function () {
-            return ++this._referenceCount;
+        CanvasSurfaceImpl.prototype.width = function () {
+            return this._width;
         };
-        CanvasSurfaceImpl.prototype.release = function () {
-            return --this._referenceCount;
+        CanvasSurfaceImpl.prototype.height = function () {
+            return this._height;
         };
-        CanvasSurfaceImpl.prototype.count = function () {
-            return this._referenceCount;
+        CanvasSurfaceImpl.prototype.name = function () {
+            return this._name;
         };
-        Object.defineProperty(CanvasSurfaceImpl.prototype, "name", {
-            get: function () {
-                return this._name;
-            },
-            enumerable: true,
-            configurable: true
-        });
         CanvasSurfaceImpl.prototype.invalidate = function () {
             if(!this._primitive) {
                 this._stage._addDirtySurfaceImpl(this);
@@ -2723,7 +2871,7 @@ var volksoper;
             this._renderer(this, this._context);
         };
         return CanvasSurfaceImpl;
-    })();
+    })(volksoper.SurfaceImpl);
     volksoper.CanvasSurfaceImpl = CanvasSurfaceImpl;    
 })(volksoper || (volksoper = {}));
 var volksoper;
@@ -2763,8 +2911,8 @@ var volksoper;
                 this._post = new volksoper.PostCanvasRenderingVisitor(context);
                 this._context = context;
             }
-            c.style.width = this.width + 'px';
-            c.style.height = this.height + 'px';
+            c.width = this.width;
+            c.height = this.height;
             this.platform.setTransformOrigin(c, '0 0');
             this.platform.setTransform(c, 'scale(' + this.scale + ')');
         };
@@ -2786,6 +2934,10 @@ var volksoper;
         };
         CanvasStage.prototype._addDirtySurfaceImpl = function (dirty) {
             this._dirty.push(dirty);
+        };
+        CanvasStage.prototype._createSceneDock = function () {
+            var parent = (this.numChildren !== 0) ? this.topScene.dock : null;
+            return new volksoper.CanvasSceneDock(this, parent);
         };
         return CanvasStage;
     })(volksoper.HTMLStage);

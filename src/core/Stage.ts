@@ -3,15 +3,15 @@
 ///<reference path="Actor.ts"/>
 ///<reference path="Matrix4.ts"/>
 ///<reference path="TouchEvent.ts"/>
-///<reference path="Label.ts"/>
 ///<reference path="Surface.ts"/>
 ///<reference path="KeyEvent.ts"/>
 ///<reference path="RenderingVisitor.ts"/>
 
 
 
-
 module volksoper{
+    declare class Label{}
+
     export class Stage extends volksoper.DisplayActor{
         private _running = true;
         get running(){
@@ -202,11 +202,15 @@ module volksoper{
             obj._visitRendering(post);
         }
 
-        _createSurfaceImpl(width: number, height: number, renderer:any, primitive: bool, name: string): ISurfaceImpl{
+        _createSurfaceImpl(width: number, height: number, renderer:any, primitive: bool, name: string): SurfaceImpl{
             return null;
         }
 
-        _createLabelImpl(width: number, height: number, name: string): ILabelImpl{
+        _createImageImpl(src: string): SurfaceImpl{
+            return this.topScene.dock._createImageImpl(src);
+        }
+
+        _createLabelImpl(width: number, height: number, name: string): LabelImpl{
             return null;
         }
 
