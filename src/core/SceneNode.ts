@@ -24,8 +24,11 @@ module volksoper{
             if(this._story){
                 return this._story;
             }
-
-            this._story = this._scene.storyBoard.story(this);
+            if(this._scene){
+                this._story = this._scene.storyBoard.story(this);
+            }else{
+                this._story = new Story(null, this);
+            }
             return this._story;
         }
 
@@ -40,6 +43,9 @@ module volksoper{
 
             this.addEventListener(volksoper.Event.ADDED_TO_SCENE,(e)=>{
                 this._scene = <volksoper.Scene>e.target;
+                if(this._story){
+                    this._story._attachStoryBoard(this._scene.storyBoard);
+                }
             }, false, volksoper.SYSTEM_PRIORITY);
             this.addEventListener(volksoper.Event.REMOVE_FROM_SCENE,(e)=>{
                 this._scene = null;

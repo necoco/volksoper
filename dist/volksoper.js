@@ -1689,14 +1689,20 @@ var volksoper;
             this._state = "normal";
         }
         Story.prototype._createScenario = function () {
+            var _this = this;
             if(!this._scenario) {
-                this._board._registerStory(this);
-                var self = this;
+                if(this._board) {
+                    this._board._registerStory(this);
+                }
                 this._scenario = CompositeScenario(function () {
-                    self._scenario = null;
-                    self._board._unregisterStory(self);
+                    _this._scenario = null;
+                    _this._board._unregisterStory(_this);
                 });
             }
+        };
+        Story.prototype._attachStoryBoard = function (board) {
+            this._board = board;
+            board._registerStory(this);
         };
         Story.prototype._addScenario = function (s) {
             this._createScenario();
@@ -1990,6 +1996,9 @@ var volksoper;
                 _super.call(this);
             this.addEventListener(volksoper.Event.ADDED_TO_SCENE, function (e) {
                 _this._scene = e.target;
+                if(_this._story) {
+                    _this._story._attachStoryBoard(_this._scene.storyBoard);
+                }
             }, false, volksoper.SYSTEM_PRIORITY);
             this.addEventListener(volksoper.Event.REMOVE_FROM_SCENE, function (e) {
                 _this._scene = null;
@@ -2026,7 +2035,11 @@ var volksoper;
                 if(this._story) {
                     return this._story;
                 }
-                this._story = this._scene.storyBoard.story(this);
+                if(this._scene) {
+                    this._story = this._scene.storyBoard.story(this);
+                } else {
+                    this._story = new volksoper.Story(null, this);
+                }
                 return this._story;
             },
             enumerable: true,

@@ -8,7 +8,6 @@
 
 module volksoper{
 
-
     function CompositeScenario(callback: ()=> void){
         var scenarios: any[] = [];
 
@@ -112,13 +111,19 @@ module volksoper{
 
         private _createScenario(): void{
             if(!this._scenario){
-                this._board._registerStory(this);
-                var self = this;
+                if(this._board){
+                    this._board._registerStory(this);
+                }
                 this._scenario = CompositeScenario(()=>{
-                    self._scenario = null;
-                    self._board._unregisterStory(self);
+                    this._scenario = null;
+                    this._board._unregisterStory(this);
                 });
             }
+        }
+
+        _attachStoryBoard(board: StoryBoard){
+            this._board = board;
+            board._registerStory(this);
         }
 
         private _addScenario(s: any): void{

@@ -15,11 +15,11 @@
 ・TouchEvent
 ・KeyEvent
 ・Easingの追加
-
+・Surfaceのレンダリングを可能にする。
 
 **ここまで**
 
-明日の作業：Surfaceのレンダリングを可能にする。
+明日の作業：イメージのプレロード,表示
 
 ・LiteSprite  =>いる？
 ・bake                 =>これは必須
