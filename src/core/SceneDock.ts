@@ -31,5 +31,9 @@ module volksoper{
         _createImageImpl(src: string): SurfaceImpl{
             return null;
         }
+
+        _createSoundImpl(src: string): SoundImpl{
+            return null;
+        }
     }
 }

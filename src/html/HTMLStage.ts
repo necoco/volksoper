@@ -24,7 +24,7 @@ module volksoper{
             return this._element;
         }
 
-        private _platform: Platform = Platform.create();
+        private _platform: Platform = Platform.instance();
         get platform(){
             return this._platform;
         }

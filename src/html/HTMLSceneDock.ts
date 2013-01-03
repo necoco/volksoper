@@ -15,6 +15,7 @@ module volksoper{
         private _totalResource = 0;
 
         private _surfaceImpls: any = {};
+        private _soundImpls: any = {};
 
         load(...files: string[]): Resource[]{
             var l = files.length;
@@ -27,7 +28,7 @@ module volksoper{
         }
 
         private _loadResource(file: string): Resource{
-            var ext = this._extractExt(file);
+            var ext = extractExt(file);
             var res: Resource = null;
             switch(ext){
                 case 'jpg':case 'png':case 'jpeg':case 'gif':
@@ -48,14 +49,6 @@ module volksoper{
             }
 
             return res;
-        }
-
-        private _extractExt(path: string): string{
-            var matched = path.match(/\.\w+$/);
-            if (matched && matched.length > 0) {
-                return matched[0].slice(1).toLowerCase();
-            }
-            return null;
         }
 
         _createImageImpl(src: string): SurfaceImpl{
@@ -82,7 +75,17 @@ module volksoper{
         }
 
         play(name: string): bool{
+            if(this._soundImpls[name]){
+                this._soundImpls[name].play();
+                return true;
+            }
             return false;
+        }
+
+        _createSoundImpl(src: string): SoundImpl{
+            var impl = <SoundImpl>new (Platform.instance().getSoundImplClass())(src);
+            this._soundImpls[src] = impl;
+            return impl;
         }
     }
 }

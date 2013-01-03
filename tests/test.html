@@ -27,6 +27,13 @@
         });
         stage.backgroundColor = 0xffffcc;
         stage.render();
+
+        var sound = new vo.Sound("test.wav");
+        sound.attach(stage);
+        sound.addUsableListener(function(){
+            sound.play();
+            console.log("hoge");
+        });
     };
 
 

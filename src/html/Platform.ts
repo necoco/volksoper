@@ -1,23 +1,29 @@
 
 module volksoper{
+    var _PLATFORM: Platform;
+
     export class Platform{
         get prefix(){
             return '';
         }
 
-        static create(){
-            var ua = navigator.userAgent;
-            if (ua.indexOf('Opera') >= 0) {
-                return new OperaPlatform();
-            } else if (ua.indexOf('MSIE') >= 0) {
-                return new MsPlatform();
-            } else if (ua.indexOf('WebKit') >= 0) {
-                return new WebkitPlatform();
-            } else if (navigator.product === 'Gecko') {
-                return new MozPlatform();
-            } else {
-                return new Platform();
+        static instance(){
+            if(!_PLATFORM){
+                var ua = navigator.userAgent;
+                if (ua.indexOf('Opera') >= 0) {
+                    _PLATFORM =  new OperaPlatform();
+                } else if (ua.indexOf('MSIE') >= 0) {
+                    _PLATFORM = new MsPlatform();
+                } else if (ua.indexOf('WebKit') >= 0) {
+                    _PLATFORM = new WebkitPlatform();
+                } else if (navigator.product === 'Gecko') {
+                    _PLATFORM = new MozPlatform();
+                } else {
+                    _PLATFORM = new Platform();
+                }
             }
+
+            return _PLATFORM;
         }
 
         setTransformOrigin(e: any, value: string){
@@ -26,6 +32,10 @@ module volksoper{
 
         setTransform(e: any, value: string){
             e.style[this.prefix + 'Transform'] = value;
+        }
+
+        getSoundImplClass(): any{
+            return DOMSoundImpl;
         }
     }
 

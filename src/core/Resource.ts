@@ -10,7 +10,7 @@ module volksoper{
             return this._usable;
         }
 
-        private _valid = false;
+        private _fired = false;
 
         _setUsable(): void{
             if(!this._usable){
@@ -23,20 +23,31 @@ module volksoper{
             }
         }
 
+        _fireUsable(): void{
+            if(this._listeners){
+                for(var n = 0; n < this._listeners.length;++n){
+                    this._listeners[n](this);
+                }
+
+                this._usable = true;
+                this._fired = true;
+            }
+        }
+
         _setError(): void{
             for(var n = 0; n < this._listeners.length;++n){
                 this._listeners[n](null);
             }
 
-            this._valid = false;
+            this._usable = false;
             this._listeners = null;
         }
 
         addUsableListener(fn: (res: any)=>void){
-            if(this._listeners){
+            if(this._listeners && !this._fired){
                 this._listeners.push(fn);
             }else{
-                if(this._valid){
+                if(this._usable){
                     fn(this);
                 }else{
                     fn(null);

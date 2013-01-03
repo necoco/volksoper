@@ -1067,7 +1067,7 @@ var volksoper;
         function ResourceImpl() {
             this._listeners = [];
             this._usable = false;
-            this._valid = false;
+            this._fired = false;
             this._referenceCount = 0;
         }
         Object.defineProperty(ResourceImpl.prototype, "usable", {
@@ -1086,18 +1086,27 @@ var volksoper;
                 this._listeners = null;
             }
         };
+        ResourceImpl.prototype._fireUsable = function () {
+            if(this._listeners) {
+                for(var n = 0; n < this._listeners.length; ++n) {
+                    this._listeners[n](this);
+                }
+                this._usable = true;
+                this._fired = true;
+            }
+        };
         ResourceImpl.prototype._setError = function () {
             for(var n = 0; n < this._listeners.length; ++n) {
                 this._listeners[n](null);
             }
-            this._valid = false;
+            this._usable = false;
             this._listeners = null;
         };
         ResourceImpl.prototype.addUsableListener = function (fn) {
-            if(this._listeners) {
+            if(this._listeners && !this._fired) {
                 this._listeners.push(fn);
             } else {
-                if(this._valid) {
+                if(this._usable) {
                     fn(this);
                 } else {
                     fn(null);
@@ -1529,6 +1538,14 @@ var volksoper;
         return "volksoper-" + prefix + "-" + (++ID).toString();
     }
     volksoper.generateUniqueName = generateUniqueName;
+    function extractExt(path) {
+        var matched = path.match(/\.\w+$/);
+        if(matched && matched.length > 0) {
+            return matched[0].slice(1).toLowerCase();
+        }
+        return null;
+    }
+    volksoper.extractExt = extractExt;
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
@@ -2094,6 +2111,9 @@ var volksoper;
         SceneDock.prototype._createImageImpl = function (src) {
             return null;
         };
+        SceneDock.prototype._createSoundImpl = function (src) {
+            return null;
+        };
         return SceneDock;
     })(volksoper.Actor);
     volksoper.SceneDock = SceneDock;    
@@ -2272,6 +2292,40 @@ var volksoper;
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
+    var SoundImpl = (function (_super) {
+        __extends(SoundImpl, _super);
+        function SoundImpl() {
+            _super.apply(this, arguments);
+
+        }
+        SoundImpl.prototype.play = function () {
+        };
+        return SoundImpl;
+    })(volksoper.ResourceImpl);
+    volksoper.SoundImpl = SoundImpl;    
+    var Sound = (function (_super) {
+        __extends(Sound, _super);
+        function Sound(_src) {
+                _super.call(this);
+            this._src = _src;
+        }
+        Sound.prototype._createImpl = function (stage) {
+            return stage.topScene.dock._createSoundImpl(this._src);
+        };
+        Sound.prototype.play = function () {
+            if(this._impl) {
+                this._impl.play();
+            }
+        };
+        Sound.prototype.attach = function (stage) {
+            this._setStage(stage);
+        };
+        return Sound;
+    })(volksoper.Resource);
+    volksoper.Sound = Sound;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
     var Sprite = (function (_super) {
         __extends(Sprite, _super);
         function Sprite() {
@@ -2339,6 +2393,57 @@ var volksoper;
     })(volksoper.SceneNode);
     volksoper.Sprite = Sprite;    
 })(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var DOMSoundImpl = (function (_super) {
+        __extends(DOMSoundImpl, _super);
+        function DOMSoundImpl(_src) {
+            var _this = this;
+                _super.call(this);
+            this._src = _src;
+            var type;
+            var ext = volksoper.extractExt(_src);
+            var audio = document.createElement('audio');
+            audio.autoplay = false;
+            audio.onerror = function () {
+                _this._setError();
+            };
+            if(ext === 'snd') {
+                var withoutExt = _src.slice(_src.length - 4);
+                if(audio.canPlayType('audio/mp3')) {
+                    audio.appendChild(this._createSource(withoutExt + '.mp3', 'audio/mp3'));
+                } else {
+                    if(audio.canPlayType('audio/ogg')) {
+                        audio.appendChild(this._createSource(withoutExt + '.ogg', 'audio/ogg'));
+                    } else {
+                        if(audio.canPlayType('audio/wave')) {
+                            audio.appendChild(this._createSource(withoutExt + '.wav', 'audio/wave'));
+                        }
+                    }
+                }
+            } else {
+                audio.appendChild(this._createSource(_src, 'audio/' + ext));
+            }
+            audio.load();
+            this._element = audio;
+            this._fireUsable();
+        }
+        DOMSoundImpl.prototype.name = function () {
+            return this._src;
+        };
+        DOMSoundImpl.prototype._createSource = function (src, mime) {
+            var srcElement = document.createElement('source');
+            srcElement.src = src;
+            srcElement.type = mime;
+            return srcElement;
+        };
+        DOMSoundImpl.prototype.play = function () {
+            this._element.play();
+        };
+        return DOMSoundImpl;
+    })(volksoper.SoundImpl);
+    volksoper.DOMSoundImpl = DOMSoundImpl;    
+})(volksoper || (volksoper = {}));
 
 var volksoper;
 (function (volksoper) {
@@ -2400,6 +2505,8 @@ var volksoper;
             this._totalResource = 0;
             this._surfaceImpls = {
             };
+            this._soundImpls = {
+            };
         }
         HTMLSceneDock.prototype.find = function (name) {
             return null;
@@ -2418,7 +2525,7 @@ var volksoper;
         };
         HTMLSceneDock.prototype._loadResource = function (file) {
             var _this = this;
-            var ext = this._extractExt(file);
+            var ext = volksoper.extractExt(file);
             var res = null;
             switch(ext) {
                 case 'jpg':
@@ -2444,13 +2551,6 @@ var volksoper;
             }
             return res;
         };
-        HTMLSceneDock.prototype._extractExt = function (path) {
-            var matched = path.match(/\.\w+$/);
-            if(matched && matched.length > 0) {
-                return matched[0].slice(1).toLowerCase();
-            }
-            return null;
-        };
         HTMLSceneDock.prototype._createImageImpl = function (src) {
             var impl = this._findImageImpl(src);
             if(impl) {
@@ -2472,7 +2572,16 @@ var volksoper;
             return null;
         };
         HTMLSceneDock.prototype.play = function (name) {
+            if(this._soundImpls[name]) {
+                this._soundImpls[name].play();
+                return true;
+            }
             return false;
+        };
+        HTMLSceneDock.prototype._createSoundImpl = function (src) {
+            var impl = new (volksoper.Platform.instance().getSoundImplClass())(src);
+            this._soundImpls[src] = impl;
+            return impl;
         };
         return HTMLSceneDock;
     })(volksoper.SceneDock);
@@ -2480,6 +2589,7 @@ var volksoper;
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
+    var _PLATFORM;
     var Platform = (function () {
         function Platform() { }
         Object.defineProperty(Platform.prototype, "prefix", {
@@ -2489,31 +2599,37 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
-        Platform.create = function create() {
-            var ua = navigator.userAgent;
-            if(ua.indexOf('Opera') >= 0) {
-                return new OperaPlatform();
-            } else {
-                if(ua.indexOf('MSIE') >= 0) {
-                    return new MsPlatform();
+        Platform.instance = function instance() {
+            if(!_PLATFORM) {
+                var ua = navigator.userAgent;
+                if(ua.indexOf('Opera') >= 0) {
+                    _PLATFORM = new OperaPlatform();
                 } else {
-                    if(ua.indexOf('WebKit') >= 0) {
-                        return new WebkitPlatform();
+                    if(ua.indexOf('MSIE') >= 0) {
+                        _PLATFORM = new MsPlatform();
                     } else {
-                        if(navigator.product === 'Gecko') {
-                            return new MozPlatform();
+                        if(ua.indexOf('WebKit') >= 0) {
+                            _PLATFORM = new WebkitPlatform();
                         } else {
-                            return new Platform();
+                            if(navigator.product === 'Gecko') {
+                                _PLATFORM = new MozPlatform();
+                            } else {
+                                _PLATFORM = new Platform();
+                            }
                         }
                     }
                 }
             }
+            return _PLATFORM;
         }
         Platform.prototype.setTransformOrigin = function (e, value) {
             e.style[this.prefix + 'TransformOrigin'] = value;
         };
         Platform.prototype.setTransform = function (e, value) {
             e.style[this.prefix + 'Transform'] = value;
+        };
+        Platform.prototype.getSoundImplClass = function () {
+            return volksoper.DOMSoundImpl;
         };
         return Platform;
     })();
@@ -2587,7 +2703,7 @@ var volksoper;
             var _this = this;
                 _super.call(this, options);
             this._mouseId = 0;
-            this._platform = volksoper.Platform.create();
+            this._platform = volksoper.Platform.instance();
             this._adjusting = false;
             var stageId = options.stageId || 'volksoper-stage';
             var stage = document.getElementById(stageId);
