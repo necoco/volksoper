@@ -1,4 +1,4 @@
-/*! Volksoper - v0.0.1 - 2013-01-02
+/*! Volksoper - v0.0.1 - 2013-01-03
 * https://github.com/necoco/volksoper
 * Copyright (c) 2013 tshinsay; Licensed MIT */
 
@@ -1326,6 +1326,13 @@ var volksoper;
         Stage.prototype.resume = function () {
             this._running = true;
         };
+        Stage.prototype.addChild = function (child) {
+            if(child instanceof volksoper.Scene) {
+                _super.prototype.addChild.call(this, child);
+            } else {
+                throw Error("Stage can hold Scene only.");
+            }
+        };
         Stage.prototype.render = function () {
         };
         Object.defineProperty(Stage.prototype, "width", {
@@ -1601,18 +1608,18 @@ var volksoper;
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
-    var Picture = (function (_super) {
-        __extends(Picture, _super);
-        function Picture(_src) {
+    var Image = (function (_super) {
+        __extends(Image, _super);
+        function Image(_src) {
                 _super.call(this, 0, 0);
             this._src = _src;
         }
-        Picture.prototype._createImpl = function (stage) {
+        Image.prototype._createImpl = function (stage) {
             return stage._createImageImpl(this._src);
         };
-        return Picture;
+        return Image;
     })(volksoper.Surface);
-    volksoper.Picture = Picture;    
+    volksoper.Image = Image;    
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
@@ -2137,6 +2144,13 @@ var volksoper;
         Scene.prototype._unsetStage = function () {
             this._dock = null;
         };
+        Scene.prototype.addChild = function (child) {
+            if(child instanceof volksoper.SceneNode) {
+                _super.prototype.addChild.call(this, child);
+            } else {
+                throw Error("Scene can hold SceneNode only.");
+            }
+        };
         Scene.prototype._registerTarget = function (target) {
             this._iterateTable(target, function (a) {
                 a.push(target);
@@ -2165,7 +2179,6 @@ var volksoper;
             var _this = this;
             if(this._execFind === 0) {
                 this._iterateTable(target, function (table) {
-                    console.log(table.indexOf(target));
                     table.splice(table.indexOf(target), 1);
                 });
             } else {
@@ -2241,6 +2254,13 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
+        SceneNode.prototype.addChild = function (child) {
+            if(child instanceof SceneNode) {
+                _super.prototype.addChild.call(this, child);
+            } else {
+                throw Error("SceneNode can hold SceneNode only.");
+            }
+        };
         SceneNode.prototype._visitRendering = function (v) {
             v.visitSceneNode(this);
         };
@@ -2329,7 +2349,7 @@ var volksoper;
             this._width = 0;
             this._height = 0;
             this._referenceCount = 0;
-            var img = new Image();
+            var img = document.createElement('img');
             img.onerror = function () {
                 _this._setError();
             };
@@ -2404,7 +2424,7 @@ var volksoper;
                 case 'jpeg':
                 case 'gif': {
                     this._totalResource++;
-                    res = new volksoper.Picture(file);
+                    res = new volksoper.Image(file);
                     res.addUsableListener(function (img) {
                         if(img) {
                             _this.broadcastEvent(new volksoper.Event(volksoper.Event.LOADED), img);
@@ -2647,7 +2667,6 @@ var volksoper;
                             this.scale = 1;
                             this.width = window.innerWidth;
                             this.height = window.innerHeight;
-                            console.log(window.innerWidth, window.innerHeight);
                         }
                     }
                 }
@@ -2792,7 +2811,6 @@ var volksoper;
             var m = o.localMatrix.m;
             this._context.save();
             this._context.transform(m[0], m[4], m[1], m[5], m[12], m[13]);
-            console.log("mat", m);
         };
         return PreCanvasRenderingVisitor;
     })(volksoper.RenderingVisitor);
@@ -2806,7 +2824,6 @@ var volksoper;
         ProcessCanvasRenderingVisitor.prototype.visitSprite = function (sprite) {
             if(sprite.surface) {
                 sprite.surface._render();
-                console.log("render");
             }
         };
         return ProcessCanvasRenderingVisitor;

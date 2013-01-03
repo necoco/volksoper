@@ -36,7 +36,7 @@ module volksoper{
         constructor(private _src: string){
             super();
 
-            var img: any = new Image();
+            var img: any = document.createElement('img');
             img.onerror = ()=>{
                 this._setError();
             }

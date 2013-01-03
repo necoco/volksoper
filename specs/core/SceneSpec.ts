@@ -4,7 +4,7 @@
 
 module scene_spec{
 
-    class MyActor extends volksoper.Actor{
+    class MyActor extends volksoper.SceneNode{
         value = 0;
     }
 

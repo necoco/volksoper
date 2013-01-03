@@ -32,7 +32,7 @@ module volksoper{
             switch(ext){
                 case 'jpg':case 'png':case 'jpeg':case 'gif':
                     this._totalResource++;
-                    res = new Picture(file);
+                    res = new Image(file);
                     res.addUsableListener((img)=>{
                         if(img){
                             this.broadcastEvent(new volksoper.Event(volksoper.Event.LOADED), img);

@@ -3,7 +3,7 @@
 
 module volksoper{
 
-    export class Picture extends Surface{
+    export class Image extends Surface{
         private _createImpl(stage: Stage){
             return stage._createImageImpl(this._src);
         }
