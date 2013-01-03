@@ -33,7 +33,9 @@ module volksoper{
         }
 
         _render(){
-            this._impl.render();
+            if(this._impl){
+                this._impl.render();
+            }
         }
 
         _setStage(stage: Stage){

@@ -1587,7 +1587,9 @@ var volksoper;
             configurable: true
         });
         Surface.prototype._render = function () {
-            this._impl.render();
+            if(this._impl) {
+                this._impl.render();
+            }
         };
         Surface.prototype._setStage = function (stage) {
             _super.prototype._setStage.call(this, stage);
