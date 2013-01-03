@@ -24,22 +24,22 @@ module.exports = function (grunt) {
             dist: {
                 src: [
                     '<banner:meta.banner>',
-                    'tmp/volksoper-canvas.js'
+                    'tests/tmp/volksoper-canvas.js'
                 ],
                 dest: 'dist/volksoper.js'
             },
             canvas: {
                 src:[
                     '<banner:meta.sourcemap>',
-                    'tmp/volksoper-canvas.js'
+                    'tests/tmp/volksoper-canvas.js'
                 ],
-                dest: 'tmp/volksoper-canvas.js'
+                dest: 'tests/tmp/volksoper-canvas.js'
             }
         },
         typescript: {
             canvas: {
                 src: ['src/core/*.ts', 'src/html/*.ts', 'src/canvas/*.ts'],
-                dest: 'tmp/volksoper-canvas.js',
+                dest: 'tests/tmp/volksoper-canvas.js',
                 options: {
                     target: "es5",
                     sourcemap: "true",
@@ -48,7 +48,7 @@ module.exports = function (grunt) {
             },
             specs: {
                 src: ['src/core/*.ts', 'specs/**/*Spec.ts'],
-                dest: "tmp/specs.js",
+                dest: "tests/tmp/specs.js",
                 options: {
                     target: "es5",
                     base_path: "specs/"
@@ -56,7 +56,7 @@ module.exports = function (grunt) {
             },
             helpers: {
                 src: ['specs/helpers/*.ts'],
-                dest: "tmp/helpers.js",
+                dest: "tests/tmp/helpers.js",
                 options: {
                     target: "es5",
                     base_path: "specs/helpers/"
@@ -75,8 +75,8 @@ module.exports = function (grunt) {
         },
         jasmine: {
             //src: "dist/volksoper.js",
-            specs: "tmp/specs.js",
-            helpers: "tmp/helpers.js"
+            specs: "tests/tmp/specs.js",
+            helpers: "tests/tmp/helpers.js"
         },
         jshint: {
             options: {

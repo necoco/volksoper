@@ -1,10 +1,16 @@
 
 module volksoper{
     var _PLATFORM: Platform;
+    var _AUDIO_CONTEXT: any;
+    var _AUDIO_ELEMENT: HTMLMediaElement;
 
     export class Platform{
         get prefix(){
             return '';
+        }
+        
+        constructor(){
+            _AUDIO_ELEMENT = <HTMLMediaElement>document.createElement('audio');
         }
 
         static instance(){
@@ -37,11 +43,55 @@ module volksoper{
         getSoundImplClass(): any{
             return DOMSoundImpl;
         }
+
+        getWebAudioContext(){
+            return null;
+        }
+        
+        getPlayableSoundFormat(){
+            if(_AUDIO_ELEMENT.canPlayType('audio/mp3')){
+                return 'mp3';
+            }else if(_AUDIO_ELEMENT.canPlayType('audio/ogg')){
+                return 'ogg';
+            }else if(_AUDIO_ELEMENT.canPlayType('_AUDIO_ELEMENT/wav')){
+                return 'wav';
+            }
+
+            return null;
+        }
+        
+        isPlayableSoundFormat(src: string){
+            return _AUDIO_ELEMENT.canPlayType('audio/' + extractExt(src));
+        }
+
+        canUseXHR(){
+            return location.protocol !== 'file:';
+        }
+
+        isMobile(){
+            return navigator.userAgent.indexOf('Mobile') === -1;
+        }
     }
 
     class WebkitPlatform extends Platform{
         get prefix(){
             return 'webkit';
+        }
+
+        getWebAudioContext(){
+            if(!_AUDIO_CONTEXT){
+                _AUDIO_CONTEXT = new ((<any>window).webkitAudioContext)();
+            }
+
+            return _AUDIO_CONTEXT;
+        }
+
+        getSoundImplClass():any{
+            if(this.canUseXHR() && this.isMobile()){
+                return WebAudioSoundImpl;
+            }else{
+                return DOMSoundImpl;
+            }
         }
     }
 

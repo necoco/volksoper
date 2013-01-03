@@ -21,14 +21,9 @@ module volksoper{
             };
 
             if(ext === 'snd'){
-                var withoutExt = _src.slice(_src.length - 4);
-                if(audio.canPlayType('audio/mp3')){
-                    audio.appendChild(this._createSource(withoutExt + '.mp3', 'audio/mp3'));
-                }else if(audio.canPlayType('audio/ogg')){
-                    audio.appendChild(this._createSource(withoutExt + '.ogg', 'audio/ogg'));
-                }else if(audio.canPlayType('audio/wave')){
-                    audio.appendChild(this._createSource(withoutExt + '.wav', 'audio/wave'));
-                }
+                var withoutExt = _src.slice(0, _src.length - 4);
+                var playable = Platform.instance().getPlayableSoundFormat();
+                audio.appendChild(this._createSource(withoutExt+playable, 'audio/'+playable));
             }else{
                 audio.appendChild(this._createSource(_src, 'audio/' + ext));
             }

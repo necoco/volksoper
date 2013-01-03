@@ -1,4 +1,4 @@
-/*! Volksoper - v0.0.1 - 2013-01-03
+/*! Volksoper - v0.0.1 - 2013-01-04
 * https://github.com/necoco/volksoper
 * Copyright (c) 2013 tshinsay; Licensed MIT */
 
@@ -1151,6 +1151,7 @@ var volksoper;
         Resource.prototype._setStage = function (stage) {
             if(!this._impl) {
                 this._impl = this._createImpl(stage);
+                this._impl.addRef();
                 if(this._listeners) {
                     for(var n = 0; n < this._listeners.length; ++n) {
                         this._impl.addUsableListener(this._listeners[n]);
@@ -2315,6 +2316,8 @@ var volksoper;
         Sound.prototype.play = function () {
             if(this._impl) {
                 this._impl.play();
+            } else {
+                throw new Error("attach stage first!!");
             }
         };
         Sound.prototype.attach = function (stage) {
@@ -2409,18 +2412,9 @@ var volksoper;
                 _this._setError();
             };
             if(ext === 'snd') {
-                var withoutExt = _src.slice(_src.length - 4);
-                if(audio.canPlayType('audio/mp3')) {
-                    audio.appendChild(this._createSource(withoutExt + '.mp3', 'audio/mp3'));
-                } else {
-                    if(audio.canPlayType('audio/ogg')) {
-                        audio.appendChild(this._createSource(withoutExt + '.ogg', 'audio/ogg'));
-                    } else {
-                        if(audio.canPlayType('audio/wave')) {
-                            audio.appendChild(this._createSource(withoutExt + '.wav', 'audio/wave'));
-                        }
-                    }
-                }
+                var withoutExt = _src.slice(0, _src.length - 4);
+                var playable = volksoper.Platform.instance().getPlayableSoundFormat();
+                audio.appendChild(this._createSource(withoutExt + playable, 'audio/' + playable));
             } else {
                 audio.appendChild(this._createSource(_src, 'audio/' + ext));
             }
@@ -2590,8 +2584,12 @@ var volksoper;
 var volksoper;
 (function (volksoper) {
     var _PLATFORM;
+    var _AUDIO_CONTEXT;
+    var _AUDIO_ELEMENT;
     var Platform = (function () {
-        function Platform() { }
+        function Platform() {
+            _AUDIO_ELEMENT = document.createElement('audio');
+        }
         Object.defineProperty(Platform.prototype, "prefix", {
             get: function () {
                 return '';
@@ -2631,6 +2629,32 @@ var volksoper;
         Platform.prototype.getSoundImplClass = function () {
             return volksoper.DOMSoundImpl;
         };
+        Platform.prototype.getWebAudioContext = function () {
+            return null;
+        };
+        Platform.prototype.getPlayableSoundFormat = function () {
+            if(_AUDIO_ELEMENT.canPlayType('audio/mp3')) {
+                return 'mp3';
+            } else {
+                if(_AUDIO_ELEMENT.canPlayType('audio/ogg')) {
+                    return 'ogg';
+                } else {
+                    if(_AUDIO_ELEMENT.canPlayType('_AUDIO_ELEMENT/wav')) {
+                        return 'wav';
+                    }
+                }
+            }
+            return null;
+        };
+        Platform.prototype.isPlayableSoundFormat = function (src) {
+            return _AUDIO_ELEMENT.canPlayType('audio/' + volksoper.extractExt(src));
+        };
+        Platform.prototype.canUseXHR = function () {
+            return location.protocol !== 'file:';
+        };
+        Platform.prototype.isMobile = function () {
+            return navigator.userAgent.indexOf('Mobile') === -1;
+        };
         return Platform;
     })();
     volksoper.Platform = Platform;    
@@ -2647,6 +2671,19 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
+        WebkitPlatform.prototype.getWebAudioContext = function () {
+            if(!_AUDIO_CONTEXT) {
+                _AUDIO_CONTEXT = new ((window).webkitAudioContext)();
+            }
+            return _AUDIO_CONTEXT;
+        };
+        WebkitPlatform.prototype.getSoundImplClass = function () {
+            if(this.canUseXHR() && this.isMobile()) {
+                return volksoper.WebAudioSoundImpl;
+            } else {
+                return volksoper.DOMSoundImpl;
+            }
+        };
         return WebkitPlatform;
     })(Platform);    
     var MozPlatform = (function (_super) {
@@ -2901,6 +2938,61 @@ var volksoper;
         return HTMLStage;
     })(volksoper.Stage);
     volksoper.HTMLStage = HTMLStage;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
+    var WebAudioSoundImpl = (function (_super) {
+        __extends(WebAudioSoundImpl, _super);
+        function WebAudioSoundImpl(_src) {
+            var _this = this;
+                _super.call(this);
+            this._src = _src;
+            var platform = volksoper.Platform.instance();
+            var actx = platform.getWebAudioContext();
+            var xhr = new XMLHttpRequest();
+            var soundSrc = null;
+            if(_src.slice(_src.length - 3) === 'snd') {
+                var withoutExt = _src.slice(0, _src.length - 4);
+                var playable = platform.getPlayableSoundFormat();
+                soundSrc = withoutExt + playable;
+            } else {
+                soundSrc = _src;
+            }
+            xhr.responseType = 'arraybuffer';
+            xhr.open('GET', soundSrc, true);
+            xhr.onload = function () {
+                actx.decodeAudioData(xhr.response, function (buffer) {
+                    _this._buffer = buffer;
+                    _this._setUsable();
+                }, function (error) {
+                    _this._setError();
+                });
+            };
+            xhr.send(null);
+        }
+        WebAudioSoundImpl.prototype.play = function () {
+            if(this._bufferSrc) {
+                this._bufferSrc.disconnect();
+            }
+            var actx = volksoper.Platform.instance().getWebAudioContext();
+            this._bufferSrc = actx.createBufferSource();
+            this._bufferSrc.buffer = this._buffer;
+            this._bufferSrc.connect(actx.destination);
+            this._bufferSrc.noteOn(0);
+        };
+        WebAudioSoundImpl.prototype.release = function () {
+            var count = _super.prototype.release.call(this);
+            if(count <= 0 && this._bufferSrc) {
+                this._bufferSrc.disconnect();
+            }
+            return count;
+        };
+        WebAudioSoundImpl.prototype.name = function () {
+            return this._src;
+        };
+        return WebAudioSoundImpl;
+    })(volksoper.SoundImpl);
+    volksoper.WebAudioSoundImpl = WebAudioSoundImpl;    
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {

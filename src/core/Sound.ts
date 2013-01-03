@@ -15,6 +15,8 @@ module volksoper{
         private play(){
             if(this._impl){
                 this._impl.play();
+            }else{
+                throw new Error("attach stage first!!");
             }
         }
 

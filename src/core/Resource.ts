@@ -93,6 +93,7 @@ module volksoper{
         _setStage(stage: Stage){
             if(!this._impl){
                 this._impl = this._createImpl(stage);
+                this._impl.addRef();
 
                 if(this._listeners){
                     for(var n = 0; n < this._listeners.length; ++n){
@@ -101,6 +102,7 @@ module volksoper{
 
                     this._listeners = null;
                 }
+
             }
         }
 
