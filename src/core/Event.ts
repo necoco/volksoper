@@ -14,6 +14,8 @@ module volksoper{
 
         static LOADING_FAILED = "loadingFailed";
 
+        static ENTER_FRAME = 'enterFrame';
+
         currentTarget: Actor;
         target: Actor;
 
@@ -29,6 +31,11 @@ module volksoper{
         private _stopImmediate: bool = false;
         get stopImmediate(): bool{
             return this._stopImmediate;
+        }
+
+        _reuse(){
+            this._propagates = true;
+            this._stopImmediate = false;
         }
 
         constructor(private _type: string){

@@ -24,6 +24,18 @@ module volksoper{
             this._running = true;
         }
 
+        get deltaTime(){
+            return 1 / this._fps;
+        }
+
+        private _stopAnimationFrame = false;
+        get loop(){
+            return !this._stopAnimationFrame;
+        }
+        set loop(loop){
+            this._stopAnimationFrame = !loop;
+        }
+
 
         addChild(child: Actor): void{
             if(child instanceof Scene){
@@ -34,6 +46,7 @@ module volksoper{
         }
 
         render(){}
+        invalidate(){}
 
         private _width: number;
         get width(){
@@ -135,6 +148,7 @@ module volksoper{
             this._keyMap = options.keys || {};
             this._fullScreen = options.fullScreen;
             this.autoSize = options.autoSize;
+            this.loop = !options.loop;
 
 
             var self = this;

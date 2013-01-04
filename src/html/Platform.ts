@@ -13,6 +13,14 @@ module volksoper{
             _AUDIO_ELEMENT = <HTMLMediaElement>document.createElement('audio');
         }
 
+        requestAnimationFrame(fn, timeOut){
+            if(window[this.prefix+'RequestAnimationFrame']){
+                window[this.prefix+'RequestAnimationFrame'](fn);
+            }else{
+                (<any>window).setInterval(fn, timeOut);
+            }
+        }
+
         static instance(){
             if(!_PLATFORM){
                 var ua = navigator.userAgent;
@@ -53,7 +61,7 @@ module volksoper{
                 return 'mp3';
             }else if(_AUDIO_ELEMENT.canPlayType('audio/ogg')){
                 return 'ogg';
-            }else if(_AUDIO_ELEMENT.canPlayType('_AUDIO_ELEMENT/wav')){
+            }else if(_AUDIO_ELEMENT.canPlayType('audio/wav')){
                 return 'wav';
             }
 
@@ -69,7 +77,7 @@ module volksoper{
         }
 
         isMobile(){
-            return navigator.userAgent.indexOf('Mobile') === -1;
+            return navigator.userAgent.indexOf('Mobile') >= 0;
         }
     }
 

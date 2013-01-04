@@ -9,6 +9,8 @@ module volksoper{
         static USE_DEFAULT = ['input', 'textarea', 'select', 'area'];
 
         private _mouseId = 0;
+        private _currentTime = 0;
+        private _leftTime = 0;
 
         private _pageX: number;
         get pageX(){
@@ -17,6 +19,11 @@ module volksoper{
         private _pageY: number;
         get pageY(){
             return this._pageY;
+        }
+
+        private _deltaTime = 0;
+        get deltaTime(){
+            return this._deltaTime;
         }
 
         private _element: HTMLElement;
@@ -31,7 +38,6 @@ module volksoper{
 
         constructor(options: any){
             super(options);
-
 
             var stageId = options.stageId || 'volksoper-stage';
 
@@ -218,6 +224,38 @@ module volksoper{
         _createSceneDock(): SceneDock{
             var parent = (this.numChildren !== 0)? this.topScene.dock: null;
             return new volksoper.HTMLSceneDock(this, parent);
+        }
+
+        invalidate(){
+            if(this._currentTime === 0){
+                this._currentTime = new Date().getTime();
+            }
+            var d = new Date().getTime() - this._currentTime;
+            this._currentTime += d;
+            var span = 1000 / this.fps;
+
+            if(this.fps){
+                var iterate = d + this._leftTime;
+                this._deltaTime = span;
+                while(iterate >= span){
+                    this.broadcastEvent(new volksoper.Event(volksoper.Event.ENTER_FRAME));
+                    iterate -= span;
+                }
+                this._leftTime = iterate;
+            }else{
+                this._deltaTime = d / 1000;
+                span = 1000 / 60;
+                this.broadcastEvent(new volksoper.Event(volksoper.Event.ENTER_FRAME));
+            }
+
+            this.render();
+
+            if(this.loop){
+                this._platform.requestAnimationFrame(()=>{
+                    this.invalidate();
+                }, span);
+            }
+
         }
     }
 

@@ -19,6 +19,7 @@ var volksoper;
         Event.COMPLETE = "complete";
         Event.LOADED = "loaded";
         Event.LOADING_FAILED = "loadingFailed";
+        Event.ENTER_FRAME = 'enterFrame';
         Object.defineProperty(Event.prototype, "type", {
             get: function () {
                 return this._type;
@@ -40,6 +41,10 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
+        Event.prototype._reuse = function () {
+            this._propagates = true;
+            this._stopImmediate = false;
+        };
         Event.prototype.stopPropagation = function () {
             this._propagates = false;
         };
@@ -217,9 +222,13 @@ var volksoper;
         Actor.prototype._broadcastEvent = function (event, target) {
             var result = false;
             result = this._handleEvent(event, target, false) || result;
-            this.forEachChild(function (child) {
-                result = child._broadcastEvent(event, target) || result;
-            });
+            if(event.propagates) {
+                this.forEachChild(function (child) {
+                    result = child._broadcastEvent(event, target) || result;
+                });
+            } else {
+                event._reuse();
+            }
             return result;
         };
         Actor.prototype.broadcast = function (name) {
@@ -1301,6 +1310,7 @@ var volksoper;
         function Stage(options) {
                 _super.call(this);
             this._running = true;
+            this._stopAnimationFrame = false;
             this._backgroundColor = 16777215;
             this._touchReceivers = {
             };
@@ -1313,6 +1323,7 @@ var volksoper;
             };
             this._fullScreen = options.fullScreen;
             this.autoSize = options.autoSize;
+            this.loop = !options.loop;
             var self = this;
             var addedListener = function (e) {
                 e.target.broadcastEvent(new volksoper.Event(volksoper.Event.ADDED_TO_STAGE), self);
@@ -1336,6 +1347,23 @@ var volksoper;
         Stage.prototype.resume = function () {
             this._running = true;
         };
+        Object.defineProperty(Stage.prototype, "deltaTime", {
+            get: function () {
+                return 1 / this._fps;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Stage.prototype, "loop", {
+            get: function () {
+                return !this._stopAnimationFrame;
+            },
+            set: function (loop) {
+                this._stopAnimationFrame = !loop;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Stage.prototype.addChild = function (child) {
             if(child instanceof volksoper.Scene) {
                 _super.prototype.addChild.call(this, child);
@@ -1344,6 +1372,8 @@ var volksoper;
             }
         };
         Stage.prototype.render = function () {
+        };
+        Stage.prototype.invalidate = function () {
         };
         Object.defineProperty(Stage.prototype, "width", {
             get: function () {
@@ -2597,6 +2627,13 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
+        Platform.prototype.requestAnimationFrame = function (fn, timeOut) {
+            if(window[this.prefix + 'RequestAnimationFrame']) {
+                window[this.prefix + 'RequestAnimationFrame'](fn);
+            } else {
+                (window).setInterval(fn, timeOut);
+            }
+        };
         Platform.instance = function instance() {
             if(!_PLATFORM) {
                 var ua = navigator.userAgent;
@@ -2639,7 +2676,7 @@ var volksoper;
                 if(_AUDIO_ELEMENT.canPlayType('audio/ogg')) {
                     return 'ogg';
                 } else {
-                    if(_AUDIO_ELEMENT.canPlayType('_AUDIO_ELEMENT/wav')) {
+                    if(_AUDIO_ELEMENT.canPlayType('audio/wav')) {
                         return 'wav';
                     }
                 }
@@ -2653,7 +2690,7 @@ var volksoper;
             return location.protocol !== 'file:';
         };
         Platform.prototype.isMobile = function () {
-            return navigator.userAgent.indexOf('Mobile') === -1;
+            return navigator.userAgent.indexOf('Mobile') >= 0;
         };
         return Platform;
     })();
@@ -2740,6 +2777,9 @@ var volksoper;
             var _this = this;
                 _super.call(this, options);
             this._mouseId = 0;
+            this._currentTime = 0;
+            this._leftTime = 0;
+            this._deltaTime = 0;
             this._platform = volksoper.Platform.instance();
             this._adjusting = false;
             var stageId = options.stageId || 'volksoper-stage';
@@ -2787,6 +2827,13 @@ var volksoper;
         Object.defineProperty(HTMLStage.prototype, "pageY", {
             get: function () {
                 return this._pageY;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(HTMLStage.prototype, "deltaTime", {
+            get: function () {
+                return this._deltaTime;
             },
             enumerable: true,
             configurable: true
@@ -2934,6 +2981,34 @@ var volksoper;
         HTMLStage.prototype._createSceneDock = function () {
             var parent = (this.numChildren !== 0) ? this.topScene.dock : null;
             return new volksoper.HTMLSceneDock(this, parent);
+        };
+        HTMLStage.prototype.invalidate = function () {
+            var _this = this;
+            if(this._currentTime === 0) {
+                this._currentTime = new Date().getTime();
+            }
+            var d = new Date().getTime() - this._currentTime;
+            this._currentTime += d;
+            var span = 1000 / this.fps;
+            if(this.fps) {
+                var iterate = d + this._leftTime;
+                this._deltaTime = span;
+                while(iterate >= span) {
+                    this.broadcastEvent(new volksoper.Event(volksoper.Event.ENTER_FRAME));
+                    iterate -= span;
+                }
+                this._leftTime = iterate;
+            } else {
+                this._deltaTime = d / 1000;
+                span = 1000 / 60;
+                this.broadcastEvent(new volksoper.Event(volksoper.Event.ENTER_FRAME));
+            }
+            this.render();
+            if(this.loop) {
+                this._platform.requestAnimationFrame(function () {
+                    _this.invalidate();
+                }, span);
+            }
         };
         return HTMLStage;
     })(volksoper.Stage);

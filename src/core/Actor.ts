@@ -187,10 +187,13 @@ module volksoper{
             var result: bool = false;
 
             result = this._handleEvent(event, target, false) || result;
-
-            this.forEachChild((child: Actor)=>{
-                result = child._broadcastEvent(event, target) || result;
-            });
+            if(event.propagates){
+                this.forEachChild((child: Actor)=>{
+                    result = child._broadcastEvent(event, target) || result;
+                });
+            }else{
+                event._reuse();
+            }
 
             return result;
         }

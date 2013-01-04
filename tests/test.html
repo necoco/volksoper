@@ -34,6 +34,13 @@
             sound.play();
             console.log("hoge");
         });
+
+        sprite.addEventListener(vo.Event.ENTER_FRAME, function(){
+            sprite.x += 1;
+
+        });
+
+        stage.invalidate();
     };
 
 
