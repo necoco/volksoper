@@ -223,7 +223,7 @@ module volksoper{
 
         _createSceneDock(): SceneDock{
             var parent = (this.numChildren !== 0)? this.topScene.dock: null;
-            return new volksoper.HTMLSceneDock(this, parent);
+            return new volksoper.HTMLSceneDock(this, <HTMLSceneDock>parent);
         }
 
         invalidate(){

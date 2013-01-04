@@ -32,7 +32,7 @@ module volksoper{
             return null;
         }
 
-        _createSoundImpl(src: string): SoundImpl{
+        _createSoundImpl(src: string, autoPlay: bool): SoundImpl{
             return null;
         }
     }

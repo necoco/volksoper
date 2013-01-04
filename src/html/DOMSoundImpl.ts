@@ -6,7 +6,7 @@ module volksoper{
             return this._src;
         }
 
-        constructor(private _src: string){
+        constructor(private _src: string, autoPlay: bool){
             super();
 
             var type: string;
@@ -29,6 +29,9 @@ module volksoper{
             }
 
             audio.load();
+            if(autoPlay){
+                audio.play();
+            }
             this._element = audio;
 
             this._fireUsable();

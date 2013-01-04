@@ -29,11 +29,8 @@
         stage.render();
 
         var sound = new vo.Sound("test.wav");
+        sound.play();
         sound.attach(stage);
-        sound.addUsableListener(function(){
-            sound.play();
-            console.log("hoge");
-        });
 
         sprite.addEventListener(vo.Event.ENTER_FRAME, function(){
             sprite.x += 1;

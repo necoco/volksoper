@@ -7,16 +7,17 @@ module volksoper{
 
     export class Sound extends Resource{
         private _impl: SoundImpl;
+        private _play = false;
 
         private _createImpl(stage: Stage){
-            return stage.topScene.dock._createSoundImpl(this._src);
+            return stage.topScene.dock._createSoundImpl(this._src, this._play);
         }
 
         private play(){
             if(this._impl){
                 this._impl.play();
             }else{
-                throw new Error("attach stage first!!");
+                this._play = true;
             }
         }
 

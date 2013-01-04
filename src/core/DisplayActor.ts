@@ -46,7 +46,7 @@ module volksoper{
 
                 m
                         .identify()
-                        .translate(px + this.x, py + this.y, 0)
+                        .translate(px + this.x, py + this.y, this.z)
                         .rotate(this.rotationX, this.rotationY, this.rotation)
                         .scale(this.scaleX, this.scaleY, 1)
                         .translate(-px, -py, 0);

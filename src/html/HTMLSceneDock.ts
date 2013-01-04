@@ -3,7 +3,7 @@
 
 module volksoper{
     export class HTMLSceneDock extends SceneDock{
-        constructor(stage: Stage, private _parentDock?: SceneDock){
+        constructor(stage: Stage, private _parentDock?: HTMLSceneDock){
             super(stage, _parentDock);
         }
 
@@ -69,7 +69,7 @@ module volksoper{
         private _findImageImpl(name: string): SurfaceImpl{
             var impl = this._surfaceImpls[name]
             if(!impl && this._parentDock){
-                return (<HTMLSceneDock>this._parentDock)._findImageImpl(name);
+                return this._parentDock._findImageImpl(name);
             }
             return null;
         }
@@ -82,10 +82,23 @@ module volksoper{
             return false;
         }
 
-        _createSoundImpl(src: string): SoundImpl{
-            var impl = <SoundImpl>new (Platform.instance().getSoundImplClass())(src);
-            this._soundImpls[src] = impl;
-            return impl;
+        _createSoundImpl(src: string, autoPlay: bool): SoundImpl{
+            var impl = this._findSoundImpl(src);
+            if(impl){
+                return impl;
+            }else{
+                impl = new (Platform.instance().getSoundImplClass())(src, autoPlay);
+                this._surfaceImpls[src] = impl;
+                return impl;
+            }
+        }
+
+        private _findSoundImpl(name: string): SoundImpl{
+            var impl = this._soundImpls[name]
+            if(!impl && this._parentDock){
+                return this._parentDock._findSoundImpl(name);
+            }
+            return null;
         }
     }
 }

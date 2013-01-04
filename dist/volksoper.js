@@ -713,7 +713,7 @@ var volksoper;
                     this._dirty = false;
                     var px = this.pivotX || 0;
                     var py = this.pivotY || 0;
-                    m.identify().translate(px + this.x, py + this.y, 0).rotate(this.rotationX, this.rotationY, this.rotation).scale(this.scaleX, this.scaleY, 1).translate(-px, -py, 0);
+                    m.identify().translate(px + this.x, py + this.y, this.z).rotate(this.rotationX, this.rotationY, this.rotation).scale(this.scaleX, this.scaleY, 1).translate(-px, -py, 0);
                 }
                 return m;
             },
@@ -2159,7 +2159,7 @@ var volksoper;
         SceneDock.prototype._createImageImpl = function (src) {
             return null;
         };
-        SceneDock.prototype._createSoundImpl = function (src) {
+        SceneDock.prototype._createSoundImpl = function (src, autoPlay) {
             return null;
         };
         return SceneDock;
@@ -2356,15 +2356,16 @@ var volksoper;
         function Sound(_src) {
                 _super.call(this);
             this._src = _src;
+            this._play = false;
         }
         Sound.prototype._createImpl = function (stage) {
-            return stage.topScene.dock._createSoundImpl(this._src);
+            return stage.topScene.dock._createSoundImpl(this._src, this._play);
         };
         Sound.prototype.play = function () {
             if(this._impl) {
                 this._impl.play();
             } else {
-                throw new Error("attach stage first!!");
+                this._play = true;
             }
         };
         Sound.prototype.attach = function (stage) {
@@ -2460,7 +2461,7 @@ var volksoper;
 (function (volksoper) {
     var DOMSoundImpl = (function (_super) {
         __extends(DOMSoundImpl, _super);
-        function DOMSoundImpl(_src) {
+        function DOMSoundImpl(_src, autoPlay) {
             var _this = this;
                 _super.call(this);
             this._src = _src;
@@ -2479,6 +2480,9 @@ var volksoper;
                 audio.appendChild(this._createSource(_src, 'audio/' + ext));
             }
             audio.load();
+            if(autoPlay) {
+                audio.play();
+            }
             this._element = audio;
             this._fireUsable();
         }
@@ -2621,7 +2625,7 @@ var volksoper;
         HTMLSceneDock.prototype._findImageImpl = function (name) {
             var impl = this._surfaceImpls[name];
             if(!impl && this._parentDock) {
-                return (this._parentDock)._findImageImpl(name);
+                return this._parentDock._findImageImpl(name);
             }
             return null;
         };
@@ -2632,10 +2636,22 @@ var volksoper;
             }
             return false;
         };
-        HTMLSceneDock.prototype._createSoundImpl = function (src) {
-            var impl = new (volksoper.Platform.instance().getSoundImplClass())(src);
-            this._soundImpls[src] = impl;
-            return impl;
+        HTMLSceneDock.prototype._createSoundImpl = function (src, autoPlay) {
+            var impl = this._findSoundImpl(src);
+            if(impl) {
+                return impl;
+            } else {
+                impl = new (volksoper.Platform.instance().getSoundImplClass())(src, autoPlay);
+                this._surfaceImpls[src] = impl;
+                return impl;
+            }
+        };
+        HTMLSceneDock.prototype._findSoundImpl = function (name) {
+            var impl = this._soundImpls[name];
+            if(!impl && this._parentDock) {
+                return this._parentDock._findSoundImpl(name);
+            }
+            return null;
         };
         return HTMLSceneDock;
     })(volksoper.SceneDock);
@@ -3048,10 +3064,11 @@ var volksoper;
 (function (volksoper) {
     var WebAudioSoundImpl = (function (_super) {
         __extends(WebAudioSoundImpl, _super);
-        function WebAudioSoundImpl(_src) {
+        function WebAudioSoundImpl(_src, autoPlay) {
             var _this = this;
                 _super.call(this);
             this._src = _src;
+            this._autoPlay = false;
             var platform = volksoper.Platform.instance();
             var actx = platform.getWebAudioContext();
             var xhr = new XMLHttpRequest();
@@ -3069,6 +3086,9 @@ var volksoper;
                 actx.decodeAudioData(xhr.response, function (buffer) {
                     _this._buffer = buffer;
                     _this._setUsable();
+                    if(autoPlay || _this._autoPlay) {
+                        _this.play();
+                    }
                 }, function (error) {
                     _this._setError();
                 });
@@ -3076,14 +3096,18 @@ var volksoper;
             xhr.send(null);
         }
         WebAudioSoundImpl.prototype.play = function () {
-            if(this._bufferSrc) {
-                this._bufferSrc.disconnect();
+            if(this._buffer) {
+                if(this._bufferSrc) {
+                    this._bufferSrc.disconnect();
+                }
+                var actx = volksoper.Platform.instance().getWebAudioContext();
+                this._bufferSrc = actx.createBufferSource();
+                this._bufferSrc.buffer = this._buffer;
+                this._bufferSrc.connect(actx.destination);
+                this._bufferSrc.noteOn(0);
+            } else {
+                this._autoPlay = true;
             }
-            var actx = volksoper.Platform.instance().getWebAudioContext();
-            this._bufferSrc = actx.createBufferSource();
-            this._bufferSrc.buffer = this._buffer;
-            this._bufferSrc.connect(actx.destination);
-            this._bufferSrc.noteOn(0);
         };
         WebAudioSoundImpl.prototype.release = function () {
             var count = _super.prototype.release.call(this);

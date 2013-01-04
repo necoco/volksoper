@@ -2,8 +2,9 @@ module volksoper{
     export class WebAudioSoundImpl extends SoundImpl{
         _buffer: any;
         _bufferSrc: any;
+        _autoPlay = false;
 
-        constructor(private _src: string){
+        constructor(private _src: string, autoPlay: bool){
             super();
 
             var platform = Platform.instance();
@@ -27,6 +28,9 @@ module volksoper{
                         (buffer)=>{
                             this._buffer = buffer;
                             this._setUsable();
+                            if(autoPlay || this._autoPlay){
+                                this.play();
+                            }
                         },
                         (error)=>{
                             this._setError();
@@ -37,14 +41,18 @@ module volksoper{
         }
 
         play(){
-            if(this._bufferSrc){
-                this._bufferSrc.disconnect();
+            if(this._buffer){
+                if(this._bufferSrc){
+                    this._bufferSrc.disconnect();
+                }
+                var actx = Platform.instance().getWebAudioContext();
+                this._bufferSrc = actx.createBufferSource();
+                this._bufferSrc.buffer = this._buffer;
+                this._bufferSrc.connect(actx.destination);
+                this._bufferSrc.noteOn(0);
+            }else{
+                this._autoPlay = true;
             }
-            var actx = Platform.instance().getWebAudioContext();
-            this._bufferSrc = actx.createBufferSource();
-            this._bufferSrc.buffer = this._buffer;
-            this._bufferSrc.connect(actx.destination);
-            this._bufferSrc.noteOn(0);
         }
 
         release(){

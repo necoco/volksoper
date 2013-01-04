@@ -78,7 +78,7 @@ module volksoper{
         }
 
         _createSceneDock(): SceneDock{
-            var parent = (this.numChildren !== 0)? this.topScene.dock: null;
+            var parent = (this.numChildren !== 0)? <CanvasSceneDock>this.topScene.dock: null;
             return new volksoper.CanvasSceneDock(this, parent);
         }
     }
