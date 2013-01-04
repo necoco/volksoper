@@ -15,7 +15,7 @@ var volksoper;
         Event.ADDED_TO_SCENE = "addedToScene";
         Event.REMOVE_FROM_SCENE = "removeFromScene";
         Event.ADDED_TO_STAGE = "addedToStage";
-        Event.REMOVE_FROM_STAGE = "removeFromScene";
+        Event.REMOVE_FROM_STAGE = "removeFromStage";
         Event.COMPLETE = "complete";
         Event.LOADED = "loaded";
         Event.LOADING_FAILED = "loadingFailed";
@@ -681,8 +681,8 @@ var volksoper;
                 _this._setStage();
             }, false, volksoper.SYSTEM_PRIORITY);
             this.addEventListener(volksoper.Event.REMOVE_FROM_STAGE, function (e) {
-                _this._stage = null;
                 _this._unsetStage();
+                _this._stage = null;
             }, false, volksoper.SYSTEM_PRIORITY);
         }
         Object.defineProperty(DisplayActor.prototype, "_dirty", {
@@ -1146,6 +1146,9 @@ var volksoper;
     volksoper.ResourceImpl = ResourceImpl;    
     var Resource = (function () {
         function Resource() { }
+        Resource.prototype._getImpl = function () {
+            return this._impl;
+        };
         Resource.prototype.addRef = function () {
             return this._impl.addRef();
         };
@@ -1170,7 +1173,6 @@ var volksoper;
         Resource.prototype._setStage = function (stage) {
             if(!this._impl) {
                 this._impl = this._createImpl(stage);
-                this._impl.addRef();
                 if(this._listeners) {
                     for(var n = 0; n < this._listeners.length; ++n) {
                         this._impl.addUsableListener(this._listeners[n]);
@@ -1340,9 +1342,6 @@ var volksoper;
             };
             var removeListener = function (e) {
                 e.target.broadcastEvent(new volksoper.Event(volksoper.Event.REMOVE_FROM_STAGE), self);
-                if(e.target instanceof volksoper.Scene) {
-                    (e.target)._releaseResource();
-                }
             };
             this.addEventListener(volksoper.Event.ADDED, addedListener, true, volksoper.SYSTEM_PRIORITY);
             this.addEventListener(volksoper.Event.REMOVE, removeListener, true, volksoper.SYSTEM_PRIORITY);
@@ -1550,7 +1549,7 @@ var volksoper;
             obj._visitRendering(post);
         };
         Stage.prototype._createSceneDock = function () {
-            return null;
+            throw new Error("unimplemented");
         };
         Stage.prototype._visitRendering = function (v) {
             v.visitStage(this);
@@ -1669,6 +1668,15 @@ var volksoper;
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
+    var ImageImpl = (function (_super) {
+        __extends(ImageImpl, _super);
+        function ImageImpl() {
+            _super.apply(this, arguments);
+
+        }
+        return ImageImpl;
+    })(volksoper.SurfaceImpl);
+    volksoper.ImageImpl = ImageImpl;    
     var Image = (function (_super) {
         __extends(Image, _super);
         function Image(_src) {
@@ -2128,7 +2136,14 @@ var volksoper;
                 _super.call(this);
             this._stage = _stage;
             this._parentDock = _parentDock;
-            this._id = 0;
+            this._currentResource = 0;
+            this._totalResource = 0;
+            this._resourcePool = {
+            };
+            this._implPool = {
+            };
+            this._soundImplPool = {
+            };
         }
         Object.defineProperty(SceneDock.prototype, "stage", {
             get: function () {
@@ -2137,33 +2152,116 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
-        SceneDock.prototype.find = function (name) {
-            return null;
-        };
         SceneDock.prototype.load = function () {
             var files = [];
             for (var _i = 0; _i < (arguments.length - 0); _i++) {
                 files[_i] = arguments[_i + 0];
             }
-            return null;
-        };
-        SceneDock.prototype.play = function (name) {
-            return false;
-        };
-        SceneDock.prototype._createImageImpl = function (src) {
-            return null;
-        };
-        SceneDock.prototype._createSoundImpl = function (src, autoPlay) {
-            return null;
-        };
-        SceneDock.prototype._createSurfaceImpl = function (width, height, renderer, primitive, name) {
-            return null;
+            var l = files.length;
+            for(var n = 0; n < l; ++n) {
+                this._loadResource(files[n]);
+            }
         };
         SceneDock.prototype._createLabelImpl = function (width, height, name) {
             return null;
         };
         SceneDock.prototype._releaseResource = function () {
-            throw new Error("no implement!");
+            for(var key in this._soundImplPool) {
+                var impl = this._soundImplPool[key];
+                impl.release();
+            }
+            this._soundImplPool = {
+            };
+        };
+        SceneDock.prototype._loadResource = function (file) {
+            var ext = volksoper.extractExt(file);
+            var res = null;
+            switch(ext) {
+                case 'jpg':
+                case 'png':
+                case 'jpeg':
+                case 'gif': {
+                    this._totalResource++;
+                    res = new volksoper.Image(file);
+                    res.addUsableListener(this._createListener());
+                    break;
+
+                }
+                case 'snd':
+                case 'mp3':
+                case 'ogg':
+                case 'wav': {
+                    this._totalResource++;
+                    res = new volksoper.Sound(file);
+                    (res).attach(this.stage);
+                    res.addUsableListener(this._createListener());
+                    break;
+
+                }
+            }
+            this._resourcePool[file] = res;
+            return res;
+        };
+        SceneDock.prototype._createListener = function () {
+            var _this = this;
+            return function (res) {
+                if(res) {
+                    _this.broadcastEvent(new volksoper.Event(volksoper.Event.LOADED), res);
+                    _this._currentResource++;
+                    if(_this._currentResource >= _this._totalResource) {
+                        _this.broadcastEvent(new volksoper.Event(volksoper.Event.COMPLETE));
+                    }
+                } else {
+                    _this.broadcastEvent(new volksoper.Event(volksoper.Event.LOADING_FAILED));
+                }
+            }
+        };
+        SceneDock.prototype.play = function (name) {
+            var res = this._resourcePool[name];
+            if(res) {
+                (res).play();
+                return true;
+            }
+            return false;
+        };
+        SceneDock.prototype._createImageImpl = function (src) {
+            var impl = this._implPool[src];
+            if(impl) {
+                return impl;
+            } else {
+                impl = this._newImageImpl(src);
+                this._implPool[src] = impl;
+                return impl;
+            }
+        };
+        SceneDock.prototype._newImageImpl = function (src) {
+            throw new Error('unimplemented');
+        };
+        SceneDock.prototype._createSoundImpl = function (src, autoPlay) {
+            var impl = this._soundImplPool[src];
+            if(impl) {
+                return impl;
+            } else {
+                impl = this._newSoundImpl(src, autoPlay);
+                this._soundImplPool[src] = impl;
+                return impl;
+            }
+        };
+        SceneDock.prototype._newSoundImpl = function (src, autoPlay) {
+            throw new Error('unimplemented');
+        };
+        SceneDock.prototype._createSurfaceImpl = function (width, height, renderer, primitive, name) {
+            var impl = this._implPool[name];
+            if(impl) {
+                return impl;
+            } else {
+                impl = this._newSurfaceImpl(width, height, renderer, primitive, name);
+                this._implPool[name] = impl;
+                return impl;
+            }
+        };
+        SceneDock.prototype._newSurfaceImpl = function (width, height, renderer, primitive, name) {
+            throw new Error('unimplemented');
         };
         return SceneDock;
     })(volksoper.Actor);
@@ -2215,6 +2313,7 @@ var volksoper;
             this._dock = this.stage._createSceneDock();
         };
         Scene.prototype._unsetStage = function () {
+            this.dock._releaseResource();
             this._dock = null;
         };
         Scene.prototype.addChild = function (child) {
@@ -2283,9 +2382,6 @@ var volksoper;
         };
         Scene.prototype._visitRendering = function (v) {
             v.visitScene(this);
-        };
-        Scene.prototype._releaseResource = function () {
-            this._dock._releaseResource();
         };
         return Scene;
     })(volksoper.DisplayActor);
@@ -2376,6 +2472,7 @@ var volksoper;
         };
         Sound.prototype.attach = function (stage) {
             this._setStage(stage);
+            this.addRef();
         };
         return Sound;
     })(volksoper.Resource);
@@ -2415,7 +2512,7 @@ var volksoper;
             }
         };
         Sprite.prototype._unsetStage = function () {
-            if(this.surface) {
+            if(this._surface) {
                 this._surface.release();
             }
         };
@@ -2519,7 +2616,6 @@ var volksoper;
             this._src = _src;
             this._width = 0;
             this._height = 0;
-            this._referenceCount = 0;
             var img = document.createElement('img');
             img.onerror = function () {
                 _this._setError();
@@ -2541,12 +2637,6 @@ var volksoper;
         HTMLImageImpl.prototype._getImage = function () {
             return this._image;
         };
-        HTMLImageImpl.prototype.addRef = function () {
-            return ++this._referenceCount;
-        };
-        HTMLImageImpl.prototype.release = function () {
-            return --this._referenceCount;
-        };
         HTMLImageImpl.prototype.render = function () {
         };
         HTMLImageImpl.prototype.invalidate = function () {
@@ -2555,7 +2645,7 @@ var volksoper;
             return this._src;
         };
         return HTMLImageImpl;
-    })(volksoper.SurfaceImpl);
+    })(volksoper.ImageImpl);
     volksoper.HTMLImageImpl = HTMLImageImpl;    
 })(volksoper || (volksoper = {}));
 var volksoper;
@@ -2565,137 +2655,12 @@ var volksoper;
         function HTMLSceneDock(stage, _parentDock) {
                 _super.call(this, stage, _parentDock);
             this._parentDock = _parentDock;
-            this._currentResource = 0;
-            this._totalResource = 0;
-            this._resourcePool = {
-            };
-            this._surfaceImpls = {
-            };
-            this._soundImpls = {
-            };
         }
-        HTMLSceneDock.prototype.find = function (name) {
-            return this._resourcePool[name];
-        };
-        HTMLSceneDock.prototype.load = function () {
-            var files = [];
-            for (var _i = 0; _i < (arguments.length - 0); _i++) {
-                files[_i] = arguments[_i + 0];
-            }
-            var l = files.length;
-            var result = [];
-            for(var n = 0; n < l; ++n) {
-                result.push(this._loadResource(files[n]));
-            }
-            return result;
-        };
-        HTMLSceneDock.prototype.release = function () {
-            var files = [];
-            for (var _i = 0; _i < (arguments.length - 0); _i++) {
-                files[_i] = arguments[_i + 0];
-            }
-            for(var n = 0; n < files.length; ++n) {
-                var res = this._resourcePool[files[n]];
-                res.release();
-                delete this._resourcePool[files[n]];
-            }
-        };
-        HTMLSceneDock.prototype._releaseResource = function () {
-            for(var key in this._resourcePool) {
-                var res = this._resourcePool[key];
-                res.release();
-            }
-            this._resourcePool = {
-            };
-        };
-        HTMLSceneDock.prototype._loadResource = function (file) {
-            var ext = volksoper.extractExt(file);
-            var res = null;
-            switch(ext) {
-                case 'jpg':
-                case 'png':
-                case 'jpeg':
-                case 'gif': {
-                    this._totalResource++;
-                    res = new volksoper.Image(file);
-                    res.addUsableListener(this._createListener());
-                    break;
-
-                }
-                case 'snd':
-                case 'mp3':
-                case 'ogg':
-                case 'wav': {
-                    this._totalResource++;
-                    res = new volksoper.Sound(file);
-                    (res).attach(this.stage);
-                    res.addUsableListener(this._createListener());
-                    break;
-
-                }
-            }
-            this._resourcePool[file] = res;
-            return res;
-        };
-        HTMLSceneDock.prototype._createListener = function () {
-            var _this = this;
-            return function (res) {
-                if(res) {
-                    _this.broadcastEvent(new volksoper.Event(volksoper.Event.LOADED), res);
-                    _this._currentResource++;
-                    if(_this._currentResource >= _this._totalResource) {
-                        _this.broadcastEvent(new volksoper.Event(volksoper.Event.COMPLETE));
-                    }
-                } else {
-                    _this.broadcastEvent(new volksoper.Event(volksoper.Event.LOADING_FAILED));
-                }
-            }
-        };
-        HTMLSceneDock.prototype._createImageImpl = function (src) {
-            var impl = this._findImageImpl(src);
-            if(impl) {
-                return impl;
-            } else {
-                impl = this._newImageImpl(src);
-                this._surfaceImpls[src] = impl;
-                impl.addRef();
-                return impl;
-            }
-        };
         HTMLSceneDock.prototype._newImageImpl = function (src) {
             return new volksoper.HTMLImageImpl(src);
         };
-        HTMLSceneDock.prototype._findImageImpl = function (name) {
-            var impl = this._surfaceImpls[name];
-            if(!impl && this._parentDock) {
-                return this._parentDock._findImageImpl(name);
-            }
-            return null;
-        };
-        HTMLSceneDock.prototype.play = function (name) {
-            if(this._soundImpls[name]) {
-                this._soundImpls[name].play();
-                return true;
-            }
-            return false;
-        };
-        HTMLSceneDock.prototype._createSoundImpl = function (src, autoPlay) {
-            var impl = this._findSoundImpl(src);
-            if(impl) {
-                return impl;
-            } else {
-                impl = new (volksoper.Platform.instance().getSoundImplClass())(src, autoPlay);
-                this._soundImpls[src] = impl;
-                impl.addRef();
-                return impl;
-            }
-        };
-        HTMLSceneDock.prototype._findSoundImpl = function (name) {
-            var impl = this._soundImpls[name];
-            if(!impl && this._parentDock) {
-                return this._parentDock._findSoundImpl(name);
-            }
-            return null;
+        HTMLSceneDock.prototype._newSoundImpl = function (src, autoPlay) {
+            return new (volksoper.Platform.instance().getSoundImplClass())(src, autoPlay);
         };
         return HTMLSceneDock;
     })(volksoper.SceneDock);
@@ -3236,7 +3201,7 @@ var volksoper;
         CanvasSceneDock.prototype._newImageImpl = function (src) {
             return new volksoper.CanvasImageImpl(src, this.stage);
         };
-        CanvasSceneDock.prototype._createSurfaceImpl = function (width, height, renderer, primitive, name) {
+        CanvasSceneDock.prototype._newSurfaceImpl = function (width, height, renderer, primitive, name) {
             return new volksoper.CanvasSurfaceImpl(width, height, renderer, primitive, name, this.stage);
         };
         return CanvasSceneDock;

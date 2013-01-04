@@ -32,6 +32,11 @@
             sprite.x += 1;
         });
 
+        stage.addEventListener(vo.TouchEvent.TOUCH_END, function(){
+            stage.popChild();
+        });
+
+
         stage.invalidate();
     };
 

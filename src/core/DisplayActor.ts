@@ -29,8 +29,8 @@ module volksoper{
                 this._setStage();
             }, false, volksoper.SYSTEM_PRIORITY);
             this.addEventListener(volksoper.Event.REMOVE_FROM_STAGE,(e)=>{
-                this._stage = null;
                 this._unsetStage();
+                this._stage = null;
             }, false, volksoper.SYSTEM_PRIORITY);
         }
 

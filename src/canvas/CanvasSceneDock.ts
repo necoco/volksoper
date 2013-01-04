@@ -4,7 +4,8 @@ module volksoper{
             return new CanvasImageImpl(src, this.stage);
         }
 
-        _createSurfaceImpl(width: number, height: number, renderer:any, primitive: bool, name: string): SurfaceImpl{
+        private _newSurfaceImpl(width: number, height: number,
+                                renderer:any, primitive: bool, name: string): SurfaceImpl{
             return new CanvasSurfaceImpl(width, height, renderer, primitive, name, <CanvasStage>this.stage);
         }
     }

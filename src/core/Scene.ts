@@ -33,6 +33,7 @@ module volksoper{
         }
 
         private _unsetStage(){
+            this.dock._releaseResource();
             this._dock = null;
         }
 
@@ -122,10 +123,6 @@ module volksoper{
 
         _visitRendering(v: any){
             v.visitScene(this);
-        }
-
-        _releaseResource(){
-            this._dock._releaseResource();
         }
     }
 

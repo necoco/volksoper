@@ -3,6 +3,10 @@
 
 module volksoper{
 
+    export class ImageImpl extends SurfaceImpl{
+
+    }
+
     export class Image extends Surface{
         private _createImpl(stage: Stage){
             return stage.topScene.dock._createImageImpl(this._src);

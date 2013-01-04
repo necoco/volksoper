@@ -7,7 +7,7 @@ module volksoper{
         static REMOVE_FROM_SCENE: string = "removeFromScene";
 
         static ADDED_TO_STAGE: string = "addedToStage";
-        static REMOVE_FROM_STAGE: string = "removeFromScene";
+        static REMOVE_FROM_STAGE: string = "removeFromStage";
 
         static COMPLETE = "complete";
         static LOADED = "loaded";

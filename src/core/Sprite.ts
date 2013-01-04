@@ -26,7 +26,7 @@ module volksoper{
         }
 
         private _unsetStage(){
-            if(this.surface){
+            if(this._surface){
                 this._surface.release();
             }
         }

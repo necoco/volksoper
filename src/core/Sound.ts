@@ -13,7 +13,7 @@ module volksoper{
             return stage.topScene.dock._createSoundImpl(this._src, this._play);
         }
 
-        private play(){
+        play(){
             if(this._impl){
                 this._impl.play();
             }else{
@@ -23,6 +23,7 @@ module volksoper{
 
         attach(stage: Stage){
             this._setStage(stage);
+            this.addRef();
         }
 
         constructor(private _src: string){

@@ -5,7 +5,7 @@ declare class Image{}
 
 module volksoper{
 
-    export class HTMLImageImpl extends SurfaceImpl{
+    export class HTMLImageImpl extends ImageImpl{
         private _width = 0;
         width(){
             return this._width;
@@ -20,13 +20,6 @@ module volksoper{
             return this._image;
         }
 
-        private _referenceCount = 0;
-        addRef(): number{
-            return ++this._referenceCount;
-        }
-        release(): number{
-            return --this._referenceCount;
-        }
         render(){}
         invalidate(): void{}
         name(){
