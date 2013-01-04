@@ -1549,15 +1549,6 @@ var volksoper;
             });
             obj._visitRendering(post);
         };
-        Stage.prototype._createSurfaceImpl = function (width, height, renderer, primitive, name) {
-            return null;
-        };
-        Stage.prototype._createImageImpl = function (src) {
-            return this.topScene.dock._createImageImpl(src);
-        };
-        Stage.prototype._createLabelImpl = function (width, height, name) {
-            return null;
-        };
         Stage.prototype._createSceneDock = function () {
             return null;
         };
@@ -1667,7 +1658,7 @@ var volksoper;
             }
         };
         Surface.prototype._createImpl = function (stage) {
-            return stage._createSurfaceImpl(this._width, this._height, this._renderer, this._primitive, this._name);
+            return stage.topScene.dock._createSurfaceImpl(this._width, this._height, this._renderer, this._primitive, this._name);
         };
         Surface.prototype.hitTestLocal = function (x, y) {
             return 0 <= x && x <= this._width && 0 <= y && y <= this._height;
@@ -1685,7 +1676,7 @@ var volksoper;
             this._src = _src;
         }
         Image.prototype._createImpl = function (stage) {
-            return stage._createImageImpl(this._src);
+            return stage.topScene.dock._createImageImpl(this._src);
         };
         return Image;
     })(volksoper.Surface);
@@ -1801,7 +1792,7 @@ var volksoper;
         });
         Label.prototype._onStage = function (stage) {
             if(!this._impl) {
-                this._impl = stage._createLabelImpl(this.width, this.height, this.name);
+                this._impl = stage.topScene.dock._createLabelImpl(this.width, this.height, this.name);
                 this._impl.font(this._font);
                 this._impl.lineGap(this._lineGap);
                 this._impl.align(this._align);
@@ -2163,6 +2154,12 @@ var volksoper;
             return null;
         };
         SceneDock.prototype._createSoundImpl = function (src, autoPlay) {
+            return null;
+        };
+        SceneDock.prototype._createSurfaceImpl = function (width, height, renderer, primitive, name) {
+            return null;
+        };
+        SceneDock.prototype._createLabelImpl = function (width, height, name) {
             return null;
         };
         SceneDock.prototype._releaseResource = function () {
@@ -3239,6 +3236,9 @@ var volksoper;
         CanvasSceneDock.prototype._newImageImpl = function (src) {
             return new volksoper.CanvasImageImpl(src, this.stage);
         };
+        CanvasSceneDock.prototype._createSurfaceImpl = function (width, height, renderer, primitive, name) {
+            return new volksoper.CanvasSurfaceImpl(width, height, renderer, primitive, name, this.stage);
+        };
         return CanvasSceneDock;
     })(volksoper.HTMLSceneDock);
     volksoper.CanvasSceneDock = CanvasSceneDock;    
@@ -3334,9 +3334,6 @@ var volksoper;
             c.height = this.height;
             this.platform.setTransformOrigin(c, '0 0');
             this.platform.setTransform(c, 'scale(' + this.scale + ')');
-        };
-        CanvasStage.prototype._createSurfaceImpl = function (width, height, renderer, primitive, name) {
-            return new volksoper.CanvasSurfaceImpl(width, height, renderer, primitive, name, this);
         };
         CanvasStage.prototype.render = function () {
             this.invalidateSurfaceImpl();

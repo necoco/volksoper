@@ -79,7 +79,8 @@ module volksoper{
 
         _onStage(stage: Stage){
             if(!this._impl){
-                this._impl = stage._createLabelImpl(this.width, this.height, this.name);
+                this._impl = stage.topScene.dock.
+                        _createLabelImpl(this.width, this.height, this.name);
                 this._impl.font(this._font);
                 this._impl.lineGap(this._lineGap);
                 this._impl.align(this._align);

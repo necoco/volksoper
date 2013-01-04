@@ -238,18 +238,6 @@ module volksoper{
             obj._visitRendering(post);
         }
 
-        _createSurfaceImpl(width: number, height: number, renderer:any, primitive: bool, name: string): SurfaceImpl{
-            return null;
-        }
-
-        _createImageImpl(src: string): SurfaceImpl{
-            return this.topScene.dock._createImageImpl(src);
-        }
-
-        _createLabelImpl(width: number, height: number, name: string): LabelImpl{
-            return null;
-        }
-
         _createSceneDock(): SceneDock{
             return null;
         }

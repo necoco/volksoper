@@ -36,6 +36,14 @@ module volksoper{
             return null;
         }
 
+        _createSurfaceImpl(width: number, height: number, renderer:any, primitive: bool, name: string): SurfaceImpl{
+            return null;
+        }
+
+        _createLabelImpl(width: number, height: number, name: string){
+            return null;
+        }
+
         _releaseResource(){
             throw new Error("no implement!");
         }

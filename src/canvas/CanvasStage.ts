@@ -47,9 +47,6 @@ module volksoper{
             this.platform.setTransform(c, 'scale(' + this.scale + ')');
         }
 
-        _createSurfaceImpl(width: number, height: number, renderer:any, primitive: bool, name: string): SurfaceImpl{
-            return new CanvasSurfaceImpl(width, height, renderer, primitive, name, this);
-        }
 
         constructor(options: any){
             super(options);

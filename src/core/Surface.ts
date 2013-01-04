@@ -55,7 +55,7 @@ module volksoper{
         }
 
         private _createImpl(stage: Stage): ResourceImpl{
-            return stage._createSurfaceImpl(
+            return stage.topScene.dock._createSurfaceImpl(
                     this._width, this._height, this._renderer, this._primitive, this._name);
         }
 
