@@ -10,6 +10,7 @@ module volksoper{
         render(): void{}
         width(): number{return 0;}
         height(): number{return 0;}
+        clearCache(): void{}
     }
 
     export class Surface extends Resource{
@@ -38,6 +39,12 @@ module volksoper{
             }
         }
 
+        _clearCache(){
+            if(this._impl){
+                this._impl.clearCache();
+            }
+        }
+
         _setStage(stage: Stage){
             super._setStage(stage);
 
@@ -52,7 +59,7 @@ module volksoper{
                     this._width, this._height, this._renderer, this._primitive, this._name);
         }
 
-        hitTest(x: number, y: number): bool{
+        hitTestLocal(x: number, y: number): bool{
             return 0 <= x && x <= this._width && 0 <= y && y <= this._height;
         }
 

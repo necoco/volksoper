@@ -661,7 +661,7 @@ var volksoper;
         function DisplayActor() {
             var _this = this;
                 _super.call(this);
-            this._dirty = true;
+            this._dirtyFlag = true;
             this._localMatrix = new volksoper.Matrix4();
             this.alpha = 1;
             this.touchEnabled = true;
@@ -685,6 +685,16 @@ var volksoper;
                 _this._unsetStage();
             }, false, volksoper.SYSTEM_PRIORITY);
         }
+        Object.defineProperty(DisplayActor.prototype, "_dirty", {
+            get: function () {
+                return this._dirtyFlag;
+            },
+            set: function (dirty) {
+                this._dirtyFlag = dirty;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(DisplayActor.prototype, "stage", {
             get: function () {
                 return this._stage;
@@ -1596,6 +1606,8 @@ var volksoper;
         SurfaceImpl.prototype.height = function () {
             return 0;
         };
+        SurfaceImpl.prototype.clearCache = function () {
+        };
         return SurfaceImpl;
     })(volksoper.ResourceImpl);
     volksoper.SurfaceImpl = SurfaceImpl;    
@@ -1639,6 +1651,11 @@ var volksoper;
                 this._impl.render();
             }
         };
+        Surface.prototype._clearCache = function () {
+            if(this._impl) {
+                this._impl.clearCache();
+            }
+        };
         Surface.prototype._setStage = function (stage) {
             _super.prototype._setStage.call(this, stage);
             if(this._invalidate) {
@@ -1649,7 +1666,7 @@ var volksoper;
         Surface.prototype._createImpl = function (stage) {
             return stage._createSurfaceImpl(this._width, this._height, this._renderer, this._primitive, this._name);
         };
-        Surface.prototype.hitTest = function (x, y) {
+        Surface.prototype.hitTestLocal = function (x, y) {
             return 0 <= x && x <= this._width && 0 <= y && y <= this._height;
         };
         return Surface;
@@ -2395,6 +2412,19 @@ var volksoper;
                 this._surface.release();
             }
         };
+        Object.defineProperty(Sprite.prototype, "_dirty", {
+            get: function () {
+                return this._dirtyFlag;
+            },
+            set: function (dirty) {
+                this._dirtyFlag = dirty;
+                if(this.surface && dirty) {
+                    this.surface._clearCache();
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(Sprite.prototype, "width", {
             get: function () {
                 return (this._surface) ? this._surface.width : 0;
@@ -2415,7 +2445,7 @@ var volksoper;
         });
         Sprite.prototype.hitTestLocal = function (x, y) {
             if(this._surface) {
-                return this._surface.hitTest(x, y);
+                return this._surface.hitTestLocal(x, y);
             }
             return false;
         };

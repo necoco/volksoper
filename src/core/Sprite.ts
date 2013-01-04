@@ -31,6 +31,17 @@ module volksoper{
             }
         }
 
+        private _dirtyFlag: bool;
+        get _dirty(): bool{
+            return this._dirtyFlag;
+        }
+        set _dirty(dirty:bool){
+            this._dirtyFlag = dirty;
+            if(this.surface && dirty){
+                this.surface._clearCache();
+            }
+        }
+
 
         get width(): number{
             return (this._surface)? this._surface.width: 0;
@@ -44,7 +55,7 @@ module volksoper{
 
         hitTestLocal(x: number, y: number){
             if(this._surface){
-                return this._surface.hitTest(x, y);
+                return this._surface.hitTestLocal(x, y);
             }
             return false;
         }

@@ -6,7 +6,13 @@ declare class Stage{}
 
 module volksoper{
     export class DisplayActor extends volksoper.Actor{
-        private _dirty: bool = true;
+        private _dirtyFlag: bool = true;
+        get _dirty(): bool{
+            return this._dirtyFlag;
+        }
+        set _dirty(dirty: bool){
+            this._dirtyFlag = dirty;
+        }
 
         private _stage: volksoper.Stage;
         get stage(): volksoper.Stage{

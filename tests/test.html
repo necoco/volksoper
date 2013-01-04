@@ -9,7 +9,7 @@
 <script>
     window.onload = function(){
         var vo = volksoper;
-        var stage = new vo.CanvasStage({fullScreen: true, autoScale: true, width: 500, height: 500});
+        var stage = new vo.CanvasStage({fullScreen: true, autoScale: true, width: 500, height: 500, fps: 15});
         var scene = new vo.Scene();
         var sprite = new vo.Sprite();
         var surface = new vo.Image("test.png");
@@ -37,7 +37,6 @@
 
         sprite.addEventListener(vo.Event.ENTER_FRAME, function(){
             sprite.x += 1;
-
         });
 
         stage.invalidate();
