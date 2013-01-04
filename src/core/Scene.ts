@@ -123,6 +123,10 @@ module volksoper{
         _visitRendering(v: any){
             v.visitScene(this);
         }
+
+        _releaseResource(){
+            this._dock._releaseResource();
+        }
     }
 
 }

@@ -35,5 +35,9 @@ module volksoper{
         _createSoundImpl(src: string, autoPlay: bool): SoundImpl{
             return null;
         }
+
+        _releaseResource(){
+            throw new Error("no implement!");
+        }
     }
 }

@@ -8,11 +8,12 @@ module volksoper{
         }
 
         find(name: string): Resource{
-            return null;
+            return this._resourcePool[name];
         }
 
-        private _currentResouce = 0;
+        private _currentResource = 0;
         private _totalResource = 0;
+        private _resourcePool = {};
 
         private _surfaceImpls: any = {};
         private _soundImpls: any = {};
@@ -27,6 +28,22 @@ module volksoper{
             return result;
         }
 
+        release(...files: string[]){
+            for(var n = 0; n < files.length; ++n){
+                var res = <Resource>this._resourcePool[files[n]];
+                res.release();
+                delete this._resourcePool[files[n]];
+            }
+        }
+
+        _releaseResource(){
+            for(var key in this._resourcePool){
+                var res = <Resource>this._resourcePool[key];
+                res.release();
+            }
+            this._resourcePool = {};
+        }
+
         private _loadResource(file: string): Resource{
             var ext = extractExt(file);
             var res: Resource = null;
@@ -34,21 +51,33 @@ module volksoper{
                 case 'jpg':case 'png':case 'jpeg':case 'gif':
                     this._totalResource++;
                     res = new Image(file);
-                    res.addUsableListener((img)=>{
-                        if(img){
-                            this.broadcastEvent(new volksoper.Event(volksoper.Event.LOADED), img);
-                            this._currentResouce++;
-                            if(this._currentResouce >= this._totalResource){
-                                this.broadcastEvent(new volksoper.Event(volksoper.Event.COMPLETE));
-                            }
-                        }else{
-                            this.broadcastEvent(new volksoper.Event(volksoper.Event.LOADING_FAILED));
-                        }
-                    });
+                    res.addUsableListener(this._createListener());
+                    break;
+                case 'snd':case 'mp3':case 'ogg':case'wav':
+                    this._totalResource++;
+                    res = new Sound(file);
+                    (<Sound>res).attach(this.stage);
+                    res.addUsableListener(this._createListener());
                     break;
             }
 
+            this._resourcePool[file] = res;
+
             return res;
+        }
+
+        private _createListener(){
+            return (res)=>{
+                if(res){
+                    this.broadcastEvent(new volksoper.Event(volksoper.Event.LOADED), res);
+                    this._currentResource++;
+                    if(this._currentResource >= this._totalResource){
+                        this.broadcastEvent(new volksoper.Event(volksoper.Event.COMPLETE));
+                    }
+                }else{
+                    this.broadcastEvent(new volksoper.Event(volksoper.Event.LOADING_FAILED));
+                }
+            };
         }
 
         _createImageImpl(src: string): SurfaceImpl{
@@ -58,6 +87,7 @@ module volksoper{
             }else{
                 impl = this._newImageImpl(src);
                 this._surfaceImpls[src] = impl;
+                impl.addRef();
                 return impl;
             }
         }
@@ -88,7 +118,8 @@ module volksoper{
                 return impl;
             }else{
                 impl = new (Platform.instance().getSoundImplClass())(src, autoPlay);
-                this._surfaceImpls[src] = impl;
+                this._soundImpls[src] = impl;
+                impl.addRef();
                 return impl;
             }
         }

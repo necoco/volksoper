@@ -159,6 +159,9 @@ module volksoper{
 
             var removeListener = (e: volksoper.Event)=>{
                 e.target.broadcastEvent(new volksoper.Event(volksoper.Event.REMOVE_FROM_STAGE), self);
+                if(e.target instanceof Scene){
+                    (<Scene>e.target)._releaseResource();
+                }
             };
 
             this.addEventListener(volksoper.Event.ADDED, addedListener, true, volksoper.SYSTEM_PRIORITY);

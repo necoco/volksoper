@@ -22,15 +22,11 @@
             console.log(e.x, e.y, e.id);
         });
 
-        surface.addUsableListener(function(){
-            stage.render();
-        });
         stage.backgroundColor = 0xffffcc;
         stage.render();
 
-        var sound = new vo.Sound("test.wav");
-        sound.play();
-        sound.attach(stage);
+        scene.dock.load('test.wav');
+        scene.dock.play('test.wav');
 
         sprite.addEventListener(vo.Event.ENTER_FRAME, function(){
             sprite.x += 1;

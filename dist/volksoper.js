@@ -1340,6 +1340,9 @@ var volksoper;
             };
             var removeListener = function (e) {
                 e.target.broadcastEvent(new volksoper.Event(volksoper.Event.REMOVE_FROM_STAGE), self);
+                if(e.target instanceof volksoper.Scene) {
+                    (e.target)._releaseResource();
+                }
             };
             this.addEventListener(volksoper.Event.ADDED, addedListener, true, volksoper.SYSTEM_PRIORITY);
             this.addEventListener(volksoper.Event.REMOVE, removeListener, true, volksoper.SYSTEM_PRIORITY);
@@ -2162,6 +2165,9 @@ var volksoper;
         SceneDock.prototype._createSoundImpl = function (src, autoPlay) {
             return null;
         };
+        SceneDock.prototype._releaseResource = function () {
+            throw new Error("no implement!");
+        };
         return SceneDock;
     })(volksoper.Actor);
     volksoper.SceneDock = SceneDock;    
@@ -2280,6 +2286,9 @@ var volksoper;
         };
         Scene.prototype._visitRendering = function (v) {
             v.visitScene(this);
+        };
+        Scene.prototype._releaseResource = function () {
+            this._dock._releaseResource();
         };
         return Scene;
     })(volksoper.DisplayActor);
@@ -2559,15 +2568,17 @@ var volksoper;
         function HTMLSceneDock(stage, _parentDock) {
                 _super.call(this, stage, _parentDock);
             this._parentDock = _parentDock;
-            this._currentResouce = 0;
+            this._currentResource = 0;
             this._totalResource = 0;
+            this._resourcePool = {
+            };
             this._surfaceImpls = {
             };
             this._soundImpls = {
             };
         }
         HTMLSceneDock.prototype.find = function (name) {
-            return null;
+            return this._resourcePool[name];
         };
         HTMLSceneDock.prototype.load = function () {
             var files = [];
@@ -2581,8 +2592,26 @@ var volksoper;
             }
             return result;
         };
+        HTMLSceneDock.prototype.release = function () {
+            var files = [];
+            for (var _i = 0; _i < (arguments.length - 0); _i++) {
+                files[_i] = arguments[_i + 0];
+            }
+            for(var n = 0; n < files.length; ++n) {
+                var res = this._resourcePool[files[n]];
+                res.release();
+                delete this._resourcePool[files[n]];
+            }
+        };
+        HTMLSceneDock.prototype._releaseResource = function () {
+            for(var key in this._resourcePool) {
+                var res = this._resourcePool[key];
+                res.release();
+            }
+            this._resourcePool = {
+            };
+        };
         HTMLSceneDock.prototype._loadResource = function (file) {
-            var _this = this;
             var ext = volksoper.extractExt(file);
             var res = null;
             switch(ext) {
@@ -2592,22 +2621,38 @@ var volksoper;
                 case 'gif': {
                     this._totalResource++;
                     res = new volksoper.Image(file);
-                    res.addUsableListener(function (img) {
-                        if(img) {
-                            _this.broadcastEvent(new volksoper.Event(volksoper.Event.LOADED), img);
-                            _this._currentResouce++;
-                            if(_this._currentResouce >= _this._totalResource) {
-                                _this.broadcastEvent(new volksoper.Event(volksoper.Event.COMPLETE));
-                            }
-                        } else {
-                            _this.broadcastEvent(new volksoper.Event(volksoper.Event.LOADING_FAILED));
-                        }
-                    });
+                    res.addUsableListener(this._createListener());
+                    break;
+
+                }
+                case 'snd':
+                case 'mp3':
+                case 'ogg':
+                case 'wav': {
+                    this._totalResource++;
+                    res = new volksoper.Sound(file);
+                    (res).attach(this.stage);
+                    res.addUsableListener(this._createListener());
                     break;
 
                 }
             }
+            this._resourcePool[file] = res;
             return res;
+        };
+        HTMLSceneDock.prototype._createListener = function () {
+            var _this = this;
+            return function (res) {
+                if(res) {
+                    _this.broadcastEvent(new volksoper.Event(volksoper.Event.LOADED), res);
+                    _this._currentResource++;
+                    if(_this._currentResource >= _this._totalResource) {
+                        _this.broadcastEvent(new volksoper.Event(volksoper.Event.COMPLETE));
+                    }
+                } else {
+                    _this.broadcastEvent(new volksoper.Event(volksoper.Event.LOADING_FAILED));
+                }
+            }
         };
         HTMLSceneDock.prototype._createImageImpl = function (src) {
             var impl = this._findImageImpl(src);
@@ -2616,6 +2661,7 @@ var volksoper;
             } else {
                 impl = this._newImageImpl(src);
                 this._surfaceImpls[src] = impl;
+                impl.addRef();
                 return impl;
             }
         };
@@ -2642,7 +2688,8 @@ var volksoper;
                 return impl;
             } else {
                 impl = new (volksoper.Platform.instance().getSoundImplClass())(src, autoPlay);
-                this._surfaceImpls[src] = impl;
+                this._soundImpls[src] = impl;
+                impl.addRef();
                 return impl;
             }
         };
