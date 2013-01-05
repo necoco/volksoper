@@ -14,8 +14,9 @@ module volksoper{
 
         consume(time: number): number{
             if(this._time < time){
+                var result = this._time;
                 this._time = 0;
-                return this._time - time;
+                return result;
             }
 
             this._time -= time;

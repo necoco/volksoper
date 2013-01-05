@@ -47,10 +47,11 @@ module volksoper{
                 if(this._story){
                     this._story._attachStoryBoard(this._scene.storyBoard);
                 }
-            }, true, volksoper.SYSTEM_PRIORITY);
+            }, false, volksoper.SYSTEM_PRIORITY);
             this.addEventListener(volksoper.Event.REMOVE_FROM_SCENE,(e)=>{
                 this._scene = null;
-            }, true, volksoper.SYSTEM_PRIORITY);
+                this._story = null;
+            }, false, volksoper.SYSTEM_PRIORITY);
 
 
         }

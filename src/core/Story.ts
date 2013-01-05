@@ -84,7 +84,7 @@ module volksoper{
             if(consumed >= 0){
                 currentTime += consumed;
                 for(key in dst){
-                    target[key] = easing(currentTime, src[key], dst[key], time);
+                    target[key] = easing(currentTime, src[key], dst[key] - src[key], time);
                 }
                 return true;
             }else{

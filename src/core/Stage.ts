@@ -24,6 +24,8 @@ module volksoper{
             this._running = true;
         }
 
+        updateByFrame = false;
+
         private _currentTime = 0;
         private _leftTime = 0;
         private _deltaTime = 0;
@@ -274,26 +276,38 @@ module volksoper{
             var d = new Date().getTime() - this._currentTime;
             this._currentTime += d;
             var span = 1000 / this.fps;
+            var story = false;
 
             if(this.fps){
                 var iterate = d + this._leftTime;
+                var count = 0;
                 this._deltaTime = span;
                 while(iterate >= span){
                     this.broadcastEvent(new volksoper.Event(volksoper.Event.ENTER_FRAME));
                     iterate -= span;
+                    count++;
+                }
+                if(this.updateByFrame){
+                    story = this.currentScene.storyBoard.update(count);
+                }else{
+                    story = this.currentScene.storyBoard.update(d/1000);
                 }
                 this._leftTime = iterate;
             }else{
                 this._deltaTime = d / 1000;
                 span = 1000 / 60;
                 this.broadcastEvent(new volksoper.Event(volksoper.Event.ENTER_FRAME));
-            }
 
-            var story = this.currentScene.storyBoard.update(this._deltaTime);
+                if(this.updateByFrame){
+                    story = this.currentScene.storyBoard.update(1);
+                }else{
+                    story = this.currentScene.storyBoard.update(this._deltaTime);
+                }
+            }
 
             this.render();
 
-            if(this.loop && story){
+            if(this.loop || story){
                 this._nextFrame(()=>{
                     this.invalidate();
                 }, span);

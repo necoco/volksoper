@@ -35,9 +35,10 @@ module volksoper{
                 this._canvas = c;
 
                 var context = c.getContext('2d');
-                this._pre = new PreCanvasRenderingVisitor(context);
+                var alphaStack = [];
+                this._pre = new PreCanvasRenderingVisitor(context, alphaStack);
                 this._process = new ProcessCanvasRenderingVisitor(context);
-                this._post = new PostCanvasRenderingVisitor(context);
+                this._post = new PostCanvasRenderingVisitor(context, alphaStack);
                 this._context = context;
             }
 

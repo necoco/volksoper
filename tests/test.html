@@ -15,22 +15,11 @@
             autoScale: true,
             width: 500,
             height: 500,
-            fps: 15,
+            fps: 30,
+            updateByFrame: true,
             backgroundColor: 0xffffcc
         });
-        var sprite = new vo.Sprite({
-            surface: new vo.Image('test.png'),
-            x: 30,
-            parent: stage.currentScene
-        });
 
-        sprite.addEventListener(vo.TouchEvent.TOUCH_START, function(e){
-            console.log(e.localX, e.localY, e.id);
-        });
-
-        sprite.addEventListener(vo.Event.ENTER_FRAME, function(){
-            sprite.x += 1;
-        });
 
         var dock = stage.currentScene.dock;
         dock.load('test.wav');
@@ -42,7 +31,22 @@
             text:"this is text \n text",
             align: vo.VerticalAlign.CENTER | vo.HorizontalAlign.CENTER
         });
-        var labelSprite = new vo.Sprite({surface: label, parent: stage.currentScene});
+        var labelSprite = new vo.Sprite({
+            surface: label,
+            parent: stage.currentScene
+        });
+
+        var sprite = new vo.Sprite({
+            surface: new vo.Image('test.png'),
+            x: 30,
+            parent: stage.currentScene
+        });
+
+        sprite.addEventListener(vo.TouchEvent.TOUCH_START, function(e){
+            labelSprite.text = e.localX + '\n' + e.localY;
+        });
+
+        sprite.story.tween({alpha: 0.3, x: 400, time: 90, easing: vo.Easing.BOUNCE_EASEOUT});
     };
 
 

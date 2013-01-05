@@ -1384,6 +1384,7 @@ var volksoper;
         function Stage(options) {
                 _super.call(this);
             this._running = true;
+            this.updateByFrame = false;
             this._currentTime = 0;
             this._leftTime = 0;
             this._deltaTime = 0;
@@ -1646,22 +1647,34 @@ var volksoper;
             var d = new Date().getTime() - this._currentTime;
             this._currentTime += d;
             var span = 1000 / this.fps;
+            var story = false;
             if(this.fps) {
                 var iterate = d + this._leftTime;
+                var count = 0;
                 this._deltaTime = span;
                 while(iterate >= span) {
                     this.broadcastEvent(new volksoper.Event(volksoper.Event.ENTER_FRAME));
                     iterate -= span;
+                    count++;
+                }
+                if(this.updateByFrame) {
+                    story = this.currentScene.storyBoard.update(count);
+                } else {
+                    story = this.currentScene.storyBoard.update(d / 1000);
                 }
                 this._leftTime = iterate;
             } else {
                 this._deltaTime = d / 1000;
                 span = 1000 / 60;
                 this.broadcastEvent(new volksoper.Event(volksoper.Event.ENTER_FRAME));
+                if(this.updateByFrame) {
+                    story = this.currentScene.storyBoard.update(1);
+                } else {
+                    story = this.currentScene.storyBoard.update(this._deltaTime);
+                }
             }
-            var story = this.currentScene.storyBoard.update(this._deltaTime);
             this.render();
-            if(this.loop && story) {
+            if(this.loop || story) {
                 this._nextFrame(function () {
                     _this.invalidate();
                 }, span);
@@ -2014,7 +2027,7 @@ var volksoper;
             if(consumed >= 0) {
                 currentTime += consumed;
                 for(key in dst) {
-                    target[key] = easing(currentTime, src[key], dst[key], time);
+                    target[key] = easing(currentTime, src[key], dst[key] - src[key], time);
                 }
                 return true;
             } else {
@@ -2191,8 +2204,9 @@ var volksoper;
         };
         StoryTimer.prototype.consume = function (time) {
             if(this._time < time) {
+                var result = this._time;
                 this._time = 0;
-                return this._time - time;
+                return result;
             }
             this._time -= time;
             return -1;
@@ -2523,10 +2537,11 @@ var volksoper;
                 if(_this._story) {
                     _this._story._attachStoryBoard(_this._scene.storyBoard);
                 }
-            }, true, volksoper.SYSTEM_PRIORITY);
+            }, false, volksoper.SYSTEM_PRIORITY);
             this.addEventListener(volksoper.Event.REMOVE_FROM_SCENE, function (e) {
                 _this._scene = null;
-            }, true, volksoper.SYSTEM_PRIORITY);
+                _this._story = null;
+            }, false, volksoper.SYSTEM_PRIORITY);
         }
         Object.defineProperty(SceneNode.prototype, "scene", {
             get: function () {
@@ -3380,13 +3395,18 @@ var volksoper;
 (function (volksoper) {
     var PreCanvasRenderingVisitor = (function (_super) {
         __extends(PreCanvasRenderingVisitor, _super);
-        function PreCanvasRenderingVisitor(_context) {
+        function PreCanvasRenderingVisitor(_context, _alphaStack) {
                 _super.call(this);
             this._context = _context;
+            this._alphaStack = _alphaStack;
         }
         PreCanvasRenderingVisitor.prototype.visitDisplayObject = function (o) {
             var m = o.localMatrix.m;
+            var len = this._alphaStack.length;
+            var alpha = (len === 0) ? o.alpha : this._alphaStack[len - 1] * o.alpha;
+            this._alphaStack.push(alpha);
             this._context.save();
+            this._context.globalAlpha = alpha;
             this._context.transform(m[0], m[4], m[1], m[5], m[12], m[13]);
         };
         return PreCanvasRenderingVisitor;
@@ -3408,12 +3428,14 @@ var volksoper;
     volksoper.ProcessCanvasRenderingVisitor = ProcessCanvasRenderingVisitor;    
     var PostCanvasRenderingVisitor = (function (_super) {
         __extends(PostCanvasRenderingVisitor, _super);
-        function PostCanvasRenderingVisitor(_context) {
+        function PostCanvasRenderingVisitor(_context, _alphaStack) {
                 _super.call(this);
             this._context = _context;
+            this._alphaStack = _alphaStack;
         }
         PostCanvasRenderingVisitor.prototype.visitDisplayObject = function (o) {
             this._context.restore();
+            this._alphaStack.pop();
         };
         return PostCanvasRenderingVisitor;
     })(volksoper.RenderingVisitor);
@@ -3524,9 +3546,10 @@ var volksoper;
                 this.element.appendChild(c);
                 this._canvas = c;
                 var context = c.getContext('2d');
-                this._pre = new volksoper.PreCanvasRenderingVisitor(context);
+                var alphaStack = [];
+                this._pre = new volksoper.PreCanvasRenderingVisitor(context, alphaStack);
                 this._process = new volksoper.ProcessCanvasRenderingVisitor(context);
-                this._post = new volksoper.PostCanvasRenderingVisitor(context);
+                this._post = new volksoper.PostCanvasRenderingVisitor(context, alphaStack);
                 this._context = context;
             }
             c.width = this.width;
