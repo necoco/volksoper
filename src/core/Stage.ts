@@ -28,12 +28,12 @@ module volksoper{
             return 1 / this._fps;
         }
 
-        private _stopAnimationFrame = false;
+        private _loop = false;
         get loop(){
-            return !this._stopAnimationFrame;
+            return this._loop;
         }
         set loop(loop){
-            this._stopAnimationFrame = !loop;
+            this._loop = loop;
         }
 
 
@@ -126,8 +126,11 @@ module volksoper{
         private _adjustStage(){}
 
         private _keyMap: any;
-        get keyMap(){
+        get keys(): any{
             return this._keyMap;
+        }
+        set keys(keys:any){
+            this._keyMap = keys;
         }
 
         _touchReceivers: any = {};
@@ -140,15 +143,13 @@ module volksoper{
 
         constructor(options: any){
             super();
-            this._width = options.width || 320;
-            this._height = options.height || 320;
-            this._fps = options.fps;
-            this._scale = options.scale || 1;
-            this._autoScale = options.autoScale;
-            this._keyMap = options.keys || {};
-            this._fullScreen = options.fullScreen;
-            this.autoSize = options.autoSize;
-            this.loop = !options.loop;
+            options.width = options.width || 320;
+            options.height = options.height || 320;
+            options.scale = options.scale || 1;
+            options.keys = options.keys || {};
+            if(options.loop === undefined){
+                options.loop = true;
+            }
 
 
             var self = this;
@@ -163,6 +164,10 @@ module volksoper{
 
             this.addEventListener(volksoper.Event.ADDED, addedListener, true, volksoper.SYSTEM_PRIORITY);
             this.addEventListener(volksoper.Event.REMOVE, removeListener, true, volksoper.SYSTEM_PRIORITY);
+
+            this.applyProperties(options);
+
+            this.addChild(new Scene());
         }
 
         propagateTouchEvent(type: string, x: number, y: number, id: number): DisplayActor{
@@ -243,8 +248,13 @@ module volksoper{
             v.visitStage(this);
         }
 
-        get topScene(): Scene{
+        get currentScene(): Scene{
             return <Scene>this.topChild;
+        }
+        
+        changeScene(scene){
+            this.popChild();
+            this.addChild(scene);
         }
     }
 }

@@ -12,6 +12,12 @@ module volksoper{
         get parent(): Actor{
             return this._parent;
         }
+        set parent(parent: Actor){
+            if(this._parent){
+                this._parent.removeChild(this);
+            }
+            parent.addChild(this);
+        }
 
         private _children: Array;
         private _captureHandlers: Object;
@@ -22,6 +28,13 @@ module volksoper{
         public name: String;
 
         constructor(){
+        }
+
+        applyProperties(props: any){
+            if(!props)return;
+            for(var key in props){
+                this[key] = props[key];
+            }
         }
 
         addChild(child: Actor): void{

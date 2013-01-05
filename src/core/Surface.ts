@@ -8,8 +8,8 @@ module volksoper{
     export class SurfaceImpl extends ResourceImpl{
         invalidate(): void{}
         render(): void{}
-        width(): number{return 0;}
-        height(): number{return 0;}
+        width(): number{throw new Error('unimplemented');}
+        height(): number{throw new Error('unimplemented');}
         clearCache(): void{}
     }
 
@@ -55,12 +55,12 @@ module volksoper{
         }
 
         private _createImpl(stage: Stage): ResourceImpl{
-            return stage.topScene.dock._createSurfaceImpl(
+            return stage.currentScene.dock._createSurfaceImpl(
                     this._width, this._height, this._renderer, this._primitive, this._name);
         }
 
         hitTestLocal(x: number, y: number): bool{
-            return 0 <= x && x <= this._width && 0 <= y && y <= this._height;
+            return 0 <= x && x <= this.width && 0 <= y && y <= this.height;
         }
 
         constructor(private _width: number,

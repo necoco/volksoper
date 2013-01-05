@@ -108,6 +108,13 @@ module volksoper{
             }
         }
 
+        applyProperties(props){
+            if(!props) return;
+            for(var key in props){
+                this[key] = props[key];
+            }
+        }
+
         private _createImpl(stage: Stage): ResourceImpl{
             throw new Error('unimplemented');
         }

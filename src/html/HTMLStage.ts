@@ -74,6 +74,8 @@ module volksoper{
                 this._adjustStage();
                 this.render();
             }
+
+            this.invalidate();
         }
 
         private _adjusting = false;
@@ -115,19 +117,19 @@ module volksoper{
             var s = this._element;
 
             document.addEventListener('keydown', (e: KeyboardEvent)=>{
-                if(this.keyMap[e.keyCode]){
+                if(this.keys[e.keyCode]){
                     e.preventDefault();
                     e.stopPropagation();
                 }
 
                 if(this.running){
-                    this.broadcastKeyEvent(KeyEvent.KEY_DOWN, e.keyCode, this.keyMap[e.keyCode]);
+                    this.broadcastKeyEvent(KeyEvent.KEY_DOWN, e.keyCode, this.keys[e.keyCode]);
                 }
             }, true);
 
             document.addEventListener('keyup', (e: KeyboardEvent)=>{
                 if(this.running){
-                    this.broadcastKeyEvent(KeyEvent.KEY_UP, e.keyCode, this.keyMap[e.keyCode]);
+                    this.broadcastKeyEvent(KeyEvent.KEY_UP, e.keyCode, this.keys[e.keyCode]);
                 }
             }, true);
 
@@ -222,7 +224,7 @@ module volksoper{
         }
 
         _createSceneDock(): SceneDock{
-            var parent = (this.numChildren !== 0)? this.topScene.dock: null;
+            var parent = (this.numChildren !== 0)? this.currentScene.dock: null;
             return new volksoper.HTMLSceneDock(this, <HTMLSceneDock>parent);
         }
 

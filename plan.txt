@@ -4,6 +4,20 @@
 Addrefのタイミングがおかしいので考える。           => OK
 
 
+ラッパーライブラリ entrance.volksoper.js
+Stageインスタンスを一つに制限することで、簡単なアクセスを提供
+
+var entrance = new volksoper.entrance.Entrance();
+
+entrance.enter({
+    //options
+},()=>{
+    //initializer
+},()=>{
+    //mainLoop
+});
+
+
 ・Actor階層構造
 ・Actorイベントフロー
 ・Sceneレジストリ

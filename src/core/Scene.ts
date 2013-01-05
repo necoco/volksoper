@@ -45,7 +45,7 @@ module volksoper{
             }
         }
 
-        constructor(){
+        constructor(props?: any){
             super();
 
             this.addEventListener(volksoper.Event.ADDED, (e: volksoper.Event)=>{
@@ -57,6 +57,8 @@ module volksoper{
                 e.target.broadcastEvent(new volksoper.Event(volksoper.Event.REMOVE_FROM_SCENE), this);
                 this._unregisterTarget(e.target);
             }, true, volksoper.SYSTEM_PRIORITY);
+
+            this.applyProperties(props);
         }
 
         private _registerTarget(target): void {

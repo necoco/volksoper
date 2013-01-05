@@ -63,5 +63,10 @@ module volksoper{
         _visitRendering(v: RenderingVisitor){
             v.visitSprite(this);
         }
+
+        constructor(props?: any){
+            super();
+            this.applyProperties(props);
+        }
     }
 }

@@ -60,6 +60,7 @@ module volksoper{
         }
 
         hitTestLocal(x: number,y :number): bool{
+            if(!this.width || !this.height)return false;
             return 0 <= x && x <= this.width && 0 <= y && y <= this.height;
         }
 
@@ -89,8 +90,8 @@ module volksoper{
 
             if(mat.invert()){
                 return {
-                    x: x*m[0] + y*m[1] + m[3],
-                    y: x*m[4] + y*m[5] + m[7]
+                    x: x*m[0] + y*m[4] + m[12],
+                    y: x*m[1] + y*m[5] + m[13]
                 };
             }else{
                 return {x: x, y: y};
@@ -145,8 +146,8 @@ module volksoper{
             this._dirty = true;
         }
 
-        width: number = 0;
-        height: number = 0;
+        width: number;
+        height: number;
 
 
         private _rotation: number = 0;

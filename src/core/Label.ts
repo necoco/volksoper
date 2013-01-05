@@ -13,6 +13,7 @@ module volksoper{
 
     export class Label extends Surface{
         private _impl: LabelImpl;
+        private _name: string;
 
         private _font: volksoper.Font;
         get font(): Font{
@@ -80,11 +81,12 @@ module volksoper{
         }
 
         _createImpl(stage: Stage){
-            return stage.topScene.dock._createLabelImpl(this._width, this._height, this._name);
+            return stage.currentScene.dock._createLabelImpl(this._width, this._height, this._name);
         }
 
-        constructor(private _width: number, private _height: number, private _name?: string){
-            super(_width, _height, null, false, name);
+        constructor(private _width: number, private _height: number, props?: any){
+            super(_width, _height, null, false, null);
+            this.applyProperties(props);
         }
     }
 
