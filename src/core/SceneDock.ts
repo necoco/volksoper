@@ -29,10 +29,6 @@ module volksoper{
             }
         }
 
-        _createLabelImpl(width: number, height: number, name: string){
-            return null;
-        }
-
         _releaseResource(){
             for(var key in this._soundImplPool){
                 var impl: SoundImpl = this._soundImplPool[key];
@@ -128,7 +124,7 @@ module volksoper{
                 return impl;
             }else{
                 impl = this._newSurfaceImpl(width, height, renderer, primitive, name);
-                this._implPool[name] = impl;
+                this._implPool[impl.name()] = impl;
 
                 return impl;
             }
@@ -136,6 +132,22 @@ module volksoper{
 
         private _newSurfaceImpl(width: number, height: number,
                                 renderer:any, primitive: bool, name: string): SurfaceImpl{
+            throw new Error('unimplemented');
+        }
+
+        _createLabelImpl(width: number, height: number, name: string): LabelImpl{
+            var impl = this._implPool[name];
+            if(impl){
+                return impl;
+            }else{
+                impl = this._newLabelImpl(width, height, name);
+                this._implPool[impl.name()] = impl;
+
+                return impl;
+            }
+        }
+
+        private _newLabelImpl(width: number, height: number, name: string): LabelImpl{
             throw new Error('unimplemented');
         }
     }

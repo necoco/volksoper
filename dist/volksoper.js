@@ -1,4 +1,4 @@
-/*! Volksoper - v0.0.1 - 2013-01-04
+/*! Volksoper - v0.0.1 - 2013-01-05
 * https://github.com/necoco/volksoper
 * Copyright (c) 2013 tshinsay; Licensed MIT */
 
@@ -1182,7 +1182,7 @@ var volksoper;
             }
         };
         Resource.prototype._createImpl = function (stage) {
-            return null;
+            throw new Error('unimplemented');
         };
         return Resource;
     })();
@@ -1580,6 +1580,15 @@ var volksoper;
         return null;
     }
     volksoper.extractExt = extractExt;
+    function toCSSColor(color) {
+        var result = color.toString(16);
+        for(var n = result.length; n < 6; ++n) {
+            result = '0' + result;
+        }
+        result = '#' + result;
+        return result;
+    }
+    volksoper.toCSSColor = toCSSColor;
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
@@ -1699,22 +1708,30 @@ var volksoper;
 
         }
         LabelImpl.prototype.text = function (text) {
+            throw new Error('unimplemented');
         };
         LabelImpl.prototype.align = function (align) {
+            throw new Error('unimplemented');
         };
         LabelImpl.prototype.lineGap = function (lineGap) {
+            throw new Error('unimplemented');
         };
         LabelImpl.prototype.textColor = function (textColor) {
+            throw new Error('unimplemented');
         };
         LabelImpl.prototype.font = function (font) {
+            throw new Error('unimplemented');
         };
         return LabelImpl;
     })(volksoper.SurfaceImpl);
     volksoper.LabelImpl = LabelImpl;    
     var Label = (function (_super) {
         __extends(Label, _super);
-        function Label(width, height, name) {
-                _super.call(this, width, height, null, false, name);
+        function Label(_width, _height, _name) {
+                _super.call(this, _width, _height, null, false, name);
+            this._width = _width;
+            this._height = _height;
+            this._name = _name;
             this._align = 0;
             this._lineGap = 0;
             this._textColor = 0;
@@ -1784,29 +1801,16 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(Label.prototype, "textWidth", {
-            get: function () {
-                return 0;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Label.prototype, "textHeight", {
-            get: function () {
-                return 0;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Label.prototype._onStage = function (stage) {
-            if(!this._impl) {
-                this._impl = stage.topScene.dock._createLabelImpl(this.width, this.height, this.name);
-                this._impl.font(this._font);
-                this._impl.lineGap(this._lineGap);
-                this._impl.align(this._align);
-                this._impl.text(this._text);
-                this._impl.textColor(this._textColor);
-            }
+        Label.prototype._setStage = function (stage) {
+            _super.prototype._setStage.call(this, stage);
+            this._impl.font(this._font);
+            this._impl.lineGap(this._lineGap);
+            this._impl.align(this._align);
+            this._impl.text(this._text);
+            this._impl.textColor(this._textColor);
+        };
+        Label.prototype._createImpl = function (stage) {
+            return stage.topScene.dock._createLabelImpl(this._width, this._height, this._name);
         };
         return Label;
     })(volksoper.Surface);
@@ -1821,18 +1825,18 @@ var volksoper;
         return Font;
     })();
     volksoper.Font = Font;    
-    (function (VerticalAlign) {
-        var CENTER = 1;
-        var LEFT = 2;
-        var RIGHT = 4;
-    })(volksoper.VerticalAlign || (volksoper.VerticalAlign = {}));
-    var VerticalAlign = volksoper.VerticalAlign;
     (function (HorizontalAlign) {
-        var CENTER = 16;
-        var TOP = 32;
-        var BOTTOM = 64;
+        HorizontalAlign.CENTER = 1;
+        HorizontalAlign.LEFT = 2;
+        HorizontalAlign.RIGHT = 4;
     })(volksoper.HorizontalAlign || (volksoper.HorizontalAlign = {}));
     var HorizontalAlign = volksoper.HorizontalAlign;
+    (function (VerticalAlign) {
+        VerticalAlign.CENTER = 16;
+        VerticalAlign.TOP = 32;
+        VerticalAlign.BOTTOM = 64;
+    })(volksoper.VerticalAlign || (volksoper.VerticalAlign = {}));
+    var VerticalAlign = volksoper.VerticalAlign;
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
@@ -2162,9 +2166,6 @@ var volksoper;
                 this._loadResource(files[n]);
             }
         };
-        SceneDock.prototype._createLabelImpl = function (width, height, name) {
-            return null;
-        };
         SceneDock.prototype._releaseResource = function () {
             for(var key in this._soundImplPool) {
                 var impl = this._soundImplPool[key];
@@ -2256,11 +2257,24 @@ var volksoper;
                 return impl;
             } else {
                 impl = this._newSurfaceImpl(width, height, renderer, primitive, name);
-                this._implPool[name] = impl;
+                this._implPool[impl.name()] = impl;
                 return impl;
             }
         };
         SceneDock.prototype._newSurfaceImpl = function (width, height, renderer, primitive, name) {
+            throw new Error('unimplemented');
+        };
+        SceneDock.prototype._createLabelImpl = function (width, height, name) {
+            var impl = this._implPool[name];
+            if(impl) {
+                return impl;
+            } else {
+                impl = this._newLabelImpl(width, height, name);
+                this._implPool[impl.name()] = impl;
+                return impl;
+            }
+        };
+        SceneDock.prototype._newLabelImpl = function (width, height, name) {
             throw new Error('unimplemented');
         };
         return SceneDock;
@@ -3149,6 +3163,142 @@ var volksoper;
 })(volksoper || (volksoper = {}));
 var volksoper;
 (function (volksoper) {
+    var CanvasLabelImpl = (function (_super) {
+        __extends(CanvasLabelImpl, _super);
+        function CanvasLabelImpl(_width, _height, _name, _context) {
+                _super.call(this);
+            this._width = _width;
+            this._height = _height;
+            this._name = _name;
+            this._context = _context;
+            this._lines = [];
+            this._lineWidth = [];
+            this._text = '';
+            this._align = 0;
+            this._lineGap = 0;
+            if(this._name) {
+                this._name = volksoper.generateUniqueName('label');
+            }
+        }
+        CanvasLabelImpl.prototype.text = function (text) {
+            this._text = text;
+            this._measureText();
+            this._measureHeight();
+        };
+        CanvasLabelImpl.prototype.align = function (align) {
+            this._align = align;
+        };
+        CanvasLabelImpl.prototype.lineGap = function (lineGap) {
+            this._lineGap = lineGap;
+            this._measureHeight();
+        };
+        CanvasLabelImpl.prototype.font = function (font) {
+            this._font = '';
+            if(font.italic) {
+                this._font += 'italic ';
+            }
+            if(font.bold) {
+                this._font += 'bold ';
+            }
+            if(font.size) {
+                this._font += font.size + 'px ';
+                this._fontSize = font.size;
+            } else {
+                this._font += '14px ';
+                this._fontSize = 14;
+            }
+            if(font.face) {
+                this._font += font.face + ' ';
+            } else {
+                this._font += 'serif ';
+            }
+            this._measureText();
+            this._measureHeight();
+        };
+        CanvasLabelImpl.prototype.textColor = function (color) {
+            this._color = volksoper.toCSSColor(color);
+        };
+        CanvasLabelImpl.prototype._measureHeight = function () {
+            var l = this._lines.length;
+            if(l === 0) {
+                this._totalHeight = 0;
+            } else {
+                this._totalHeight = l * this._fontSize + (l - 1) * this._lineGap;
+            }
+        };
+        CanvasLabelImpl.prototype._measureText = function () {
+            var lines = this._text.replace(/\r\n/, "\n").split("\n");
+            this._lines = [];
+            this._lineWidth = [];
+            this._context.font = this._font;
+            for(var n = 0, ll = lines.length; n < ll; ++n) {
+                this._pushLine(lines[n]);
+            }
+        };
+        CanvasLabelImpl.prototype._pushLine = function (line) {
+            var buf = '', tmpBuf = '', lineWidth = 0;
+            for(var n = 0, ll = line.length; n < ll; ++n) {
+                tmpBuf += line.charAt(n);
+                if((lineWidth = this._context.measureText(tmpBuf).width) > this._width) {
+                    if(tmpBuf.length === 1) {
+                        return;
+                    }
+                    this._lines.push(buf);
+                    this._lineWidth.push(lineWidth);
+                    n -= 1;
+                    buf = '';
+                    tmpBuf = '';
+                } else {
+                    buf = tmpBuf;
+                }
+            }
+            if(buf.length > 0) {
+                this._lines.push(buf);
+                this._lineWidth.push(lineWidth);
+            }
+        };
+        CanvasLabelImpl.prototype.width = function () {
+            return this._width;
+        };
+        CanvasLabelImpl.prototype.height = function () {
+            return this._height;
+        };
+        CanvasLabelImpl.prototype.name = function () {
+            return this._name;
+        };
+        CanvasLabelImpl.prototype.render = function () {
+            var x = 0, y = 0;
+            var align = this._align;
+            if((align & volksoper.VerticalAlign.CENTER) !== 0) {
+                y = (this._height - this._totalHeight) / 2;
+            } else {
+                if((align & volksoper.VerticalAlign.BOTTOM) !== 0) {
+                    y = (this._height - this._totalHeight);
+                }
+            }
+            this._context.font = this._font;
+            this._context.fillStyle = this._color;
+            this._context.textBaseline = 'top';
+            for(var n = 0, ll = this._lines.length; n < ll; ++n) {
+                if((align & volksoper.HorizontalAlign.CENTER) !== 0) {
+                    x = (this._width - this._lineWidth[n]) / 2;
+                } else {
+                    if((align & volksoper.HorizontalAlign.RIGHT) !== 0) {
+                        x = this._width - this._lineWidth[n];
+                    } else {
+                        x = 0;
+                    }
+                }
+                this._context.fillText(this._lines[n], x, y);
+                y += this._fontSize + this._lineGap;
+            }
+        };
+        return CanvasLabelImpl;
+    })(volksoper.LabelImpl);
+    volksoper.CanvasLabelImpl = CanvasLabelImpl;    
+})(volksoper || (volksoper = {}));
+var volksoper;
+(function (volksoper) {
     var PreCanvasRenderingVisitor = (function (_super) {
         __extends(PreCanvasRenderingVisitor, _super);
         function PreCanvasRenderingVisitor(_context) {
@@ -3203,6 +3353,9 @@ var volksoper;
         };
         CanvasSceneDock.prototype._newSurfaceImpl = function (width, height, renderer, primitive, name) {
             return new volksoper.CanvasSurfaceImpl(width, height, renderer, primitive, name, this.stage);
+        };
+        CanvasSceneDock.prototype._newLabelImpl = function (width, height, name) {
+            return new volksoper.CanvasLabelImpl(width, height, name, (this.stage).context);
         };
         return CanvasSceneDock;
     })(volksoper.HTMLSceneDock);
@@ -3302,7 +3455,7 @@ var volksoper;
         };
         CanvasStage.prototype.render = function () {
             this.invalidateSurfaceImpl();
-            this.context.fillStyle = '#' + this.backgroundColor.toString(16);
+            this.context.fillStyle = volksoper.toCSSColor(this.backgroundColor);
             this.context.fillRect(0, 0, this.width, this.height);
             this._render(this._pre, this._process, this._post);
         };

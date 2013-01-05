@@ -4,11 +4,11 @@
 module volksoper{
 
     export class LabelImpl extends SurfaceImpl{
-        text(text: string): void{}
-        align(align: number): void{}
-        lineGap(lineGap: number): void{}
-        textColor(textColor: number): void{}
-        font(font: Font): void{}
+        text(text: string): void{throw new Error('unimplemented');}
+        align(align: number): void{throw new Error('unimplemented');}
+        lineGap(lineGap: number): void{throw new Error('unimplemented');}
+        textColor(textColor: number): void{throw new Error('unimplemented');}
+        font(font: Font): void{throw new Error('unimplemented');}
     }
 
     export class Label extends Surface{
@@ -69,28 +69,22 @@ module volksoper{
             }
         }
 
-        get textWidth(): number{
-            return 0;
+        _setStage(stage: Stage){
+            super._setStage(stage);
+
+            this._impl.font(this._font);
+            this._impl.lineGap(this._lineGap);
+            this._impl.align(this._align);
+            this._impl.text(this._text);
+            this._impl.textColor(this._textColor);
         }
 
-        get textHeight(): number{
-            return 0;
+        _createImpl(stage: Stage){
+            return stage.topScene.dock._createLabelImpl(this._width, this._height, this._name);
         }
 
-        _onStage(stage: Stage){
-            if(!this._impl){
-                this._impl = stage.topScene.dock.
-                        _createLabelImpl(this.width, this.height, this.name);
-                this._impl.font(this._font);
-                this._impl.lineGap(this._lineGap);
-                this._impl.align(this._align);
-                this._impl.text(this._text);
-                this._impl.textColor(this._textColor);
-            }
-        }
-
-        constructor(width: number, height: number, name?: string){
-            super(width, height, null, false, name);
+        constructor(private _width: number, private _height: number, private _name?: string){
+            super(_width, _height, null, false, name);
         }
     }
 
@@ -103,16 +97,16 @@ module volksoper{
         }
     }
 
-    export module VerticalAlign{
-        var CENTER: number = 0x1;
-        var LEFT: number = 0x2;
-        var RIGHT: number = 0x4;
+    export module HorizontalAlign{
+        export var CENTER: number = 0x1;
+        export var LEFT: number = 0x2;
+        export var RIGHT: number = 0x4;
     }
 
-    export module HorizontalAlign{
-        var CENTER: number = 0x10;
-        var TOP: number = 0x20;
-        var BOTTOM: number = 0x40;
+    export module VerticalAlign{
+        export var CENTER: number = 0x10;
+        export var TOP: number = 0x20;
+        export var BOTTOM: number = 0x40;
     }
 
 }

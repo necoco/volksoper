@@ -8,5 +8,9 @@ module volksoper{
                                 renderer:any, primitive: bool, name: string): SurfaceImpl{
             return new CanvasSurfaceImpl(width, height, renderer, primitive, name, <CanvasStage>this.stage);
         }
+
+        private _newLabelImpl(width: number, height: number, name: string): LabelImpl{
+            return new CanvasLabelImpl(width, height, name, (<CanvasStage>this.stage).context);
+        }
     }
 }

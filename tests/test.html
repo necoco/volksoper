@@ -36,6 +36,14 @@
             stage.popChild();
         });
 
+        var label = new vo.Label(100, 100);
+        label.font = new vo.Font();
+        label.text = "this is text \n text";
+        label.align = vo.VerticalAlign.CENTER | vo.HorizontalAlign.CENTER;
+        var labelSprite = new vo.Sprite();
+        labelSprite.surface = label;
+        labelSprite.y = 0;
+        scene.addChild(labelSprite);
 
         stage.invalidate();
     };

@@ -14,4 +14,14 @@ module volksoper{
         }
         return null;
     }
+
+    export function toCSSColor(color: number){
+        var result = color.toString(16);
+
+        for(var n = result.length; n < 6; ++n){
+            result = '0' + result;
+        }
+        result = '#' + result;
+        return result;
+    }
 }

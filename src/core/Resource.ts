@@ -109,7 +109,7 @@ module volksoper{
         }
 
         private _createImpl(stage: Stage): ResourceImpl{
-            return null;
+            throw new Error('unimplemented');
         }
     }
 }
