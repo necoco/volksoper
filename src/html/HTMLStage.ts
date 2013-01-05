@@ -9,8 +9,6 @@ module volksoper{
         static USE_DEFAULT = ['input', 'textarea', 'select', 'area'];
 
         private _mouseId = 0;
-        private _currentTime = 0;
-        private _leftTime = 0;
 
         private _pageX: number;
         get pageX(){
@@ -19,11 +17,6 @@ module volksoper{
         private _pageY: number;
         get pageY(){
             return this._pageY;
-        }
-
-        private _deltaTime = 0;
-        get deltaTime(){
-            return this._deltaTime;
         }
 
         private _element: HTMLElement;
@@ -125,12 +118,14 @@ module volksoper{
                 if(this.running){
                     this.broadcastKeyEvent(KeyEvent.KEY_DOWN, e.keyCode, this.keys[e.keyCode]);
                 }
+                this.invalidate();
             }, true);
 
             document.addEventListener('keyup', (e: KeyboardEvent)=>{
                 if(this.running){
                     this.broadcastKeyEvent(KeyEvent.KEY_UP, e.keyCode, this.keys[e.keyCode]);
                 }
+                this.invalidate();
             }, true);
 
             var preventTouchDefault = (e: any)=>{
@@ -186,6 +181,8 @@ module volksoper{
                             this.unregisterTouchReceiver(id);
                         }
                     }
+
+                    this.invalidate();
                 }
             };
 
@@ -204,6 +201,7 @@ module volksoper{
                 mouseDown = true;
                 var obj = this.propagateTouchEvent(volksoper.TouchEvent.TOUCH_START, x, y, id);
                 this.registerTouchReceiver(obj, id);
+                this.invalidate();
             }, false);
             document.addEventListener('mouseup',(e)=>{
                 var x = (e.pageX - this._pageX) / this.scale;
@@ -212,6 +210,7 @@ module volksoper{
                 mouseDown = false;
                 this.propagateTouchEvent(volksoper.TouchEvent.TOUCH_END, x, y, id);
                 this.unregisterTouchReceiver(id);
+                this.invalidate();
             }, false);
             s.addEventListener('mousemove',(e)=>{
                 var x = (e.pageX - this._pageX) / this.scale;
@@ -220,6 +219,7 @@ module volksoper{
                 if(mouseDown){
                     this.propagateTouchEvent(volksoper.TouchEvent.TOUCH_MOVE, x, y, id);
                 }
+                this.invalidate();
             }, false);
         }
 
@@ -228,36 +228,8 @@ module volksoper{
             return new volksoper.HTMLSceneDock(this, <HTMLSceneDock>parent);
         }
 
-        invalidate(){
-            if(this._currentTime === 0){
-                this._currentTime = new Date().getTime();
-            }
-            var d = new Date().getTime() - this._currentTime;
-            this._currentTime += d;
-            var span = 1000 / this.fps;
-
-            if(this.fps){
-                var iterate = d + this._leftTime;
-                this._deltaTime = span;
-                while(iterate >= span){
-                    this.broadcastEvent(new volksoper.Event(volksoper.Event.ENTER_FRAME));
-                    iterate -= span;
-                }
-                this._leftTime = iterate;
-            }else{
-                this._deltaTime = d / 1000;
-                span = 1000 / 60;
-                this.broadcastEvent(new volksoper.Event(volksoper.Event.ENTER_FRAME));
-            }
-
-            this.render();
-
-            if(this.loop){
-                this._platform.requestAnimationFrame(()=>{
-                    this.invalidate();
-                }, span);
-            }
-
+        private _nextFrame(fn: any, span: number){
+            this._platform.requestAnimationFrame(fn, span);
         }
     }
 

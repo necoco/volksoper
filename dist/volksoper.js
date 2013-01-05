@@ -1384,6 +1384,9 @@ var volksoper;
         function Stage(options) {
                 _super.call(this);
             this._running = true;
+            this._currentTime = 0;
+            this._leftTime = 0;
+            this._deltaTime = 0;
             this._loop = false;
             this._backgroundColor = 16777215;
             this._touchReceivers = {
@@ -1423,7 +1426,7 @@ var volksoper;
         };
         Object.defineProperty(Stage.prototype, "deltaTime", {
             get: function () {
-                return 1 / this._fps;
+                return this._deltaTime;
             },
             enumerable: true,
             configurable: true
@@ -1446,8 +1449,7 @@ var volksoper;
             }
         };
         Stage.prototype.render = function () {
-        };
-        Stage.prototype.invalidate = function () {
+            throw new Error('unimplemented');
         };
         Object.defineProperty(Stage.prototype, "width", {
             get: function () {
@@ -1635,6 +1637,38 @@ var volksoper;
         };
         Stage.prototype.popScene = function () {
             this.popChild();
+        };
+        Stage.prototype.invalidate = function () {
+            var _this = this;
+            if(this._currentTime === 0) {
+                this._currentTime = new Date().getTime();
+            }
+            var d = new Date().getTime() - this._currentTime;
+            this._currentTime += d;
+            var span = 1000 / this.fps;
+            if(this.fps) {
+                var iterate = d + this._leftTime;
+                this._deltaTime = span;
+                while(iterate >= span) {
+                    this.broadcastEvent(new volksoper.Event(volksoper.Event.ENTER_FRAME));
+                    iterate -= span;
+                }
+                this._leftTime = iterate;
+            } else {
+                this._deltaTime = d / 1000;
+                span = 1000 / 60;
+                this.broadcastEvent(new volksoper.Event(volksoper.Event.ENTER_FRAME));
+            }
+            var story = this.currentScene.storyBoard.update(this._deltaTime);
+            this.render();
+            if(this.loop && story) {
+                this._nextFrame(function () {
+                    _this.invalidate();
+                }, span);
+            }
+        };
+        Stage.prototype._nextFrame = function (fn, span) {
+            throw new Error('unimplemented');
         };
         return Stage;
     })(volksoper.DisplayActor);
@@ -2919,9 +2953,6 @@ var volksoper;
             var _this = this;
                 _super.call(this, options);
             this._mouseId = 0;
-            this._currentTime = 0;
-            this._leftTime = 0;
-            this._deltaTime = 0;
             this._platform = volksoper.Platform.instance();
             this._adjusting = false;
             var stageId = options.stageId || 'volksoper-stage';
@@ -2970,13 +3001,6 @@ var volksoper;
         Object.defineProperty(HTMLStage.prototype, "pageY", {
             get: function () {
                 return this._pageY;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(HTMLStage.prototype, "deltaTime", {
-            get: function () {
-                return this._deltaTime;
             },
             enumerable: true,
             configurable: true
@@ -3036,11 +3060,13 @@ var volksoper;
                 if(_this.running) {
                     _this.broadcastKeyEvent(volksoper.KeyEvent.KEY_DOWN, e.keyCode, _this.keys[e.keyCode]);
                 }
+                _this.invalidate();
             }, true);
             document.addEventListener('keyup', function (e) {
                 if(_this.running) {
                     _this.broadcastKeyEvent(volksoper.KeyEvent.KEY_UP, e.keyCode, _this.keys[e.keyCode]);
                 }
+                _this.invalidate();
             }, true);
             var preventTouchDefault = function (e) {
                 var tag = (e.target.tagName).toLowerCase();
@@ -3089,6 +3115,7 @@ var volksoper;
                             _this.unregisterTouchReceiver(id);
                         }
                     }
+                    _this.invalidate();
                 }
             };
             s.addEventListener('touchstart', touchListener(volksoper.TouchEvent.TOUCH_START, true, false), false);
@@ -3103,6 +3130,7 @@ var volksoper;
                 mouseDown = true;
                 var obj = _this.propagateTouchEvent(volksoper.TouchEvent.TOUCH_START, x, y, id);
                 _this.registerTouchReceiver(obj, id);
+                _this.invalidate();
             }, false);
             document.addEventListener('mouseup', function (e) {
                 var x = (e.pageX - _this._pageX) / _this.scale;
@@ -3111,6 +3139,7 @@ var volksoper;
                 mouseDown = false;
                 _this.propagateTouchEvent(volksoper.TouchEvent.TOUCH_END, x, y, id);
                 _this.unregisterTouchReceiver(id);
+                _this.invalidate();
             }, false);
             s.addEventListener('mousemove', function (e) {
                 var x = (e.pageX - _this._pageX) / _this.scale;
@@ -3119,39 +3148,15 @@ var volksoper;
                 if(mouseDown) {
                     _this.propagateTouchEvent(volksoper.TouchEvent.TOUCH_MOVE, x, y, id);
                 }
+                _this.invalidate();
             }, false);
         };
         HTMLStage.prototype._createSceneDock = function () {
             var parent = (this.numChildren !== 0) ? this.currentScene.dock : null;
             return new volksoper.HTMLSceneDock(this, parent);
         };
-        HTMLStage.prototype.invalidate = function () {
-            var _this = this;
-            if(this._currentTime === 0) {
-                this._currentTime = new Date().getTime();
-            }
-            var d = new Date().getTime() - this._currentTime;
-            this._currentTime += d;
-            var span = 1000 / this.fps;
-            if(this.fps) {
-                var iterate = d + this._leftTime;
-                this._deltaTime = span;
-                while(iterate >= span) {
-                    this.broadcastEvent(new volksoper.Event(volksoper.Event.ENTER_FRAME));
-                    iterate -= span;
-                }
-                this._leftTime = iterate;
-            } else {
-                this._deltaTime = d / 1000;
-                span = 1000 / 60;
-                this.broadcastEvent(new volksoper.Event(volksoper.Event.ENTER_FRAME));
-            }
-            this.render();
-            if(this.loop) {
-                this._platform.requestAnimationFrame(function () {
-                    _this.invalidate();
-                }, span);
-            }
+        HTMLStage.prototype._nextFrame = function (fn, span) {
+            this._platform.requestAnimationFrame(fn, span);
         };
         return HTMLStage;
     })(volksoper.Stage);

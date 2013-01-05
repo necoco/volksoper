@@ -24,8 +24,11 @@ module volksoper{
             this._running = true;
         }
 
+        private _currentTime = 0;
+        private _leftTime = 0;
+        private _deltaTime = 0;
         get deltaTime(){
-            return 1 / this._fps;
+            return this._deltaTime;
         }
 
         private _loop = false;
@@ -45,8 +48,7 @@ module volksoper{
             }
         }
 
-        render(){}
-        invalidate(){}
+        render(){throw new Error('unimplemented');}
 
         private _width: number;
         get width(){
@@ -264,5 +266,41 @@ module volksoper{
         popScene(){
             this.popChild();
         }
+
+        invalidate(){
+            if(this._currentTime === 0){
+                this._currentTime = new Date().getTime();
+            }
+            var d = new Date().getTime() - this._currentTime;
+            this._currentTime += d;
+            var span = 1000 / this.fps;
+
+            if(this.fps){
+                var iterate = d + this._leftTime;
+                this._deltaTime = span;
+                while(iterate >= span){
+                    this.broadcastEvent(new volksoper.Event(volksoper.Event.ENTER_FRAME));
+                    iterate -= span;
+                }
+                this._leftTime = iterate;
+            }else{
+                this._deltaTime = d / 1000;
+                span = 1000 / 60;
+                this.broadcastEvent(new volksoper.Event(volksoper.Event.ENTER_FRAME));
+            }
+
+            var story = this.currentScene.storyBoard.update(this._deltaTime);
+
+            this.render();
+
+            if(this.loop && story){
+                this._nextFrame(()=>{
+                    this.invalidate();
+                }, span);
+            }
+
+        }
+
+        private _nextFrame(fn: any, span: number){throw new Error('unimplemented');}
     }
 }
