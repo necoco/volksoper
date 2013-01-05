@@ -52,12 +52,14 @@ module volksoper{
                 this._name = volksoper.generateUniqueName("surface");
             }
 
-            var element: HTMLCanvasElement = <HTMLCanvasElement>document.createElement('canvas');
-            element.style.width = this._width + 'px';
-            element.style.height = this._height + 'px';
-            element.style.position = 'absolute';
-            this._element = element;
-            this._context = <CanvasRenderingContext2D>element.getContext("2d");
+            if(!_primitive){
+                var element: HTMLCanvasElement = <HTMLCanvasElement>document.createElement('canvas');
+                element.style.width = this._width + 'px';
+                element.style.height = this._height + 'px';
+                element.style.position = 'absolute';
+                this._element = element;
+                this._context = <CanvasRenderingContext2D>element.getContext("2d");
+            }
         }
     }
 }

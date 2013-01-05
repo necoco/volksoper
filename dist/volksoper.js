@@ -3376,12 +3376,14 @@ var volksoper;
             if(!this._name) {
                 this._name = volksoper.generateUniqueName("surface");
             }
-            var element = document.createElement('canvas');
-            element.style.width = this._width + 'px';
-            element.style.height = this._height + 'px';
-            element.style.position = 'absolute';
-            this._element = element;
-            this._context = element.getContext("2d");
+            if(!_primitive) {
+                var element = document.createElement('canvas');
+                element.style.width = this._width + 'px';
+                element.style.height = this._height + 'px';
+                element.style.position = 'absolute';
+                this._element = element;
+                this._context = element.getContext("2d");
+            }
         }
         CanvasSurfaceImpl.prototype.width = function () {
             return this._width;
