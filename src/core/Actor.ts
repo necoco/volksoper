@@ -74,7 +74,7 @@ module volksoper{
         }
 
         get topChild(): Actor{
-            if(!this._children || this._children.length == 0) return null;
+            if(!this._children || this._children.length === 0) return null;
             return this._children[this._children.length-1];
         }
 
@@ -90,7 +90,7 @@ module volksoper{
         }
 
         getChild(index: number): Actor{
-            if(this._children == null)return null;
+            if(!this._children)return null;
 
             return this._children[index];
         }
@@ -258,7 +258,7 @@ module volksoper{
                 handlers = this._bubbleHandlers[type];
             }
 
-            if(!handlers || handlers.length == 0){
+            if(!handlers || handlers.length === 0){
                 return false;
             }
 

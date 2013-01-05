@@ -42,7 +42,7 @@ module volksoper{
                 this._stories.splice(this._stories.indexOf(this._unregister[n]), 1);
             }
 
-            return this._stories.length == 0;
+            return this._stories.length === 0;
         }
 
         _registerStory(story: volksoper.Story){

@@ -16,7 +16,7 @@ module volksoper{
                 scenarios.push(scenario);
                 return false;
             }
-            while(scenarios.length != 0){
+            while(scenarios.length !== 0){
                 if(scenarios[0](timer)){
                     return true;
                 }else{
@@ -186,7 +186,7 @@ module volksoper{
             var dst;
             var time;
 
-            if(args.length == 1){
+            if(args.length === 1){
                 var obj = args[0];
                 easing = obj.easing || volksoper.Easing.LINEAR;
                 delete obj.easing;

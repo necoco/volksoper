@@ -115,7 +115,7 @@ var volksoper;
         };
         Object.defineProperty(Actor.prototype, "topChild", {
             get: function () {
-                if(!this._children || this._children.length == 0) {
+                if(!this._children || this._children.length === 0) {
                     return null;
                 }
                 return this._children[this._children.length - 1];
@@ -139,7 +139,7 @@ var volksoper;
             this._children.sort(comparator);
         };
         Actor.prototype.getChild = function (index) {
-            if(this._children == null) {
+            if(!this._children) {
                 return null;
             }
             return this._children[index];
@@ -289,7 +289,7 @@ var volksoper;
                     handlers = this._bubbleHandlers[type];
                 }
             }
-            if(!handlers || handlers.length == 0) {
+            if(!handlers || handlers.length === 0) {
                 return false;
             }
             for(var index in handlers) {
@@ -536,7 +536,7 @@ var volksoper;
             var tmp = Matrix4.TMP;
             var m = this.m;
             var l_det = m[3] * m[6] * m[9] * m[12] - m[2] * m[7] * m[9] * m[12] - m[3] * m[5] * m[10] * m[12] + m[1] * m[7] * m[10] * m[12] + m[2] * m[5] * m[11] * m[12] - m[1] * m[6] * m[11] * m[12] - m[3] * m[6] * m[8] * m[13] + m[2] * m[7] * m[8] * m[13] + m[3] * m[4] * m[10] * m[13] - m[0] * m[7] * m[10] * m[13] - m[2] * m[4] * m[11] * m[13] + m[0] * m[6] * m[11] * m[13] + m[3] * m[5] * m[8] * m[14] - m[1] * m[7] * m[8] * m[14] - m[3] * m[4] * m[9] * m[14] + m[0] * m[7] * m[9] * m[14] + m[1] * m[4] * m[11] * m[14] - m[0] * m[5] * m[11] * m[14] - m[2] * m[5] * m[8] * m[15] + m[1] * m[6] * m[8] * m[15] + m[2] * m[4] * m[9] * m[15] - m[0] * m[6] * m[9] * m[15] - m[1] * m[4] * m[10] * m[15] + m[0] * m[5] * m[10] * m[15];
-            if(l_det == 0) {
+            if(l_det === 0) {
                 return false;
             }
             var inv_det = 1 / l_det;
@@ -1847,7 +1847,7 @@ var volksoper;
                 scenarios.push(scenario);
                 return false;
             }
-            while(scenarios.length != 0) {
+            while(scenarios.length !== 0) {
                 if(scenarios[0](timer)) {
                     return true;
                 } else {
@@ -1995,7 +1995,7 @@ var volksoper;
             var easing;
             var dst;
             var time;
-            if(args.length == 1) {
+            if(args.length === 1) {
                 var obj = args[0];
                 easing = obj.easing || volksoper.Easing.LINEAR;
                 delete obj.easing;
@@ -2105,7 +2105,7 @@ var volksoper;
             for(var n = 0; n < this._unregister.length; ++n) {
                 this._stories.splice(this._stories.indexOf(this._unregister[n]), 1);
             }
-            return this._stories.length == 0;
+            return this._stories.length === 0;
         };
         StoryBoard.prototype._registerStory = function (story) {
             var index = this._unregister.indexOf(story);
