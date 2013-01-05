@@ -252,9 +252,17 @@ module volksoper{
             return <Scene>this.topChild;
         }
         
-        changeScene(scene){
+        changeScene(scene:Scene){
             this.popChild();
             this.addChild(scene);
+        }
+
+        pushScene(scene: Scene){
+            this.addChild(scene);
+        }
+
+        popScene(){
+            this.popChild();
         }
     }
 }

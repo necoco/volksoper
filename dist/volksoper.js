@@ -1630,6 +1630,12 @@ var volksoper;
             this.popChild();
             this.addChild(scene);
         };
+        Stage.prototype.pushScene = function (scene) {
+            this.addChild(scene);
+        };
+        Stage.prototype.popScene = function () {
+            this.popChild();
+        };
         return Stage;
     })(volksoper.DisplayActor);
     volksoper.Stage = Stage;    
