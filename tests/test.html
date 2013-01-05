@@ -20,28 +20,29 @@
         });
         var sprite = new vo.Sprite({
             surface: new vo.Image('test.png'),
-            x: 30
+            x: 30,
+            parent: stage.currentScene
         });
-        stage.currentScene.addChild(sprite);
 
         sprite.addEventListener(vo.TouchEvent.TOUCH_START, function(e){
             console.log(e.localX, e.localY, e.id);
         });
-        var dock = stage.currentScene.dock;
-        dock.load('test.wav');
-        dock.play('test.wav');
 
         sprite.addEventListener(vo.Event.ENTER_FRAME, function(){
             sprite.x += 1;
         });
+
+        var dock = stage.currentScene.dock;
+        dock.load('test.wav');
+        dock.play('test.wav');
+
 
         var label = new vo.Label(100, 100,{
             font: new vo.Font(),
             text:"this is text \n text",
             align: vo.VerticalAlign.CENTER | vo.HorizontalAlign.CENTER
         });
-        var labelSprite = new vo.Sprite({surface: label});
-        stage.currentScene.addChild(labelSprite);
+        var labelSprite = new vo.Sprite({surface: label, parent: stage.currentScene});
     };
 
 

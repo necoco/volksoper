@@ -677,6 +677,7 @@ var volksoper;
                 _super.call(this);
             this._dirtyFlag = true;
             this._localMatrix = new volksoper.Matrix4();
+            this._hitArea = false;
             this.alpha = 1;
             this.touchEnabled = true;
             this._x = 0;
@@ -739,7 +740,21 @@ var volksoper;
             if(!this.width || !this.height) {
                 return false;
             }
-            return 0 <= x && x <= this.width && 0 <= y && y <= this.height;
+            if(this._hitArea) {
+                return this._left <= x && x <= this._right && this._top <= y && y <= this._bottom;
+            } else {
+                return 0 <= x && x <= this.width && 0 <= y && y <= this.height;
+            }
+        };
+        DisplayActor.prototype.setHitArea = function (left, top, right, bottom) {
+            this._hitArea = true;
+            this._left = left;
+            this._top = top;
+            this._right = right;
+            this._bottom = bottom;
+        };
+        DisplayActor.prototype.clearHitArea = function () {
+            this._hitArea = false;
         };
         DisplayActor.prototype.hitTest = function (x, y) {
             var localPos = this.globalToLocal(x, y);
@@ -2619,12 +2634,6 @@ var volksoper;
             enumerable: true,
             configurable: true
         });
-        Sprite.prototype.hitTestLocal = function (x, y) {
-            if(this._surface) {
-                return this._surface.hitTestLocal(x, y);
-            }
-            return false;
-        };
         Sprite.prototype._visitRendering = function (v) {
             v.visitSprite(this);
         };

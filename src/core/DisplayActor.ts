@@ -61,8 +61,30 @@ module volksoper{
 
         hitTestLocal(x: number,y :number): bool{
             if(!this.width || !this.height)return false;
-            return 0 <= x && x <= this.width && 0 <= y && y <= this.height;
+            if(this._hitArea){
+                return this._left <= x && x <= this._right && this._top <= y && y <= this._bottom;
+            }else{
+                return 0 <= x && x <= this.width && 0 <= y && y <= this.height;
+            }
         }
+
+        private _hitArea = false;
+        private _left: number;
+        private _top: number;
+        private _right: number;
+        private _bottom: number;
+        setHitArea(left: number, top: number, right: number, bottom: number){
+            this._hitArea = true;
+            this._left = left;
+            this._top = top;
+            this._right = right;
+            this._bottom = bottom;
+        }
+
+        clearHitArea(){
+            this._hitArea = false;
+        }
+
 
         hitTest(x: number, y: number): bool{
             var localPos = this.globalToLocal(x, y);

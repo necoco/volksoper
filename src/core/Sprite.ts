@@ -53,13 +53,6 @@ module volksoper{
         }
         set height(_: number){}
 
-        hitTestLocal(x: number, y: number){
-            if(this._surface){
-                return this._surface.hitTestLocal(x, y);
-            }
-            return false;
-        }
-
         _visitRendering(v: RenderingVisitor){
             v.visitSprite(this);
         }
