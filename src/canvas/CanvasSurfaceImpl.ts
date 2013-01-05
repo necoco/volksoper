@@ -46,11 +46,7 @@ module volksoper{
 
         constructor(private _width: number, private _height: number, private _renderer: any, private _primitive: bool,
                     private _name: string, private _stage: CanvasStage){
-            super();
-
-            if(!this._name){
-                this._name = volksoper.generateUniqueName("surface");
-            }
+            super(_name, 'surface');
 
             if(!_primitive){
                 var element: HTMLCanvasElement = <HTMLCanvasElement>document.createElement('canvas');

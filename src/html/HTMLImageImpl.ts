@@ -27,7 +27,7 @@ module volksoper{
         }
 
         constructor(private _src: string){
-            super();
+            super(_src);
 
             var img: any = document.createElement('img');
             img.onerror = ()=>{

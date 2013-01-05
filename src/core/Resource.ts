@@ -63,7 +63,13 @@ module volksoper{
             return --this._referenceCount;
         }
         name(): string{
-            return null;
+            return this._name;
+        }
+
+        constructor(private _name?: string, prefix?: string){
+            if(!_name){
+                this._name = generateUniqueName(prefix);
+            }
         }
     }
 

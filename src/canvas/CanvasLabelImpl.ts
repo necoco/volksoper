@@ -142,11 +142,7 @@ module volksoper{
 
         constructor(private _width: number, private _height: number,
                     private _name: string, private _context: CanvasRenderingContext2D){
-            super();
-
-            if(this._name){
-                this._name = generateUniqueName('label');
-            }
+            super(_name, 'label');
         }
     }
 }

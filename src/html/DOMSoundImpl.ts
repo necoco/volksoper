@@ -7,9 +7,7 @@ module volksoper{
         }
 
         constructor(private _src: string, autoPlay: bool){
-            super();
-
-            var type: string;
+            super(_src);
 
             var ext = extractExt(_src);
 
@@ -47,6 +45,19 @@ module volksoper{
 
         play(){
             this._element.play();
+        }
+
+        stop(){
+            this._element.pause();
+            this._element.currentTime = 0;
+        }
+
+        pause(){
+            this._element.pause();
+        }
+
+        loop(loop){
+            this._element.loop = loop;
         }
     }
 }

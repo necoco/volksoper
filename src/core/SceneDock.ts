@@ -75,17 +75,27 @@ module volksoper{
         }
 
 
-        play(name: string): bool{
-            var res = this._resourcePool[name];
-            if(res){
-                (<Sound>res).play();
-                return true;
+        sound(name: string): Sound{
+            return <Sound>this._resourcePool[name];
+        }
+
+        image(name: string): Image{
+            return <Image>this._resourcePool[name];
+        }
+
+        private _findResource(name: string){
+            var result = this._resourcePool[name];
+            if(result){
+                return result;
+            }else if(this._parentDock){
+                return this._parentDock._findResource(name);
             }
-            return false;
+
+            return null;
         }
 
         _createImageImpl(src: string): ImageImpl{
-            var impl = this._implPool[src];
+            var impl = this._findImpl(src);
             if(impl){
                 return impl;
             }else{
@@ -101,7 +111,7 @@ module volksoper{
         }
 
         _createSoundImpl(src: string, autoPlay: bool): SoundImpl{
-            var impl = this._soundImplPool[src];
+            var impl = this._findSoundImpl(src);
             if(impl){
                 return impl;
             }else{
@@ -112,13 +122,24 @@ module volksoper{
             }
         }
 
+        private _findSoundImpl(name: string){
+            var result = this._soundImplPool[name];
+            if(result){
+                return result;
+            }else if(this._parentDock){
+                return this._parentDock._findSoundImpl(name);
+            }
+
+            return null;
+        }
+
         private _newSoundImpl(src: string, autoPlay: bool): SoundImpl{
             throw new Error('unimplemented');
         }
 
         _createSurfaceImpl(width: number, height: number,
                            renderer:any, primitive: bool, name: string): SurfaceImpl{
-            var impl = this._implPool[name];
+            var impl = this._findImpl(name);
             if(impl){
                 return impl;
             }else{
@@ -129,13 +150,24 @@ module volksoper{
             }
         }
 
+        private _findImpl(name: string){
+            var result = this._implPool[name];
+            if(result){
+                return result;
+            }else if(this._parentDock){
+                return this._parentDock._findImpl(name);
+            }
+
+            return null;
+        }
+
         private _newSurfaceImpl(width: number, height: number,
                                 renderer:any, primitive: bool, name: string): SurfaceImpl{
             throw new Error('unimplemented');
         }
 
         _createLabelImpl(width: number, height: number, name: string): LabelImpl{
-            var impl = this._implPool[name];
+            var impl = this._findImpl(name);
             if(impl){
                 return impl;
             }else{

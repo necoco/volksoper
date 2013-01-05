@@ -3,9 +3,10 @@ module volksoper{
         _buffer: any;
         _bufferSrc: any;
         _autoPlay = false;
+        _pause = false;
 
         constructor(private _src: string, autoPlay: bool){
-            super();
+            super(_src);
 
             var platform = Platform.instance();
             var actx = platform.getWebAudioContext();
@@ -42,16 +43,50 @@ module volksoper{
 
         play(){
             if(this._buffer){
-                if(this._bufferSrc){
-                    this._bufferSrc.disconnect();
-                }
                 var actx = Platform.instance().getWebAudioContext();
-                this._bufferSrc = actx.createBufferSource();
-                this._bufferSrc.buffer = this._buffer;
-                this._bufferSrc.connect(actx.destination);
-                this._bufferSrc.noteOn(0);
+
+                if(this._pause){
+                    this._bufferSrc.connect(actx.destination);
+                }else{
+                    if(this._bufferSrc){
+                        this._bufferSrc.disconnect(actx.destination);
+                    }
+                    this._bufferSrc = actx.createBufferSource();
+                    this._bufferSrc.buffer = this._buffer;
+                    this._bufferSrc.connect(actx.destination);
+                    this._bufferSrc.loop = this._loop;
+                    this._bufferSrc.noteOn(0);
+
+                }
             }else{
                 this._autoPlay = true;
+            }
+        }
+
+        pause(){
+            if(this._bufferSrc){
+                var actx = Platform.instance().getWebAudioContext();
+                this._bufferSrc.disconnect(actx.destination);
+                this._pause = true;
+            }else{
+                this._autoPlay = false;
+            }
+        }
+
+        stop(){
+            if(this._bufferSrc){
+                this._bufferSrc.noteOff(0);
+            }else{
+                this._autoPlay = false;
+            }
+        }
+
+        private _loop = false;
+        loop(loop: bool){
+            if(this._bufferSrc){
+                this._bufferSrc.loop = loop;
+            }else{
+                this._loop = loop;
             }
         }
 
