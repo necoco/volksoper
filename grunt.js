@@ -42,8 +42,9 @@ module.exports = function (grunt) {
                 dest: 'tests/tmp/volksoper-canvas.js',
                 options: {
                     target: "es5",
-                    sourcemap: "true",
-                    base_path: "src/"
+                    sourcemap: true,
+                    base_path: "src/",
+                    declaration_file: true
                 }
             },
             specs: {
