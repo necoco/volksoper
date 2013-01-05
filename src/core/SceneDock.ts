@@ -24,6 +24,7 @@ module volksoper{
 
         load(...files: string[]){
             var l = files.length;
+            this._totalResource += l;
             for(var n = 0; n < l; ++n){
                 this._loadResource(files[n]);
             }
@@ -44,12 +45,10 @@ module volksoper{
 
             switch(ext){
                 case 'jpg':case 'png':case 'jpeg':case 'gif':
-                this._totalResource++;
                 res = new Image(file);
                 res.addUsableListener(this._createListener());
                 break;
                 case 'snd':case 'mp3':case 'ogg':case'wav':
-                this._totalResource++;
                 res = new Sound(file);
                 (<Sound>res).attach(this.stage);
                 res.addUsableListener(this._createListener());

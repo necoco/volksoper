@@ -2285,6 +2285,7 @@ var volksoper;
                 files[_i] = arguments[_i + 0];
             }
             var l = files.length;
+            this._totalResource += l;
             for(var n = 0; n < l; ++n) {
                 this._loadResource(files[n]);
             }
@@ -2305,7 +2306,6 @@ var volksoper;
                 case 'png':
                 case 'jpeg':
                 case 'gif': {
-                    this._totalResource++;
                     res = new volksoper.Image(file);
                     res.addUsableListener(this._createListener());
                     break;
@@ -2315,7 +2315,6 @@ var volksoper;
                 case 'mp3':
                 case 'ogg':
                 case 'wav': {
-                    this._totalResource++;
                     res = new volksoper.Sound(file);
                     (res).attach(this.stage);
                     res.addUsableListener(this._createListener());

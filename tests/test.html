@@ -43,7 +43,7 @@
         });
 
         sprite.addEventListener(vo.TouchEvent.TOUCH_START, function(e){
-            labelSprite.text = e.localX + '\n' + e.localY;
+            labelSprite.surface.text = e.localX + '\n' + e.localY;
         });
 
         sprite.story.tween({alpha: 0.3, x: 400, time: 90, easing: vo.Easing.BOUNCE_EASEOUT});
